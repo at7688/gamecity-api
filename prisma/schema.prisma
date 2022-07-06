@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String  @id @default(cuid())
+  email String  @unique
+  name  String?
+  password String
+  auth_token AuthToken?
+  operations OperationRec[]
+  role Role @relation(fields: [role_id], references: [id])
+  role_id String
+  is_active Boolean @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Permission {
+  id    String  @id @default(cuid())
+  name  String @unique
+  controller String
+  handler String
+  role Role[]
+
+  @@unique([controller, handler], name: "controller_handler")
+}
+
+model Role {
+  id    String  @id @default(cuid())
+  name String
+  code String @unique
+  permissions Permission[]
+  users User[]
+
+}
+
+model OperationRec {
+  id  Int @id @default(autoincrement())
+  controller String
+  handler String
+  operator User @relation(fields: [operator_id], references: [id])
+  operator_id String
+  reqBody Json?
+  path String
+  target_id String?
+  method String
+  operated_at DateTime @default(now())
+}
+
+
+enum AnnouncementType {
+  GAME
+  OPERATION
+  EVENT
+  SERVICE
+}
+
+
+enum Platform {
+  MAIN
+  SECONDARY
+  ALL
+}
+
+
+model Announcement {
+  id String @id @default(cuid())
+  title String
+  content String?
+  start_at DateTime? @db.Timestamp()
+  end_at DateTime? @db.Timestamp()
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  type AnnouncementType
+  is_active Boolean @default(true)
+  link String?
+  is_new_win Boolean @default(false)
+  is_top Boolean @default(false)
+  sort Int @default(autoincrement())
+}
+
+
+model AuthToken {
+  id String @id @default(cuid())
+  token String @unique
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user_id String @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+

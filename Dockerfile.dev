@@ -1,0 +1,19 @@
+FROM node:17
+
+WORKDIR /app
+
+COPY package.json yarn.lock ./
+RUN yarn
+
+# ENV DATABASE_URL="postgresql://postgres:postgres@postgres:5432/postgres?schema=public"
+# ARG DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres?schema=public
+
+
+COPY . .
+
+RUN npx prisma generate
+
+# RUN yarn build
+
+
+EXPOSE 8080 5555

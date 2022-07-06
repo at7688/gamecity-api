@@ -1,0 +1,90 @@
+name: Dev CI
+on:
+  push:
+    branches:
+      - "master"
+
+env:
+  REPO_PATH: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  ACTION_PATH: https://github.com/${{ github.repository }}/actions/runs/${{github.run_id}}
+  APP_NAME: official-api
+  APP_ENV_NAME: official-api-dev
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Copy docker files to VM
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST}}
+          username: ${{ secrets.VM_USERNAME }}
+          password: ${{ secrets.VM_PASSWORD }}
+          source: "*"
+          target: "app"
+          overwrite: true
+
+      - name: VM run docker
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          password: ${{ secrets.VM_PASSWORD }}
+          script: |
+            cd app
+            echo "Restart containers"
+            docker-compose -f "docker-compose.yml" up --force-recreate -d --build
+            echo "Clean image"
+            docker image prune -f
+
+
+      - name: Telegram succeeded notification
+        if: ${{ success() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            🎉 *${{ env.APP_ENV_NAME }}* *[${{ job.status }}]*
+
+            Branch: *${{ github.ref_name }}*
+
+            `${{ github.event.commits[0].message }}`
+
+            Commit by *${{ github.actor }}*  [↗↗↗](${{ env.REPO_PATH }})
+
+      - name: Telegram failed notification
+        continue-on-error: true
+        if: ${{ failure() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            🥲 *${{ env.APP_ENV_NAME }}* *[${{ job.status }}]*
+
+            Branch: *${{ github.ref_name }}*
+
+            `${{ github.event.head_commit.message }}`
+
+            Commit by *${{ github.actor }}*  [↗↗↗](${{ env.REPO_PATH }})
+
+            💣 Workflow: [↗↗↗](${{ env.ACTION_PATH }})
+
+            --------------------------
+
