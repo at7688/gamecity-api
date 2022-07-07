@@ -1,26 +1,60 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 
 @Injectable()
 export class MenuService {
-  create(createMenuDto: CreateMenuDto) {
-    return 'This action adds a new menu';
+  constructor(private readonly prisma: PrismaService) {}
+  create({ permission_ids, ...data }: CreateMenuDto) {
+    return this.prisma.menu.create({
+      data: {
+        ...data,
+        permissions: {
+          connect: permission_ids.map((id) => ({ id })),
+        },
+      },
+      include: {
+        permissions: true,
+      },
+    });
   }
 
   findAll() {
-    return `This action returns all menu`;
+    return this.prisma.menu.findMany({
+      where: {
+        root_menu: null,
+      },
+      include: {
+        sub_menus: {
+          include: {
+            permissions: true,
+          },
+        },
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} menu`;
+  findOne(id: string) {
+    return this.prisma.menu.findUnique({ where: { id } });
   }
 
-  update(id: number, updateMenuDto: UpdateMenuDto) {
-    return `This action updates a #${id} menu`;
+  update(id: string, { permission_ids, ...data }: UpdateMenuDto) {
+    return this.prisma.menu.update({
+      where: { id },
+      data: {
+        ...data,
+        permissions: {
+          set: permission_ids.map((id) => ({ id })),
+        },
+      },
+      include: {
+        permissions: true,
+      },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} menu`;
+  remove(id: string) {
+    return this.prisma.menu.delete({ where: { id } });
   }
 }

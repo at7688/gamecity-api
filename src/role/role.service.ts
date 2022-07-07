@@ -8,12 +8,32 @@ export class RoleService {
   create(data: Prisma.AdminRoleCreateInput) {
     return this.prisma.adminRole.create({
       data,
-      include: { menu: true },
+      include: {
+        menu: {
+          where: {
+            root_menu: null,
+          },
+          include: {
+            sub_menus: true,
+          },
+        },
+      },
     });
   }
 
   findAll() {
-    return this.prisma.adminRole.findMany();
+    return this.prisma.adminRole.findMany({
+      include: {
+        menu: {
+          where: {
+            root_menu: null,
+          },
+          include: {
+            sub_menus: true,
+          },
+        },
+      },
+    });
   }
 
   findOne(id: string) {

@@ -95,6 +95,7 @@ model Menu {
   root_menu_id String?
   root_menu    Menu?   @relation("root", fields: [root_menu_id], references: [id])
   sub_menus    Menu[]  @relation("root")
+  sort Int @default(autoincrement())
 }
 
 enum MemberType {
@@ -108,8 +109,6 @@ model Member {
   username   String     @unique
   password   String
   nickname   String
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
   promo_code String?    @unique()
   type       MemberType
   layer Int @default(1)
@@ -118,4 +117,9 @@ model Member {
   parent    Member? @relation("agent", fields: [parent_id], references: [id])
   parent_id String?
   subs Member[] @relation("agent")
+
+
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  login_at DateTime?
 }
