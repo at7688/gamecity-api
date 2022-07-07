@@ -112,9 +112,10 @@ model Member {
   updated_at DateTime   @updatedAt
   promo_code String?    @unique()
   type       MemberType
+  layer Int @default(1)
+  is_active Boolean  @default(true)
 
   parent    Member? @relation("agent", fields: [parent_id], references: [id])
   parent_id String?
-
   subs Member[] @relation("agent")
 }

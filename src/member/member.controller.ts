@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 
 import { MemberService } from './member.service';
@@ -13,6 +14,7 @@ import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { Serilizer } from 'src/interceptors/serializer.interceptor';
 import { MemberDto } from './dto/member.dto';
+import { SearchMembersDto } from './dto/search-members.dto';
 
 @Controller('members')
 @Serilizer(MemberDto)
@@ -25,8 +27,8 @@ export class MemberController {
   }
 
   @Get()
-  findAll() {
-    return this.memberService.findAll();
+  findAll(@Query() query?: SearchMembersDto) {
+    return this.memberService.findAll(query);
   }
 
   @Get(':id')
