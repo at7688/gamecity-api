@@ -21,6 +21,7 @@ export class RoleInterceptor implements NestInterceptor {
     next: CallHandler<any>,
   ): Promise<Observable<any>> {
     const req = context.switchToHttp().getRequest();
+    // console.log(req);
     const controller = context.getClass();
     const handler = context.getHandler();
 
@@ -29,11 +30,11 @@ export class RoleInterceptor implements NestInterceptor {
       [context.getHandler(), context.getClass()],
     );
 
-    if (req.user && !isRolePublic) {
-      if (req.user.admin_role.code === 'MASTER') {
+    if (req.session.user && !isRolePublic) {
+      if (req.session.user.admin_role.code === 'MASTER') {
         return next.handle();
       }
-      const role_id = req.user.admin_role.id as string;
+      const role_id = req.session.user.admin_role.id as string;
       const permissions = await this.prisma.permission.findMany({
         where: {
           admin_role: { some: { id: role_id } },

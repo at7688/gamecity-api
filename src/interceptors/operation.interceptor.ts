@@ -22,7 +22,7 @@ export class OperationInterceptor implements NestInterceptor {
     const [req, res] = context.getArgs();
     return next.handle().pipe(
       map(async (data) => {
-        const user: AdminUser = req.user || data.user;
+        const user: AdminUser = req.session.user;
         if (req.method !== 'GET' && user) {
           if (req.body.password) {
             req.body.password = '***';
