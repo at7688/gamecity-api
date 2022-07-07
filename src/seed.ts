@@ -6,14 +6,14 @@ import * as dotenv from 'dotenv';
 dotenv.config(); // Load the environment variables
 
 async function main() {
-  await prisma.user.upsert({
-    where: { email: 'sp@admin.com' },
+  await prisma.adminUser.upsert({
+    where: { username: 'superAdmin' },
     update: {},
     create: {
-      email: 'sp@admin.com',
-      name: '超級管理員',
+      nickname: '超級管理員',
+      username: 'superAdmin',
       password: await argon2.hash(process.env.DEFAULT_PASSWORD),
-      role: {
+      admin_role: {
         connectOrCreate: {
           where: { code: 'MASTER' },
           create: {

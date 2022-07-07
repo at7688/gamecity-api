@@ -10,15 +10,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model AdminUser {
   id    String  @id @default(cuid())
-  email String  @unique
-  name  String?
+  username  String @unique
   password String
-  auth_token AuthToken?
+  nickname String?
   operations OperationRec[]
-  role Role @relation(fields: [role_id], references: [id])
-  role_id String
+  admin_role AdminRole @relation(fields: [admin_role_id], references: [id])
+  admin_role_id String
   is_active Boolean @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -29,17 +28,17 @@ model Permission {
   name  String @unique
   controller String
   handler String
-  role Role[]
+  admin_role AdminRole[]
 
   @@unique([controller, handler], name: "controller_handler")
 }
 
-model Role {
+model AdminRole {
   id    String  @id @default(cuid())
   name String
   code String @unique
   permissions Permission[]
-  users User[]
+  users AdminUser[]
 
 }
 
@@ -47,7 +46,7 @@ model OperationRec {
   id  Int @id @default(autoincrement())
   controller String
   handler String
-  operator User @relation(fields: [operator_id], references: [id])
+  operator AdminUser @relation(fields: [operator_id], references: [id])
   operator_id String
   reqBody Json?
   path String
@@ -56,21 +55,13 @@ model OperationRec {
   operated_at DateTime @default(now())
 }
 
-
+// 最新消息
 enum AnnouncementType {
   GAME
   OPERATION
   EVENT
   SERVICE
 }
-
-
-enum Platform {
-  MAIN
-  SECONDARY
-  ALL
-}
-
 
 model Announcement {
   id String @id @default(cuid())
@@ -89,12 +80,12 @@ model Announcement {
 }
 
 
-model AuthToken {
+
+model Member {
   id String @id @default(cuid())
-  token String @unique
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  user_id String @unique
+  username String @unique
+  password String
+  nickname String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
-

@@ -1,20 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Role, Permission } from '@prisma/client';
+import { Prisma, AdminRole, Permission } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class RoleService {
   constructor(private readonly prisma: PrismaService) {}
-  create(data: Prisma.RoleCreateInput) {
-    return this.prisma.role.create({ data, include: { permissions: true } });
+  create(data: Prisma.AdminRoleCreateInput) {
+    return this.prisma.adminRole.create({
+      data,
+      include: { permissions: true },
+    });
   }
 
   findAll() {
-    return this.prisma.role.findMany();
+    return this.prisma.adminRole.findMany();
   }
 
   findOne(id: string) {
-    return this.prisma.role.findUnique({
+    return this.prisma.adminRole.findUnique({
       where: { id },
       include: {
         permissions: {
@@ -27,8 +30,8 @@ export class RoleService {
     });
   }
 
-  update(id: string, data: Prisma.RoleUpdateInput) {
-    return this.prisma.role.update({
+  update(id: string, data: Prisma.AdminRoleUpdateInput) {
+    return this.prisma.adminRole.update({
       where: { id },
       data,
       include: { permissions: true },
@@ -36,6 +39,6 @@ export class RoleService {
   }
 
   remove(id: string) {
-    return this.prisma.role.delete({ where: { id } });
+    return this.prisma.adminRole.delete({ where: { id } });
   }
 }

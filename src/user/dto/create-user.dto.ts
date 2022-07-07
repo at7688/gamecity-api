@@ -10,11 +10,11 @@ import {
 export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
-  role_id: string;
+  admin_role_id: string;
 
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  @IsString()
+  username: string;
 
   @IsNotEmpty()
   @IsString()

@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
+import { Prisma, AdminUser } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,11 +14,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async findOne(id: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({
+  async findOne(id: string): Promise<AdminUser | null> {
+    const user = await this.prisma.adminUser.findUnique({
       where: { id },
       include: {
-        role: {
+        admin_role: {
           include: {
             permissions: {
               select: { id: true, name: true },
@@ -34,15 +34,14 @@ export class UserService {
   }
 
   async findAll(search: SearchUserDto) {
-    const { page, perpage, email, name, is_active } = search;
-    const findManyArgs: Prisma.UserFindManyArgs = {
+    const { page, perpage, username, is_active } = search;
+    const findManyArgs: Prisma.AdminUserFindManyArgs = {
       where: {
-        email,
-        name,
+        username,
         is_active,
       },
       include: {
-        role: true,
+        admin_role: true,
       },
       orderBy: [{ id: 'desc' }],
       take: perpage || 10,
@@ -50,9 +49,9 @@ export class UserService {
     };
 
     const [items, count_all, count_is_active] = await this.prisma.$transaction([
-      this.prisma.user.findMany(findManyArgs),
-      this.prisma.user.count({ where: findManyArgs.where }),
-      this.prisma.user.count({
+      this.prisma.adminUser.findMany(findManyArgs),
+      this.prisma.adminUser.count({ where: findManyArgs.where }),
+      this.prisma.adminUser.count({
         where: { ...findManyArgs.where, is_active: true },
       }),
     ]);
@@ -67,15 +66,14 @@ export class UserService {
     };
   }
 
-  async create({ password, ...data }: CreateUserDto): Promise<User> {
+  async create({ password, ...data }: CreateUserDto): Promise<AdminUser> {
     const hash = await argon2.hash(password);
 
-    return await this.prisma.user.create({
+    return await this.prisma.adminUser.create({
       data: {
-        name: data.name,
-        email: data.email,
-        role: {
-          connect: { id: data.role_id },
+        username: data.username,
+        admin_role: {
+          connect: { id: data.admin_role_id },
         },
         password: hash,
       },
@@ -85,21 +83,21 @@ export class UserService {
   async update(
     id: string,
     { password, ...data }: UpdateUserDto,
-  ): Promise<User> {
+  ): Promise<AdminUser> {
     if (password) {
       const hash = await argon2.hash(password);
-      return this.prisma.user.update({
+      return this.prisma.adminUser.update({
         where: { id },
         data: { ...data, password: hash },
       });
     }
-    return this.prisma.user.update({
+    return this.prisma.adminUser.update({
       where: { id },
       data,
     });
   }
 
   remove(id: string) {
-    return this.prisma.user.delete({ where: { id } });
+    return this.prisma.adminUser.delete({ where: { id } });
   }
 }
