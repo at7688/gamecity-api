@@ -10,6 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 管理員帳號
 model AdminUser {
   id            String         @id @default(cuid())
   username      String         @unique
@@ -23,6 +24,7 @@ model AdminUser {
   updated_at    DateTime       @updatedAt
 }
 
+// 權限
 model Permission {
   id         String @id @default(cuid())
   name       String @unique
@@ -33,6 +35,7 @@ model Permission {
   @@unique([controller, handler], name: "controller_handler")
 }
 
+// 管理員角色
 model AdminRole {
   id    String      @id @default(cuid())
   name  String
@@ -42,6 +45,7 @@ model AdminRole {
 
 }
 
+// 操作記錄
 model OperationRec {
   id          Int       @id @default(autoincrement())
   controller  String
@@ -63,6 +67,7 @@ enum AnnouncementType {
   SERVICE
 }
 
+// 最新消息
 model Announcement {
   id         String           @id @default(cuid())
   title      String
@@ -79,6 +84,7 @@ model Announcement {
   sort       Int              @default(autoincrement())
 }
 
+// 選單
 model Menu {
   id          String       @id @default(cuid())
   name        String
@@ -91,11 +97,24 @@ model Menu {
   sub_menus    Menu[]  @relation("root")
 }
 
+enum MemberType {
+  PLAYER
+  AGENT
+}
+
+// 階層會員
 model Member {
-  id         String   @id @default(cuid())
-  username   String   @unique
+  id         String     @id @default(cuid())
+  username   String     @unique
   password   String
   nickname   String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  promo_code String?    @unique()
+  type       MemberType
+
+  parent    Member? @relation("agent", fields: [parent_id], references: [id])
+  parent_id String?
+
+  subs Member[] @relation("agent")
 }
