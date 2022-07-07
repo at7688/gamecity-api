@@ -20,7 +20,7 @@ export class UserService {
       include: {
         admin_role: {
           include: {
-            permissions: {
+            menu: {
               select: { id: true, name: true },
             },
           },

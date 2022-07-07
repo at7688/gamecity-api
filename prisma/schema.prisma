@@ -11,48 +11,48 @@ datasource db {
 }
 
 model AdminUser {
-  id    String  @id @default(cuid())
-  username  String @unique
-  password String
-  nickname String?
-  operations OperationRec[]
-  admin_role AdminRole @relation(fields: [admin_role_id], references: [id])
+  id            String         @id @default(cuid())
+  username      String         @unique
+  password      String
+  nickname      String?
+  operations    OperationRec[]
+  admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
   admin_role_id String
-  is_active Boolean @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
 }
 
 model Permission {
-  id    String  @id @default(cuid())
-  name  String @unique
+  id         String @id @default(cuid())
+  name       String @unique
   controller String
-  handler String
-  admin_role AdminRole[]
+  handler    String
+  menus      Menu[]
 
   @@unique([controller, handler], name: "controller_handler")
 }
 
 model AdminRole {
-  id    String  @id @default(cuid())
-  name String
-  code String @unique
-  permissions Permission[]
+  id    String      @id @default(cuid())
+  name  String
+  code  String      @unique
+  menu  Menu[]
   users AdminUser[]
 
 }
 
 model OperationRec {
-  id  Int @id @default(autoincrement())
-  controller String
-  handler String
-  operator AdminUser @relation(fields: [operator_id], references: [id])
+  id          Int       @id @default(autoincrement())
+  controller  String
+  handler     String
+  operator    AdminUser @relation(fields: [operator_id], references: [id])
   operator_id String
-  reqBody Json?
-  path String
-  target_id String?
-  method String
-  operated_at DateTime @default(now())
+  reqBody     Json?
+  path        String
+  target_id   String?
+  method      String
+  operated_at DateTime  @default(now())
 }
 
 // 最新消息
@@ -64,28 +64,38 @@ enum AnnouncementType {
 }
 
 model Announcement {
-  id String @id @default(cuid())
-  title String
-  content String?
-  start_at DateTime? @db.Timestamp()
-  end_at DateTime? @db.Timestamp()
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  type AnnouncementType
-  is_active Boolean @default(true)
-  link String?
-  is_new_win Boolean @default(false)
-  is_top Boolean @default(false)
-  sort Int @default(autoincrement())
+  id         String           @id @default(cuid())
+  title      String
+  content    String?
+  start_at   DateTime?        @db.Timestamp()
+  end_at     DateTime?        @db.Timestamp()
+  created_at DateTime         @default(now())
+  updated_at DateTime         @updatedAt
+  type       AnnouncementType
+  is_active  Boolean          @default(true)
+  link       String?
+  is_new_win Boolean          @default(false)
+  is_top     Boolean          @default(false)
+  sort       Int              @default(autoincrement())
 }
 
+model Menu {
+  id          String       @id @default(cuid())
+  name        String
+  permissions Permission[]
 
+  admin_roles AdminRole[]
+
+  root_menu_id String?
+  root_menu    Menu?   @relation("root", fields: [root_menu_id], references: [id])
+  sub_menus    Menu[]  @relation("root")
+}
 
 model Member {
-  id String @id @default(cuid())
-  username String @unique
-  password String
-  nickname String
+  id         String   @id @default(cuid())
+  username   String   @unique
+  password   String
+  nickname   String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

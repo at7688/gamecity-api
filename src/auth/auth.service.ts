@@ -13,7 +13,7 @@ export class AuthService {
       include: {
         admin_role: {
           include: {
-            permissions: true,
+            menu: true,
           },
         },
       },

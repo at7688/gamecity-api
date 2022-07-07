@@ -25,19 +25,31 @@ export class RoleInterceptor implements NestInterceptor {
     const controller = context.getClass();
     const handler = context.getHandler();
 
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
     const isRolePublic = this.reflector.getAllAndOverride<boolean>(
       IS_ROLE_PUBLIC_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    if (req.session.user && !isRolePublic) {
+    if (!isPublic && !isRolePublic && req.session.user) {
       if (req.session.user.admin_role.code === 'MASTER') {
         return next.handle();
       }
       const role_id = req.session.user.admin_role.id as string;
+      // const role = await this.prisma.adminRole.findUnique({
+      //   where: { id: role_id },
+      //   include: {
+      //     menu: { include: { permissions: { select: { id: true } } } },
+      //   },
+      // });
+
       const permissions = await this.prisma.permission.findMany({
         where: {
-          admin_role: { some: { id: role_id } },
+          menus: { some: { admin_roles: { some: { id: role_id } } } },
           controller: controller.name,
           handler: handler.name,
         },

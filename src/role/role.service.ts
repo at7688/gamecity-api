@@ -8,7 +8,7 @@ export class RoleService {
   create(data: Prisma.AdminRoleCreateInput) {
     return this.prisma.adminRole.create({
       data,
-      include: { permissions: true },
+      include: { menu: true },
     });
   }
 
@@ -20,7 +20,7 @@ export class RoleService {
     return this.prisma.adminRole.findUnique({
       where: { id },
       include: {
-        permissions: {
+        menu: {
           select: {
             id: true,
             name: true,
@@ -34,7 +34,7 @@ export class RoleService {
     return this.prisma.adminRole.update({
       where: { id },
       data,
-      include: { permissions: true },
+      include: { menu: true },
     });
   }
 

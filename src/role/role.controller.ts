@@ -20,7 +20,7 @@ export class RoleController {
     return this.roleService.create({
       name,
       code,
-      permissions: {
+      menu: {
         connect: permission_ids.map((per_id) => ({ id: per_id })),
       },
     });
@@ -44,7 +44,7 @@ export class RoleController {
     return this.roleService.update(id, {
       name,
       code,
-      permissions: {
+      menu: {
         set: permission_ids.map((per_id) => ({ id: per_id })),
       },
     });
