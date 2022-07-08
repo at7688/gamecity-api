@@ -123,3 +123,65 @@ model Member {
   updated_at DateTime   @updatedAt
   login_at DateTime?
 }
+
+// 活動曝光
+model ActivityPromo {
+  id String @id @default(cuid())
+  pc_img String
+  mb_img String
+  title String
+  sub_title String
+  content String
+  is_active Boolean
+  sort Int
+  start_at   DateTime?        @db.Timestamp()
+  end_at     DateTime?        @db.Timestamp()
+}
+
+// 輪播圖
+model Banner {
+  id String @id @default(cuid())
+  pc_img String
+  mb_img String
+  name String
+  is_active Boolean
+  sort Int
+  start_at   DateTime?        @db.Timestamp()
+  end_at     DateTime?        @db.Timestamp()
+}
+
+// 遊戲類型
+model GameCategory {
+  id Int @id @default(autoincrement())
+  name String
+  platforms GamePlatform[]
+}
+
+enum GamePlatformStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+}
+
+// 遊戲平台
+model GamePlatform {
+  id String @id @default(cuid())
+  name String
+  code String @unique
+  status GamePlatformStatus
+  sort Int
+  games Game[]
+  category GameCategory @relation(fields: [category_id], references: [id])
+  category_id Int
+}
+
+// 遊戲
+model Game {
+  id String @id @default(cuid())
+  name String
+  code String @unique
+  is_active Boolean
+  sort Int
+  platform GamePlatform @relation(fields: [platform_id], references: [id])
+  platform_id String
+}
