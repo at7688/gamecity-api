@@ -6,6 +6,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { AdminUser, Member, Permission } from '@prisma/client';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY, IS_ROLE_PUBLIC_KEY } from 'src/meta-consts';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -35,31 +36,24 @@ export class RoleInterceptor implements NestInterceptor {
       [context.getHandler(), context.getClass()],
     );
 
-    if (!isPublic && !isRolePublic && req.session.user) {
-      if (req.session.user.admin_role.code === 'MASTER') {
-        return next.handle();
-      }
-      const role_id = req.session.user.admin_role.id as string;
-      // const role = await this.prisma.adminRole.findUnique({
-      //   where: { id: role_id },
-      //   include: {
-      //     menu: { include: { permissions: { select: { id: true } } } },
-      //   },
-      // });
+    const permissions: Permission[] = req.session.permissions || [];
 
-      const permissions = await this.prisma.permission.findMany({
-        where: {
-          menus: { some: { admin_roles: { some: { id: role_id } } } },
-          controller: controller.name,
-          handler: handler.name,
-        },
-      });
-
-      if (!permissions.length) {
-        throw new ForbiddenException('無角色權限');
-      }
+    if (isPublic || isRolePublic) {
+      return next.handle();
     }
 
-    return next.handle();
+    if (req.session.user.admin_role?.code === 'MASTER') {
+      return next.handle();
+    }
+
+    const i = permissions.findIndex(
+      (t) => t.controller === controller.name && t.handler === handler.name,
+    );
+
+    if (i > -1) {
+      return next.handle();
+    }
+
+    throw new ForbiddenException('無操作權限');
   }
 }

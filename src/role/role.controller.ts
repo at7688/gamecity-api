@@ -16,14 +16,8 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Post()
-  create(@Body() { name, code, permission_ids }: CreateRoleDto) {
-    return this.roleService.create({
-      name,
-      code,
-      menu: {
-        connect: permission_ids.map((per_id) => ({ id: per_id })),
-      },
-    });
+  create(@Body() createRoleDto: CreateRoleDto) {
+    return this.roleService.create(createRoleDto);
   }
 
   @Get()
@@ -37,17 +31,8 @@ export class RoleController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() { name, code, permission_ids }: UpdateRoleDto,
-  ) {
-    return this.roleService.update(id, {
-      name,
-      code,
-      menu: {
-        set: permission_ids.map((per_id) => ({ id: per_id })),
-      },
-    });
+  update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
+    return this.roleService.update(id, updateRoleDto);
   }
 
   @Delete(':id')

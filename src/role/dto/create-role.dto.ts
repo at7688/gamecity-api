@@ -9,5 +9,5 @@ export class CreateRoleDto {
   code: string;
 
   @IsString({ each: true })
-  permission_ids: string[];
+  menu_ids: string[];
 }

@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, AdminRole, Permission } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
 export class RoleService {
   constructor(private readonly prisma: PrismaService) {}
-  create(data: Prisma.AdminRoleCreateInput) {
+  create({ menu_ids, ...data }: CreateRoleDto) {
     return this.prisma.adminRole.create({
-      data,
+      data: {
+        ...data,
+        menu: {
+          connect: menu_ids.map((per_id) => ({ id: per_id })),
+        },
+      },
       include: {
         menu: true,
       },
@@ -36,10 +42,15 @@ export class RoleService {
     });
   }
 
-  update(id: string, data: Prisma.AdminRoleUpdateInput) {
+  update(id: string, { menu_ids, ...data }: UpdateRoleDto) {
     return this.prisma.adminRole.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        menu: {
+          set: menu_ids.map((per_id) => ({ id: per_id })),
+        },
+      },
       include: { menu: true },
     });
   }

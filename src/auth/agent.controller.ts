@@ -3,14 +3,14 @@ import { Public } from 'src/user/metas/public.meta';
 import { AuthService } from './auth.service';
 import { SigninDto } from './dto/signin.dto';
 
-@Controller('auth')
-export class AuthController {
+@Controller('agent')
+export class AgentController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
   @Public()
   async login(@Body() body: SigninDto, @Session() session) {
-    const res = await this.authService.adminUserValidate(body);
+    const res = await this.authService.agentValidate(body);
     session.user = res.user;
     session.permissions = res.permissions;
     return {
