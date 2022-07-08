@@ -11,13 +11,10 @@ export class AuthService {
     const user = await this.prisma.adminUser.findUnique({
       where: { username },
       include: {
-        admin_role: {
-          include: {
-            menu: true,
-          },
-        },
+        admin_role: true,
       },
     });
+
     if (!user) {
       throw new BadRequestException('user is not exist');
     }
@@ -26,6 +23,31 @@ export class AuthService {
       throw new BadRequestException('bad password');
     }
 
-    return user;
+    const menu = await this.prisma.menu.findMany({
+      where: {
+        root_menu: null,
+        admin_roles: {
+          some: {
+            id: user.admin_role_id,
+          },
+        },
+      },
+      include: {
+        sub_menus: {
+          where: {
+            admin_roles: {
+              some: {
+                id: user.admin_role_id,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      ...user,
+      menu,
+    };
   }
 }

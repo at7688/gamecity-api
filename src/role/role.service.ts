@@ -9,14 +9,7 @@ export class RoleService {
     return this.prisma.adminRole.create({
       data,
       include: {
-        menu: {
-          where: {
-            root_menu: null,
-          },
-          include: {
-            sub_menus: true,
-          },
-        },
+        menu: true,
       },
     });
   }
@@ -24,14 +17,7 @@ export class RoleService {
   findAll() {
     return this.prisma.adminRole.findMany({
       include: {
-        menu: {
-          where: {
-            root_menu: null,
-          },
-          include: {
-            sub_menus: true,
-          },
-        },
+        menu: true,
       },
     });
   }
