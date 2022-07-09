@@ -179,7 +179,6 @@ model GamePlatform {
 model Game {
   id String @id @default(cuid())
   name String
-  code String @unique
   is_active Boolean
   sort Int
   platform GamePlatform @relation(fields: [platform_id], references: [id])

@@ -13,6 +13,9 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { MemberModule } from './member/member.module';
 import { AuthModule } from './auth/auth.module';
 import { MenuModule } from './menu/menu.module';
+import { ActivityPromoModule } from './activity-promo/activity-promo.module';
+import { BannerModule } from './banner/banner.module';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { MenuModule } from './menu/menu.module';
     MemberModule,
     AuthModule,
     MenuModule,
+    ActivityPromoModule,
+    BannerModule,
+    GameModule,
   ],
   controllers: [AppController],
   providers: [

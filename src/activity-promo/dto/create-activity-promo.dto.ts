@@ -1,0 +1,45 @@
+import { Prisma } from '@prisma/client';
+import {
+  IsBoolean,
+  IsInt,
+  IsISO8601,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+
+export class CreateActivityPromoDto implements Prisma.ActivityPromoCreateInput {
+  @IsString()
+  @IsNotEmpty()
+  pc_img: string;
+
+  @IsString()
+  @IsNotEmpty()
+  mb_img: string;
+
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @IsString()
+  @IsNotEmpty()
+  sub_title: string;
+
+  @IsString()
+  @IsNotEmpty()
+  content: string;
+
+  @IsBoolean()
+  is_active: boolean;
+
+  @IsInt()
+  sort: number;
+
+  @IsISO8601()
+  @IsOptional()
+  start_at?: string | Date;
+
+  @IsISO8601()
+  @IsOptional()
+  end_at?: string | Date;
+}
