@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ActivityPromoService } from './activity-promo.service';
 import { CreateActivityPromoDto } from './dto/create-activity-promo.dto';
 import { UpdateActivityPromoDto } from './dto/update-activity-promo.dto';
@@ -19,16 +27,19 @@ export class ActivityPromoController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.activityPromoService.findOne(+id);
+    return this.activityPromoService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateActivityPromoDto: UpdateActivityPromoDto) {
-    return this.activityPromoService.update(+id, updateActivityPromoDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateActivityPromoDto: UpdateActivityPromoDto,
+  ) {
+    return this.activityPromoService.update(id, updateActivityPromoDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.activityPromoService.remove(+id);
+    return this.activityPromoService.remove(id);
   }
 }

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { BannerService } from './banner.service';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
@@ -19,16 +27,16 @@ export class BannerController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.bannerService.findOne(+id);
+    return this.bannerService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBannerDto: UpdateBannerDto) {
-    return this.bannerService.update(+id, updateBannerDto);
+    return this.bannerService.update(id, updateBannerDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.bannerService.remove(+id);
+    return this.bannerService.remove(id);
   }
 }
