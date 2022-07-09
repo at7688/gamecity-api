@@ -9,6 +9,7 @@ env:
   ACTION_PATH: https://github.com/${{ github.repository }}/actions/runs/${{github.run_id}}
   APP_NAME: gamecity-api
   APP_ENV_NAME: gamecity-api-dev
+  AWS_REGION: ap-southeast-1
 
 jobs:
   build:
@@ -57,7 +58,7 @@ jobs:
           use_existing_version_if_available: true
           wait_for_deployment: true
           version_label: "${{ env.APP_ENV_NAME }}_${{ steps.current-time.outputs.formattedTime }}"
-          region: us-east-2
+          region: ${{ env.AWS_REGION }}
           deployment_package: deploy.zip
 
 
@@ -90,7 +91,7 @@ jobs:
 
             Branch: *${{ github.ref_name }}*
 
-            `${{ github.event.commits[0].message }}`
+            `${{ github.event.head_commit.message }}`
 
             Commit by *${{ github.actor }}*  [↗↗↗](${{ env.REPO_PATH }})
 
