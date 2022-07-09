@@ -1,8 +1,8 @@
 name: Dev CI
 on:
-  pull_request:
-    branches:
-      - main
+  push:
+    tags:
+      - v1.*.*
 
 env:
   REPO_PATH: https://github.com/${{ github.repository }}/commit/${{github.sha}}
@@ -57,7 +57,7 @@ jobs:
           environment_name: ${{ env.APP_ENV_NAME }}
           use_existing_version_if_available: true
           wait_for_deployment: true
-          version_label: "${{ env.APP_ENV_NAME }}_${{ steps.current-time.outputs.formattedTime }}"
+          version_label: "${{ env.APP_ENV_NAME }}_${{ github.ref_name }}"
           region: ${{ env.AWS_REGION }}
           deployment_package: deploy.zip
 
