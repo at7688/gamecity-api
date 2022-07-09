@@ -10,53 +10,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    String  @id @default(cuid())
-  email String  @unique
-  name  String?
-  password String
-  auth_token AuthToken?
-  operations OperationRec[]
-  role Role @relation(fields: [role_id], references: [id])
-  role_id String
-  is_active Boolean @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+// 管理員帳號
+model AdminUser {
+  id            String         @id @default(cuid())
+  username      String         @unique
+  password      String
+  nickname      String?
+  operations    OperationRec[]
+  admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
+  admin_role_id String
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
 }
 
+// 權限
 model Permission {
-  id    String  @id @default(cuid())
-  name  String @unique
+  id         String @id @default(cuid())
+  name       String @unique
   controller String
-  handler String
-  role Role[]
+  handler    String
+  menus      Menu[]
 
   @@unique([controller, handler], name: "controller_handler")
 }
 
-model Role {
-  id    String  @id @default(cuid())
-  name String
-  code String @unique
-  permissions Permission[]
-  users User[]
+// 管理員角色
+model AdminRole {
+  id    String      @id @default(cuid())
+  name  String
+  code  String      @unique
+  menu  Menu[]
+  users AdminUser[]
 
 }
 
+// 操作記錄
 model OperationRec {
-  id  Int @id @default(autoincrement())
-  controller String
-  handler String
-  operator User @relation(fields: [operator_id], references: [id])
+  id          Int       @id @default(autoincrement())
+  controller  String
+  handler     String
+  operator    AdminUser @relation(fields: [operator_id], references: [id])
   operator_id String
-  reqBody Json?
-  path String
-  target_id String?
-  method String
-  operated_at DateTime @default(now())
+  reqBody     Json?
+  path        String
+  target_id   String?
+  method      String
+  operated_at DateTime  @default(now())
 }
 
-
+// 最新消息
 enum AnnouncementType {
   GAME
   OPERATION
@@ -64,37 +67,120 @@ enum AnnouncementType {
   SERVICE
 }
 
-
-enum Platform {
-  MAIN
-  SECONDARY
-  ALL
+// 最新消息
+model Announcement {
+  id         String           @id @default(cuid())
+  title      String
+  content    String?
+  start_at   DateTime?        @db.Timestamp()
+  end_at     DateTime?        @db.Timestamp()
+  created_at DateTime         @default(now())
+  updated_at DateTime         @updatedAt
+  type       AnnouncementType
+  is_active  Boolean          @default(true)
+  link       String?
+  is_new_win Boolean          @default(false)
+  is_top     Boolean          @default(false)
+  sort       Int              @default(autoincrement())
 }
 
+// 選單
+model Menu {
+  id          String       @id @default(cuid())
+  name        String
+  permissions Permission[]
 
-model Announcement {
-  id String @id @default(cuid())
-  title String
-  content String?
-  start_at DateTime? @db.Timestamp()
-  end_at DateTime? @db.Timestamp()
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  type AnnouncementType
-  is_active Boolean @default(true)
-  link String?
-  is_new_win Boolean @default(false)
-  is_top Boolean @default(false)
+  admin_roles AdminRole[]
+
+  root_menu_id String?
+  root_menu    Menu?   @relation("root", fields: [root_menu_id], references: [id])
+  sub_menus    Menu[]  @relation("root")
   sort Int @default(autoincrement())
 }
 
-
-model AuthToken {
-  id String @id @default(cuid())
-  token String @unique
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  user_id String @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+enum MemberType {
+  PLAYER
+  AGENT
 }
 
+// 階層會員
+model Member {
+  id         String     @id @default(cuid())
+  username   String     @unique
+  password   String
+  nickname   String
+  promo_code String?    @unique()
+  type       MemberType
+  layer Int @default(1)
+  is_active Boolean  @default(true)
+
+  parent    Member? @relation("agent", fields: [parent_id], references: [id])
+  parent_id String?
+  subs Member[] @relation("agent")
+
+
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  login_at DateTime?
+}
+
+// 活動曝光
+model ActivityPromo {
+  id String @id @default(cuid())
+  pc_img String
+  mb_img String
+  title String
+  sub_title String
+  content String
+  is_active Boolean
+  sort Int
+  start_at   DateTime?        @db.Timestamp()
+  end_at     DateTime?        @db.Timestamp()
+}
+
+// 輪播圖
+model Banner {
+  id String @id @default(cuid())
+  pc_img String
+  mb_img String
+  name String
+  is_active Boolean
+  sort Int
+  start_at   DateTime?        @db.Timestamp()
+  end_at     DateTime?        @db.Timestamp()
+}
+
+// 遊戲類型
+model GameCategory {
+  id Int @id @default(autoincrement())
+  name String
+  platforms GamePlatform[]
+}
+
+enum GamePlatformStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+}
+
+// 遊戲平台
+model GamePlatform {
+  id String @id @default(cuid())
+  name String
+  code String @unique
+  status GamePlatformStatus
+  sort Int
+  games Game[]
+  category GameCategory @relation(fields: [category_id], references: [id])
+  category_id Int
+}
+
+// 遊戲
+model Game {
+  id String @id @default(cuid())
+  name String
+  is_active Boolean
+  sort Int
+  platform GamePlatform @relation(fields: [platform_id], references: [id])
+  platform_id String
+}

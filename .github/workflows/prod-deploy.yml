@@ -1,0 +1,100 @@
+name: Dev CI
+on:
+  push:
+    tags:
+      - v1.*.*
+
+env:
+  REPO_PATH: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+  ACTION_PATH: https://github.com/${{ github.repository }}/actions/runs/${{github.run_id}}
+  APP_NAME: gamecity-api
+  APP_ENV_NAME: gamecity-api-prod
+  AWS_REGION: ap-southeast-1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:latest
+
+  deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYMMDDHHmm
+          utcOffset: "+08:00"
+
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v20
+        continue-on-error: true
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ env.APP_NAME }}
+          environment_name: ${{ env.APP_ENV_NAME }}
+          use_existing_version_if_available: true
+          wait_for_deployment: true
+          version_label: "${{ env.APP_ENV_NAME }}_${{ github.ref_name }}"
+          region: ${{ env.AWS_REGION }}
+          deployment_package: deploy.zip
+
+
+      - name: Telegram succeeded notification
+        if: ${{ success() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            🎉 *${{ env.APP_ENV_NAME }}* *[${{ job.status }}]*
+
+            Branch: *${{ github.ref_name }}*
+
+            `${{ github.event.commits[0].message }}`
+
+            Commit by *${{ github.actor }}*  [↗↗↗](${{ env.REPO_PATH }})
+
+      - name: Telegram failed notification
+        continue-on-error: true
+        if: ${{ failure() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            🥲 *${{ env.APP_ENV_NAME }}* *[${{ job.status }}]*
+
+            Branch: *${{ github.ref_name }}*
+
+            `${{ github.event.head_commit.message }}`
+
+            Commit by *${{ github.actor }}*  [↗↗↗](${{ env.REPO_PATH }})
+
+            💣 Workflow: [↗↗↗](${{ env.ACTION_PATH }})
+
+            --------------------------

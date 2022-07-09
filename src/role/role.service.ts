@@ -1,23 +1,38 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Role, Permission } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @Injectable()
 export class RoleService {
   constructor(private readonly prisma: PrismaService) {}
-  create(data: Prisma.RoleCreateInput) {
-    return this.prisma.role.create({ data, include: { permissions: true } });
+  create({ menu_ids, ...data }: CreateRoleDto) {
+    return this.prisma.adminRole.create({
+      data: {
+        ...data,
+        menu: {
+          connect: menu_ids.map((per_id) => ({ id: per_id })),
+        },
+      },
+      include: {
+        menu: true,
+      },
+    });
   }
 
   findAll() {
-    return this.prisma.role.findMany();
+    return this.prisma.adminRole.findMany({
+      include: {
+        menu: true,
+      },
+    });
   }
 
   findOne(id: string) {
-    return this.prisma.role.findUnique({
+    return this.prisma.adminRole.findUnique({
       where: { id },
       include: {
-        permissions: {
+        menu: {
           select: {
             id: true,
             name: true,
@@ -27,15 +42,20 @@ export class RoleService {
     });
   }
 
-  update(id: string, data: Prisma.RoleUpdateInput) {
-    return this.prisma.role.update({
+  update(id: string, { menu_ids, ...data }: UpdateRoleDto) {
+    return this.prisma.adminRole.update({
       where: { id },
-      data,
-      include: { permissions: true },
+      data: {
+        ...data,
+        menu: {
+          set: menu_ids.map((per_id) => ({ id: per_id })),
+        },
+      },
+      include: { menu: true },
     });
   }
 
   remove(id: string) {
-    return this.prisma.role.delete({ where: { id } });
+    return this.prisma.adminRole.delete({ where: { id } });
   }
 }

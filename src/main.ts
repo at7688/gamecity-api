@@ -12,13 +12,13 @@ async function bootstrap() {
 
   app.enableCors();
   app.use(helmet());
-  // app.use(
-  //   session({
-  //     secret: 'mycat',
-  //     resave: false,
-  //     saveUninitialized: false,
-  //   }),
-  // );
+  app.use(
+    session({
+      secret: 'happyhour',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

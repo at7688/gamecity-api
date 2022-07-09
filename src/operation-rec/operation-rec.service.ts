@@ -19,7 +19,7 @@ export class OperationRecService {
           {
             operator: user_key
               ? {
-                  OR: [{ id: user_key }, { email: user_key }],
+                  OR: [{ id: user_key }, { username: user_key }],
                 }
               : undefined,
             target_id,
@@ -32,9 +32,9 @@ export class OperationRecService {
         operator: {
           select: {
             id: true,
-            name: true,
-            email: true,
-            role: true,
+            username: true,
+            nickname: true,
+            admin_role: true,
           },
         },
       },
@@ -62,7 +62,7 @@ export class OperationRecService {
         controller: { equals: 'AuthController' },
         operator: user_key
           ? {
-              OR: [{ id: user_key }, { email: user_key }],
+              OR: [{ id: user_key }, { username: user_key }],
             }
           : undefined,
       },
@@ -70,9 +70,9 @@ export class OperationRecService {
         operator: {
           select: {
             id: true,
-            name: true,
-            role: true,
-            email: true,
+            username: true,
+            nickname: true,
+            admin_role: true,
           },
         },
       },

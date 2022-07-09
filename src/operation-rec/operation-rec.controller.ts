@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   Query,
+  Session,
+  Request,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { SearchAuthOperationRecDto } from './dto/search-auth-operation-rec.dto';
@@ -28,7 +30,8 @@ export class OperationRecController {
   }
 
   @Get('auth')
-  findAuthAll(@Query() query: SearchAuthOperationRecDto) {
+  findAuthAll(@Query() query: SearchAuthOperationRecDto, @Request() req) {
+    // console.log(req.session.user);
     return this.operationRecService.findAuthAll(query);
   }
 

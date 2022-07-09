@@ -3,9 +3,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SigninDto {
   @IsNotEmpty()
-  @IsEmail()
-  @ApiProperty({ default: 'summer@gmail.com' })
-  email: string;
+  @IsString()
+  @ApiProperty({ default: 'summer' })
+  username: string;
 
   @IsNotEmpty()
   @IsString()

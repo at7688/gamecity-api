@@ -6,7 +6,7 @@ import {
   NestInterceptor,
   UseInterceptors,
 } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { AdminUser, Member } from '@prisma/client';
 import { map, Observable } from 'rxjs';
 import { OperationRecService } from '../operation-rec/operation-rec.service';
 
@@ -22,8 +22,9 @@ export class OperationInterceptor implements NestInterceptor {
     const [req, res] = context.getArgs();
     return next.handle().pipe(
       map(async (data) => {
-        const user: User = req.user || data.user;
-        if (req.method !== 'GET' && user) {
+        const user: AdminUser | Member = req.session.user;
+
+        if (user && 'admin_role_id' in user && req.method !== 'GET' && user) {
           if (req.body.password) {
             req.body.password = '***';
           }
