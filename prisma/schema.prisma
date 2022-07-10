@@ -15,7 +15,7 @@ model AdminUser {
   id            String         @id @default(cuid())
   username      String         @unique
   password      String
-  nickname      String?
+  nickname      String
   operations    OperationRec[]
   admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
   admin_role_id String
@@ -96,6 +96,9 @@ model Menu {
   root_menu    Menu?   @relation("root", fields: [root_menu_id], references: [id])
   sub_menus    Menu[]  @relation("root")
   sort Int @default(autoincrement())
+
+  icon String?
+  path String?
 }
 
 enum MemberType {

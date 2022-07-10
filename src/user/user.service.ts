@@ -72,6 +72,7 @@ export class UserService {
     return await this.prisma.adminUser.create({
       data: {
         username: data.username,
+        nickname: data.nickname,
         admin_role: {
           connect: { id: data.admin_role_id },
         },
