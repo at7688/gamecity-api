@@ -27,6 +27,10 @@ async function bootstrap() {
       secret: 'happyhour',
       resave: false,
       saveUninitialized: false,
+      cookie: {
+        sameSite: 'none',
+        secure: true,
+      },
     }),
   );
   app.useGlobalPipes(
