@@ -9,10 +9,16 @@ const port = process.env.PORT || 8080;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  console.log(process.env.NODE_ENV);
   app.enableCors({
-    origin:
-      process.env.NODE_ENV === 'development' ? ['http://localhost:8809'] : '*',
+    origin: [
+      'http://localhost:8809',
+      'http://dev.gamecity-admin.techcake.net',
+      'http://gamecity-admin.techcake.net',
+      'http://gamecity-agent.techcake.net',
+      'http://dev.gamecity-agent.techcake.net',
+      'http://gamecity-client.techcake.net',
+      'http://dev.gamecity-client.techcake.net',
+    ],
     credentials: true,
   });
   app.use(helmet());
