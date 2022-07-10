@@ -18,7 +18,7 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsString()
-  name: string;
+  nickname: string;
 
   @IsNotEmpty()
   @IsString()

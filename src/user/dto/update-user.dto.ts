@@ -4,7 +4,11 @@ import { IsOptional, IsString } from 'class-validator';
 import { CreateUserDto } from './create-user.dto';
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @Exclude()
-  email: string;
+  username: string;
+
+  @IsString()
+  @IsOptional()
+  nickname: string;
 
   @IsString()
   @IsOptional()
