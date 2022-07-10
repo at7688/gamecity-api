@@ -9,16 +9,9 @@ const port = process.env.PORT || 8080;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.enableCors({
-    origin: [
-      'https://localhost:8809',
-      'https://dev.gamecity-admin.techcake.net',
-      'https://gamecity-admin.techcake.net',
-      'https://gamecity-agent.techcake.net',
-      'https://dev.gamecity-agent.techcake.net',
-      'https://gamecity-client.techcake.net',
-      'https://dev.gamecity-client.techcake.net',
-    ],
+    origin: [/\.techcake\.net/, /localhost/],
     credentials: true,
   });
   app.use(helmet());
@@ -27,6 +20,11 @@ async function bootstrap() {
       secret: 'happyhour',
       resave: false,
       saveUninitialized: false,
+      cookie: {
+        sameSite: 'none',
+        secure: true,
+        domain: '.techcake.net',
+      },
     }),
   );
   app.useGlobalPipes(
