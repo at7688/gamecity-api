@@ -12,12 +12,12 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:8809',
-      'http://dev.gamecity-admin.techcake.net',
-      'http://gamecity-admin.techcake.net',
-      'http://gamecity-agent.techcake.net',
-      'http://dev.gamecity-agent.techcake.net',
-      'http://gamecity-client.techcake.net',
-      'http://dev.gamecity-client.techcake.net',
+      'https://dev.gamecity-admin.techcake.net',
+      'https://gamecity-admin.techcake.net',
+      'https://gamecity-agent.techcake.net',
+      'https://dev.gamecity-agent.techcake.net',
+      'https://gamecity-client.techcake.net',
+      'https://dev.gamecity-client.techcake.net',
     ],
     credentials: true,
   });
