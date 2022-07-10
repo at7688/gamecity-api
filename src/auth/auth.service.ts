@@ -11,7 +11,6 @@ export class AuthService {
     const users = await this.prisma.member.findMany({
       where: { username, type: 'AGENT' },
     });
-    console.log(users);
 
     if (!users.length) {
       throw new BadRequestException('user is not exist');
@@ -40,8 +39,10 @@ export class AuthService {
               },
             },
           },
+          orderBy: { sort: 'asc' },
         },
       },
+      orderBy: { sort: 'asc' },
     });
 
     const permissions = await this.prisma.permission.findMany({
@@ -81,12 +82,29 @@ export class AuthService {
       throw new BadRequestException('bad password');
     }
 
+    if (user.admin_role.code === 'MASTER') {
+      const menu = await this.prisma.menu.findMany({
+        where: { root_menu: null },
+        include: {
+          sub_menus: {
+            orderBy: { sort: 'asc' },
+          },
+        },
+        orderBy: { sort: 'asc' },
+      });
+
+      return {
+        user,
+        menu,
+      };
+    }
+
     const menu = await this.prisma.menu.findMany({
       where: {
         root_menu: null,
         admin_roles: {
           some: {
-            id: user.admin_role_id,
+            code: user.admin_role.code,
           },
         },
       },
@@ -95,12 +113,14 @@ export class AuthService {
           where: {
             admin_roles: {
               some: {
-                id: user.admin_role_id,
+                code: user.admin_role.code,
               },
             },
           },
+          orderBy: { sort: 'asc' },
         },
       },
+      orderBy: { sort: 'asc' },
     });
 
     const permissions = await this.prisma.permission.findMany({
@@ -109,7 +129,7 @@ export class AuthService {
           some: {
             admin_roles: {
               some: {
-                id: user.admin_role_id,
+                code: user.admin_role.code,
               },
             },
           },
