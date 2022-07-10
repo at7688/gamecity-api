@@ -13,6 +13,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [/\.techcake\.net/, /localhost/],
     credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTION'],
   });
   app.use(helmet());
   app.use(
@@ -23,7 +24,10 @@ async function bootstrap() {
       cookie: {
         sameSite: 'none',
         secure: true,
-        domain: '.techcake.net',
+        // domain: '.techcake.net',
+        maxAge: 1000 * 60 * 60 * 24, // 一天
+        path: '/',
+        httpOnly: true,
       },
     }),
   );
