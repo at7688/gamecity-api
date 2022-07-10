@@ -9,9 +9,10 @@ const port = process.env.PORT || 8080;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  console.log(process.env.NODE_ENV);
   app.enableCors({
-    origin: ['http://localhost:8809', '*'],
+    origin:
+      process.env.NODE_ENV === 'development' ? ['http://localhost:8809'] : '*',
     credentials: true,
   });
   app.use(helmet());
