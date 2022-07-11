@@ -20,13 +20,7 @@ async function bootstrap() {
       process.env.NODE_ENV === 'development' ? httpsOptions : undefined,
   });
 
-  app.enableCors({
-    origin: [/\.techcake\.net/, /localhost/],
-    credentials: true,
-    // methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTION'],
-    // exposedHeaders: ['Set-Cookie'],
-    // allowedHeaders: ['Set-Cookie'],
-  });
+  app.enableCors();
   app.use(helmet());
   app.use(
     session({
@@ -36,10 +30,10 @@ async function bootstrap() {
       cookie: {
         // sameSite: 'none',
         secure: true,
-        domain: '.techcake.net',
-        maxAge: 1000 * 60 * 60, // 1小時
+        // domain: '.techcake.net',
+        // maxAge: 1000 * 60 * 60, // 1小時
         // path: '/',
-        httpOnly: true,
+        // httpOnly: true,
       },
     }),
   );
