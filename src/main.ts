@@ -36,7 +36,7 @@ async function bootstrap() {
       cookie: {
         sameSite: 'none',
         secure: true,
-        // domain: '.techcake.net',
+        domain: '.techcake.net',
         maxAge: 1000 * 60 * 60, // 1小時
         // path: '/',
         httpOnly: true,
