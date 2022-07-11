@@ -10,8 +10,8 @@ const port = process.env.PORT || 8080;
 
 async function bootstrap() {
   const httpsOptions: HttpsOptions = {
-    key: fs.readFileSync('./secrets/localhost-key.pem'),
-    cert: fs.readFileSync('./secrets/localhost.pem'),
+    key: fs.readFileSync('./secrets/local.techcake.net-key.pem'),
+    cert: fs.readFileSync('./secrets/local.techcake.net.pem'),
     // honorCipherOrder: true,
     // requestCert: true,
   };
@@ -34,7 +34,7 @@ async function bootstrap() {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        sameSite: 'none',
+        // sameSite: 'none',
         secure: true,
         domain: '.techcake.net',
         maxAge: 1000 * 60 * 60, // 1小時
