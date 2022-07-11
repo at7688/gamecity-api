@@ -4,16 +4,26 @@ import * as session from 'express-session';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
-
+import { HttpsOptions } from '@nestjs/common/interfaces/external/https-options.interface';
+import * as fs from 'fs';
 const port = process.env.PORT || 8080;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const httpsOptions: HttpsOptions = {
+    key: fs.readFileSync('./secrets/localhost-key.pem'),
+    cert: fs.readFileSync('./secrets/localhost.pem'),
+  };
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions:
+      process.env.NODE_ENV === 'development' ? httpsOptions : undefined,
+  });
 
   app.enableCors({
     origin: [/\.techcake\.net/, /localhost/],
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTION'],
+    // methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTION'],
+    // exposedHeaders: ['Set-Cookie'],
+    // allowedHeaders: ['Set-Cookie'],
   });
   app.use(helmet());
   app.use(
@@ -25,8 +35,8 @@ async function bootstrap() {
         sameSite: 'none',
         secure: true,
         // domain: '.techcake.net',
-        maxAge: 1000 * 60 * 60 * 24, // 一天
-        path: '/',
+        maxAge: 1000 * 60 * 60, // 1小時
+        // path: '/',
         httpOnly: true,
       },
     }),
