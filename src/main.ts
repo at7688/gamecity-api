@@ -12,6 +12,8 @@ async function bootstrap() {
   const httpsOptions: HttpsOptions = {
     key: fs.readFileSync('./secrets/localhost-key.pem'),
     cert: fs.readFileSync('./secrets/localhost.pem'),
+    honorCipherOrder: true,
+    // requestCert: true,
   };
   const app = await NestFactory.create(AppModule, {
     httpsOptions:
@@ -19,7 +21,7 @@ async function bootstrap() {
         ? httpsOptions
         : {
             honorCipherOrder: true,
-            requestCert: true,
+            // requestCert: true,
           },
   });
 
