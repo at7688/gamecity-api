@@ -17,7 +17,11 @@ async function bootstrap() {
   };
   const app = await NestFactory.create(AppModule, {
     httpsOptions:
-      process.env.NODE_ENV === 'development' ? httpsOptions : undefined,
+      process.env.NODE_ENV === 'development'
+        ? httpsOptions
+        : {
+            honorCipherOrder: false,
+          },
   });
 
   app.enableCors({
