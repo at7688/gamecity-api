@@ -15,12 +15,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Set outputs
-        id: vars
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      - name: Check outputs
-        run: echo ${{ steps.vars.outputs.sha_short }}
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -34,7 +28,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:${{ steps.vars.outputs.sha_short }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:${{github.run_id}}
 
   deploy:
     needs: [build]
@@ -68,6 +62,11 @@ jobs:
           deployment_package: deploy.zip
 
 
+  notify:
+    continue-on-error: true
+    needs: [deploy, build]
+    runs-on: ubuntu-latest
+    steps:
       - name: Telegram succeeded notification
         if: ${{ success() }}
         uses: appleboy/telegram-action@master
