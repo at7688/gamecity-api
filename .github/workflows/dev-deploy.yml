@@ -1,4 +1,4 @@
-name: Dev CI
+name: Dev Deploy
 on:
   push:
     branches:
@@ -15,6 +15,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: Check outputs
+        run: echo ${{ steps.vars.outputs.sha_short }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -28,7 +34,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:${{ steps.vars.outputs.sha_short }}
 
   deploy:
     needs: [build]
@@ -74,7 +80,7 @@ jobs:
 
             Branch: *${{ github.ref_name }}*
 
-            `${{ github.event.commits[0].message }}`
+            `${{ github.event.head_commit.message }}`
 
             Commit by *${{ github.actor }}*  [↗↗↗](${{ env.REPO_PATH }})
 
