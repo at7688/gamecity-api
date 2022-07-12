@@ -1,4 +1,4 @@
-name: Dev CI
+name: Prod Deploy
 on:
   push:
     tags:

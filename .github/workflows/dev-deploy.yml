@@ -2,7 +2,7 @@ name: Dev Deploy
 on:
   push:
     branches:
-      - "dev"
+      - "ci-test"
 
 env:
   REPO_PATH: https://github.com/${{ github.repository }}/commit/${{github.sha}}
@@ -15,12 +15,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Set outputs
-        id: vars
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      - name: Check outputs
-        run: echo ${{ steps.vars.outputs.sha_short }}
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -34,7 +28,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:${{ steps.vars.outputs.sha_short }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:${{github.run_id}}
 
   deploy:
     needs: [build]
@@ -47,27 +41,32 @@ jobs:
           format: YYMMDDHHmm
           utcOffset: "+08:00"
 
-      - name: Checkout source code
-        uses: actions/checkout@v2
+      # - name: Checkout source code
+      #   uses: actions/checkout@v2
 
-      - name: Generate deployment package
-        run: zip -r deploy.zip . -x '*.git*'
+      # - name: Generate deployment package
+      #   run: zip -r deploy.zip . -x '*.git*'
 
-      - name: Deploy to EB
-        uses: einaregilsson/beanstalk-deploy@v20
-        continue-on-error: true
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: ${{ env.APP_NAME }}
-          environment_name: ${{ env.APP_ENV_NAME }}
-          use_existing_version_if_available: true
-          wait_for_deployment: true
-          version_label: "${{ env.APP_ENV_NAME }}_${{ steps.current-time.outputs.formattedTime }}"
-          region: ${{ env.AWS_REGION }}
-          deployment_package: deploy.zip
+      # - name: Deploy to EB
+      #   uses: einaregilsson/beanstalk-deploy@v20
+      #   continue-on-error: true
+      #   with:
+      #     aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     application_name: ${{ env.APP_NAME }}
+      #     environment_name: ${{ env.APP_ENV_NAME }}
+      #     use_existing_version_if_available: true
+      #     wait_for_deployment: true
+      #     version_label: "${{ env.APP_ENV_NAME }}_${{ steps.current-time.outputs.formattedTime }}"
+      #     region: ${{ env.AWS_REGION }}
+      #     deployment_package: deploy.zip
 
 
+  notify:
+    continue-on-error: true
+    needs: [deploy, build]
+    runs-on: ubuntu-latest
+    steps:
       - name: Telegram succeeded notification
         if: ${{ success() }}
         uses: appleboy/telegram-action@master
