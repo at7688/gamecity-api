@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SigninDto } from './dto/signin.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async agentValidate({ username, password }: SigninDto) {
     const users = await this.prisma.member.findMany({
@@ -45,24 +49,14 @@ export class AuthService {
       orderBy: { sort: 'asc' },
     });
 
-    const permissions = await this.prisma.permission.findMany({
-      where: {
-        menus: {
-          some: {
-            admin_roles: {
-              some: {
-                code: 'AGENT',
-              },
-            },
-          },
-        },
-      },
-    });
-
     return {
       user,
       menu,
-      permissions,
+      access_token: this.jwtService.sign({
+        username: user.username,
+        sub: user.id,
+        agent: user.type === 'AGENT',
+      }),
     };
   }
 
@@ -96,6 +90,10 @@ export class AuthService {
       return {
         user,
         menu,
+        access_token: this.jwtService.sign({
+          username: user.username,
+          sub: user.id,
+        }),
       };
     }
 
@@ -123,24 +121,13 @@ export class AuthService {
       orderBy: { sort: 'asc' },
     });
 
-    const permissions = await this.prisma.permission.findMany({
-      where: {
-        menus: {
-          some: {
-            admin_roles: {
-              some: {
-                code: user.admin_role.code,
-              },
-            },
-          },
-        },
-      },
-    });
-
     return {
       user,
       menu,
-      permissions,
+      access_token: this.jwtService.sign({
+        username: user.username,
+        sub: user.id,
+      }),
     };
   }
 }

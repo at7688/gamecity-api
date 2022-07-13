@@ -9,14 +9,8 @@ export class AgentController {
 
   @Post('login')
   @Public()
-  async login(@Body() body: SigninDto, @Session() session) {
-    const res = await this.authService.agentValidate(body);
-    session.user = res.user;
-    session.permissions = res.permissions;
-    return {
-      ...res.user,
-      menu: res.menu,
-    };
+  async login(@Body() body: SigninDto) {
+    return this.authService.agentValidate(body);
   }
 
   @Post('logout')

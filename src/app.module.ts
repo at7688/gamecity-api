@@ -16,6 +16,7 @@ import { MenuModule } from './menu/menu.module';
 import { ActivityPromoModule } from './activity-promo/activity-promo.module';
 import { BannerModule } from './banner/banner.module';
 import { GameModule } from './game/game.module';
+import { JwtStrategy } from './auth/jwt.strategy';
 
 @Module({
   imports: [

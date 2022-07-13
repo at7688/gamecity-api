@@ -1,42 +1,15 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import * as session from 'express-session';
-import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
-import { HttpsOptions } from '@nestjs/common/interfaces/external/https-options.interface';
-import * as fs from 'fs';
+import { AppModule } from './app.module';
 const port = process.env.PORT || 8080;
 
 async function bootstrap() {
-  const httpsOptions: HttpsOptions = {
-    key: fs.readFileSync('./secrets/local.techcake.net-key.pem'),
-    cert: fs.readFileSync('./secrets/local.techcake.net.pem'),
-    // honorCipherOrder: true,
-    // requestCert: true,
-  };
-  const app = await NestFactory.create(AppModule, {
-    httpsOptions:
-      process.env.NODE_ENV === 'development' ? httpsOptions : undefined,
-  });
+  const app = await NestFactory.create(AppModule);
 
   app.enableCors();
   app.use(helmet());
-  app.use(
-    session({
-      secret: 'happyhour',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        // sameSite: 'none',
-        secure: true,
-        // domain: '.techcake.net',
-        // maxAge: 1000 * 60 * 60, // 1小時
-        // path: '/',
-        // httpOnly: true,
-      },
-    }),
-  );
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
