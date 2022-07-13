@@ -51,6 +51,9 @@ export class AuthService {
 
     return {
       user,
+      // role: await this.prisma.adminRole.findUnique({
+      //   where: { code: 'AGENT' },
+      // }),
       menu,
       access_token: this.jwtService.sign({
         username: user.username,
@@ -89,6 +92,7 @@ export class AuthService {
 
       return {
         user,
+        // role: user.admin_role,
         menu,
         access_token: this.jwtService.sign({
           username: user.username,

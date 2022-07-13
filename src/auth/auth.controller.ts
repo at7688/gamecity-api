@@ -16,7 +16,6 @@ export class AuthController {
   @Post('logout')
   @Public()
   async logout(@Request() req) {
-    req.session.user = null;
     return { success: true };
   }
 }

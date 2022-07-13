@@ -24,7 +24,7 @@ export class OperationInterceptor implements NestInterceptor {
       map(async (data) => {
         const user: AdminUser | Member = req.user;
 
-        if (user && 'admin_role_id' in user && req.method !== 'GET' && user) {
+        if (user && 'admin_role_id' in user && req.method !== 'GET') {
           if (req.body.password) {
             req.body.password = '***';
           }

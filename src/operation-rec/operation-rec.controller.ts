@@ -31,7 +31,6 @@ export class OperationRecController {
 
   @Get('auth')
   findAuthAll(@Query() query: SearchAuthOperationRecDto, @Request() req) {
-    // console.log(req.session.user);
     return this.operationRecService.findAuthAll(query);
   }
 

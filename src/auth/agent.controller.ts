@@ -15,7 +15,6 @@ export class AgentController {
 
   @Post('logout')
   async logout(@Request() req) {
-    req.session.user = null;
     return { success: true };
   }
 }
