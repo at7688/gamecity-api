@@ -1,5 +1,10 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import {
+  CacheModule,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -17,6 +22,7 @@ import { ActivityPromoModule } from './activity-promo/activity-promo.module';
 import { BannerModule } from './banner/banner.module';
 import { GameModule } from './game/game.module';
 import { JwtStrategy } from './auth/jwt.strategy';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -36,6 +42,21 @@ import { JwtStrategy } from './auth/jwt.strategy';
     ActivityPromoModule,
     BannerModule,
     GameModule,
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      isGlobal: true,
+      useFactory: async (configService: ConfigService) => ({
+        ttl: configService.get('CACHE_TTL'),
+
+        max: 500,
+        store: redisStore,
+
+        // Store-specific configuration:
+        host: configService.get('REDIS_HOST'),
+        port: configService.get('REDIS_PORT'),
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [AppController],
   providers: [

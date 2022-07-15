@@ -22,6 +22,8 @@ model AdminUser {
   is_active     Boolean        @default(true)
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
+
+  // access_token
 }
 
 // 權限
@@ -44,6 +46,13 @@ model AdminRole {
   users AdminUser[]
 
 }
+
+// model AccessToken {
+//   id Int @id @default(autoincrement())
+//   admin_user AdminUser @relation(fields: [admin_user_id], references: [id])
+//   admin_user_id String
+//   // agent Member
+// }
 
 // 操作記錄
 model OperationRec {
