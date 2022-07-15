@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  CacheModule,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { AppController } from './app.controller';
@@ -36,6 +41,7 @@ import { JwtStrategy } from './auth/jwt.strategy';
     ActivityPromoModule,
     BannerModule,
     GameModule,
+    CacheModule.register({ isGlobal: true, ttl: 60 * 60, max: 500 }),
   ],
   controllers: [AppController],
   providers: [

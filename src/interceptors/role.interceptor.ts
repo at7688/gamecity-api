@@ -1,12 +1,15 @@
 import {
+  CACHE_MANAGER,
   CallHandler,
   ExecutionContext,
   ForbiddenException,
+  Inject,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AdminUser, Member, Permission } from '@prisma/client';
+import { Cache } from 'cache-manager';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY, IS_ROLE_PUBLIC_KEY } from 'src/meta-consts';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -16,13 +19,14 @@ export class RoleInterceptor implements NestInterceptor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly reflector: Reflector,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   async intercept(
     context: ExecutionContext,
     next: CallHandler<any>,
   ): Promise<Observable<any>> {
     const req = context.switchToHttp().getRequest();
-    // console.log(req);
+
     const controller = context.getClass();
     const handler = context.getHandler();
 
@@ -44,23 +48,13 @@ export class RoleInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const role_code = req.user.agent ? 'AGENT' : req.user.admin_role?.code;
+    const permissions = await this.cacheManager.get<Permission[]>(
+      req.user.username,
+    );
 
-    const permissions = await this.prisma.permission.findMany({
-      where: {
-        menus: {
-          some: {
-            admin_roles: {
-              some: {
-                code: role_code,
-              },
-            },
-          },
-        },
-      },
-    });
+    console.log(permissions);
 
-    const i = permissions.findIndex(
+    const i = permissions?.findIndex(
       (t) => t.controller === controller.name && t.handler === handler.name,
     );
 
