@@ -22,6 +22,8 @@ import { ActivityPromoModule } from './activity-promo/activity-promo.module';
 import { BannerModule } from './banner/banner.module';
 import { GameModule } from './game/game.module';
 import { JwtStrategy } from './auth/jwt.strategy';
+import * as redisStore from 'cache-manager-redis-store';
+import type { ClientOpts } from 'redis';
 
 @Module({
   imports: [
@@ -41,7 +43,16 @@ import { JwtStrategy } from './auth/jwt.strategy';
     ActivityPromoModule,
     BannerModule,
     GameModule,
-    CacheModule.register({ isGlobal: true, ttl: 60 * 60, max: 500 }),
+    CacheModule.register<ClientOpts>({
+      isGlobal: true,
+      ttl: 60 * 60, // 1h
+      max: 500,
+      store: redisStore,
+
+      // Store-specific configuration:
+      host: 'localhost',
+      port: 6379,
+    }),
   ],
   controllers: [AppController],
   providers: [
