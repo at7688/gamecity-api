@@ -52,8 +52,6 @@ export class RoleInterceptor implements NestInterceptor {
       req.user.username,
     );
 
-    console.log(permissions);
-
     const i = permissions?.findIndex(
       (t) => t.controller === controller.name && t.handler === handler.name,
     );
