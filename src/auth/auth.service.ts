@@ -9,6 +9,7 @@ import { Menu } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { Cache } from 'cache-manager';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TasksService } from 'src/tasks/tasks.service';
 import { SigninDto } from './dto/signin.dto';
 
 export type MenuWithSubMenu = Menu & {
@@ -20,6 +21,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly tasks: TasksService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 

@@ -22,7 +22,9 @@ import { ActivityPromoModule } from './activity-promo/activity-promo.module';
 import { BannerModule } from './banner/banner.module';
 import { GameModule } from './game/game.module';
 import { JwtStrategy } from './auth/jwt.strategy';
+import { TasksService } from './tasks/tasks.service';
 import * as redisStore from 'cache-manager-redis-store';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -42,6 +44,7 @@ import * as redisStore from 'cache-manager-redis-store';
     ActivityPromoModule,
     BannerModule,
     GameModule,
+    ScheduleModule.forRoot(),
     CacheModule.registerAsync({
       imports: [ConfigModule],
       isGlobal: true,
