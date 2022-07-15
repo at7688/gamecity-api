@@ -18,6 +18,8 @@ model AdminUser {
   updated_at    DateTime       @updatedAt
   admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
   operations    OperationRec[]
+
+  inboxs Inbox[]
 }
 
 model Permission {
@@ -95,6 +97,9 @@ model Member {
   login_at   DateTime?
   parent     Member?    @relation("agent", fields: [parent_id], references: [id])
   subs       Member[]   @relation("agent")
+
+  sended_inboxs   Inbox[] @relation("from")
+  received_inboxs Inbox[] @relation("to")
 }
 
 model ActivityPromo {
@@ -145,6 +150,39 @@ model Game {
   sort        Int
   platform_id String
   platform    GamePlatform @relation(fields: [platform_id], references: [id])
+}
+
+model Inbox {
+  id           String    @id @default(cuid())
+  from_user    AdminUser @relation(fields: [from_user_id], references: [id])
+  from_user_id String
+
+  from_member    Member @relation("from", fields: [from_member_id], references: [id])
+  from_member_id String
+
+  to_member    Member @relation("to", fields: [to_member_id], references: [id])
+  to_member_id String
+
+  opened_at DateTime?
+
+  inbox_rec    InboxRec @relation(fields: [inbox_rec_id], references: [id])
+  inbox_rec_id String
+}
+
+model InboxRec {
+  id         String        @id @default(cuid())
+  title      String
+  content    String
+  inboxs     Inbox[]
+  inbox_type InboxSendType
+  sended_at  DateTime      @default(now())
+}
+
+enum InboxSendType {
+  PRIVATE
+  AGENTS
+  MEMBERS
+  SYSTEM
 }
 
 enum AnnouncementType {
