@@ -1,4 +1,8 @@
-import { ValidationPipe } from '@nestjs/common';
+import {
+  ValidationPipe,
+  VersioningType,
+  VERSION_NEUTRAL,
+} from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -10,6 +14,10 @@ async function bootstrap() {
 
   app.enableCors();
   app.use(helmet());
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: VERSION_NEUTRAL,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

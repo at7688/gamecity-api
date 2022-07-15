@@ -40,3 +40,7 @@ lerna-debug.log*
 # Env
 .env
 .env.*
+
+
+# REDIS
+dump.rdb
