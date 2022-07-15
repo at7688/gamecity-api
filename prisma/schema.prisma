@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,23 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 管理員帳號
 model AdminUser {
   id            String         @id @default(cuid())
   username      String         @unique
   password      String
   nickname      String
-  operations    OperationRec[]
-  admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
   admin_role_id String
   is_active     Boolean        @default(true)
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
-
-  // access_token
+  admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
+  operations    OperationRec[]
 }
 
-// 權限
 model Permission {
   id         String @id @default(cuid())
   name       String @unique
@@ -37,52 +30,33 @@ model Permission {
   @@unique([controller, handler], name: "controller_handler")
 }
 
-// 管理員角色
 model AdminRole {
   id    String      @id @default(cuid())
   name  String
   code  String      @unique
-  menu  Menu[]
   users AdminUser[]
-
+  menu  Menu[]
 }
 
-// model AccessToken {
-//   id Int @id @default(autoincrement())
-//   admin_user AdminUser @relation(fields: [admin_user_id], references: [id])
-//   admin_user_id String
-//   // agent Member
-// }
-
-// 操作記錄
 model OperationRec {
   id          Int       @id @default(autoincrement())
   controller  String
   handler     String
-  operator    AdminUser @relation(fields: [operator_id], references: [id])
   operator_id String
   reqBody     Json?
   path        String
   target_id   String?
   method      String
   operated_at DateTime  @default(now())
+  operator    AdminUser @relation(fields: [operator_id], references: [id])
 }
 
-// 最新消息
-enum AnnouncementType {
-  GAME
-  OPERATION
-  EVENT
-  SERVICE
-}
-
-// 最新消息
 model Announcement {
   id         String           @id @default(cuid())
   title      String
   content    String?
-  start_at   DateTime?        @db.Timestamp()
-  end_at     DateTime?        @db.Timestamp()
+  start_at   DateTime?        @db.Timestamp(6)
+  end_at     DateTime?        @db.Timestamp(6)
   created_at DateTime         @default(now())
   updated_at DateTime         @updatedAt
   type       AnnouncementType
@@ -93,21 +67,91 @@ model Announcement {
   sort       Int              @default(autoincrement())
 }
 
-// 選單
 model Menu {
+  id           String       @id @default(cuid())
+  name         String
+  root_menu_id String?
+  sort         Int          @default(autoincrement())
+  icon         String?
+  path         String?
+  root_menu    Menu?        @relation("root", fields: [root_menu_id], references: [id])
+  sub_menus    Menu[]       @relation("root")
+  admin_roles  AdminRole[]
+  permissions  Permission[]
+}
+
+model Member {
+  id         String     @id @default(cuid())
+  username   String     @unique
+  password   String
+  nickname   String
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  parent_id  String?
+  promo_code String?    @unique
+  type       MemberType
+  is_active  Boolean    @default(true)
+  layer      Int        @default(1)
+  login_at   DateTime?
+  parent     Member?    @relation("agent", fields: [parent_id], references: [id])
+  subs       Member[]   @relation("agent")
+}
+
+model ActivityPromo {
+  id        String    @id @default(cuid())
+  pc_img    String
+  mb_img    String
+  title     String
+  sub_title String
+  content   String
+  is_active Boolean
+  sort      Int
+  start_at  DateTime? @db.Timestamp(6)
+  end_at    DateTime? @db.Timestamp(6)
+}
+
+model Banner {
+  id        String    @id @default(cuid())
+  pc_img    String
+  mb_img    String
+  name      String
+  is_active Boolean
+  sort      Int
+  start_at  DateTime? @db.Timestamp(6)
+  end_at    DateTime? @db.Timestamp(6)
+}
+
+model GameCategory {
+  id        Int            @id @default(autoincrement())
+  name      String
+  platforms GamePlatform[]
+}
+
+model GamePlatform {
+  id          String             @id @default(cuid())
+  name        String
+  code        String             @unique
+  status      GamePlatformStatus
+  sort        Int
+  category_id Int
+  category    GameCategory       @relation(fields: [category_id], references: [id])
+  games       Game[]
+}
+
+model Game {
   id          String       @id @default(cuid())
   name        String
-  permissions Permission[]
+  is_active   Boolean
+  sort        Int
+  platform_id String
+  platform    GamePlatform @relation(fields: [platform_id], references: [id])
+}
 
-  admin_roles AdminRole[]
-
-  root_menu_id String?
-  root_menu    Menu?   @relation("root", fields: [root_menu_id], references: [id])
-  sub_menus    Menu[]  @relation("root")
-  sort Int @default(autoincrement())
-
-  icon String?
-  path String?
+enum AnnouncementType {
+  GAME
+  OPERATION
+  EVENT
+  SERVICE
 }
 
 enum MemberType {
@@ -115,84 +159,8 @@ enum MemberType {
   AGENT
 }
 
-// 階層會員
-model Member {
-  id         String     @id @default(cuid())
-  username   String     @unique
-  password   String
-  nickname   String
-  promo_code String?    @unique()
-  type       MemberType
-  layer Int @default(1)
-  is_active Boolean  @default(true)
-
-  parent    Member? @relation("agent", fields: [parent_id], references: [id])
-  parent_id String?
-  subs Member[] @relation("agent")
-
-
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-  login_at DateTime?
-}
-
-// 活動曝光
-model ActivityPromo {
-  id String @id @default(cuid())
-  pc_img String
-  mb_img String
-  title String
-  sub_title String
-  content String
-  is_active Boolean
-  sort Int
-  start_at   DateTime?        @db.Timestamp()
-  end_at     DateTime?        @db.Timestamp()
-}
-
-// 輪播圖
-model Banner {
-  id String @id @default(cuid())
-  pc_img String
-  mb_img String
-  name String
-  is_active Boolean
-  sort Int
-  start_at   DateTime?        @db.Timestamp()
-  end_at     DateTime?        @db.Timestamp()
-}
-
-// 遊戲類型
-model GameCategory {
-  id Int @id @default(autoincrement())
-  name String
-  platforms GamePlatform[]
-}
-
 enum GamePlatformStatus {
   ONLINE
   OFFLINE
   MAINTENANCE
-}
-
-// 遊戲平台
-model GamePlatform {
-  id String @id @default(cuid())
-  name String
-  code String @unique
-  status GamePlatformStatus
-  sort Int
-  games Game[]
-  category GameCategory @relation(fields: [category_id], references: [id])
-  category_id Int
-}
-
-// 遊戲
-model Game {
-  id String @id @default(cuid())
-  name String
-  is_active Boolean
-  sort Int
-  platform GamePlatform @relation(fields: [platform_id], references: [id])
-  platform_id String
 }

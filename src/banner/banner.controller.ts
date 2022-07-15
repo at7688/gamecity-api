@@ -23,7 +23,9 @@ export class BannerController {
   ) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file', { limits: {} }))
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 1024 * 1024 } }),
+  )
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     return this.uploadsService.uploadFile(file);
   }
