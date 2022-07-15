@@ -15,7 +15,10 @@ import { SearchAnnouncementsDto } from './dto/search-announcements.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 
 @ApiBearerAuth()
-@Controller('announcements')
+@Controller({
+  path: 'announcements',
+  // version: '1',
+})
 export class AnnouncementController {
   constructor(private readonly announcementService: AnnouncementService) {}
 
