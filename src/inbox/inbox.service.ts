@@ -48,7 +48,7 @@ export class InboxService {
   async create(data: CreateInboxDto, user: LoginUser) {
     let toMembers: SimpleMember[] = [];
 
-    switch (data.inbox_type) {
+    switch (data.send_type) {
       case InboxSendType.PRIVATE:
         toMembers = await this.prisma.member.findMany({
           where: {
@@ -101,7 +101,7 @@ export class InboxService {
   }
 
   findAll(search: SearchInboxsDto, user: LoginUser) {
-    const { page, perpage, title, username, nickname, type } = search;
+    const { page, perpage, title, username, nickname, send_type } = search;
     return this.prisma.inbox.findMany({
       where: {
         ['admin_role_id' in user ? 'from_user_id' : 'from_member_id']: user.id,
@@ -109,7 +109,7 @@ export class InboxService {
           title: {
             contains: title,
           },
-          inbox_type: type,
+          send_type,
         },
         to_member: {
           username,

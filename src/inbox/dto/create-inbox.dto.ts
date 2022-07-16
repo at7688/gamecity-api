@@ -16,5 +16,5 @@ export class CreateInboxDto {
 
   @IsEnum(InboxSendType)
   @IsNotEmpty()
-  inbox_type: InboxSendType;
+  send_type: InboxSendType;
 }

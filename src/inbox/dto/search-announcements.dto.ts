@@ -17,5 +17,5 @@ export class SearchInboxsDto extends PaginateDto {
 
   @IsEnum(InboxSendType)
   @IsOptional()
-  type: InboxSendType;
+  send_type: InboxSendType;
 }

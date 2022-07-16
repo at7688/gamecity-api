@@ -165,7 +165,7 @@ model Inbox {
 
   opened_at DateTime?
 
-  inbox_rec    InboxRec @relation(fields: [inbox_rec_id], references: [id])
+  inbox_rec    InboxRec @relation(fields: [inbox_rec_id], references: [id], onDelete: Cascade)
   inbox_rec_id String
 }
 
@@ -174,7 +174,7 @@ model InboxRec {
   title      String
   content    String
   inboxs     Inbox[]
-  inbox_type InboxSendType
+  send_type InboxSendType
   sended_at  DateTime      @default(now())
 }
 
