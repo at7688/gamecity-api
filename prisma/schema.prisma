@@ -154,11 +154,11 @@ model Game {
 
 model Inbox {
   id           String    @id @default(cuid())
-  from_user    AdminUser @relation(fields: [from_user_id], references: [id])
-  from_user_id String
+  from_user    AdminUser? @relation(fields: [from_user_id], references: [id])
+  from_user_id String?
 
-  from_member    Member @relation("from", fields: [from_member_id], references: [id])
-  from_member_id String
+  from_member    Member? @relation("from", fields: [from_member_id], references: [id])
+  from_member_id String?
 
   to_member    Member @relation("to", fields: [to_member_id], references: [id])
   to_member_id String
@@ -181,7 +181,7 @@ model InboxRec {
 enum InboxSendType {
   PRIVATE
   AGENTS
-  MEMBERS
+  PLAYERS
   SYSTEM
 }
 
