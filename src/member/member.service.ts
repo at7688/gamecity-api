@@ -4,8 +4,9 @@ import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import * as argon2 from 'argon2';
 import { SearchMembersDto } from './dto/search-members.dto';
-import { Member } from '@prisma/client';
+import { Member, Prisma } from '@prisma/client';
 import { LoginUser } from 'src/types';
+import { PaginateDto } from 'src/dto/paginate.dto';
 @Injectable()
 export class MemberService {
   constructor(private readonly prisma: PrismaService) {}
@@ -27,18 +28,33 @@ export class MemberService {
     });
   }
 
-  findAll(query: SearchMembersDto, user: LoginUser) {
-    return this.prisma.member.findMany({
+  async findAll(search: SearchMembersDto, user: LoginUser) {
+    const { page, perpage, type, username, parent_id } = search;
+    const default_parent_id = 'admin_role_id' in user ? undefined : user.id;
+    const findManyArgs: Prisma.MemberFindManyArgs = {
       where: {
-        type: query.type,
-        username: query.username,
-        parent_id: query.parent_id || user.id,
+        type,
+        username,
+        parent_id: parent_id || default_parent_id,
       },
       include: { _count: true },
       orderBy: {
         created_at: 'desc',
       },
-    });
+      take: perpage,
+      skip: (page - 1) * perpage,
+    };
+
+    const [items, count] = await this.prisma.$transaction([
+      this.prisma.member.findMany(findManyArgs),
+      this.prisma.member.count({ where: findManyArgs.where }),
+    ]);
+
+    return {
+      items,
+      count,
+      search,
+    };
   }
 
   findOne(id: string) {

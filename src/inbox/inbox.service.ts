@@ -100,9 +100,9 @@ export class InboxService {
     });
   }
 
-  findAll(search: SearchInboxsDto, user: LoginUser) {
+  async findAll(search: SearchInboxsDto, user: LoginUser) {
     const { page, perpage, title, username, nickname, send_type } = search;
-    return this.prisma.inbox.findMany({
+    const findManyArgs: Prisma.InboxFindManyArgs = {
       where: {
         ['admin_role_id' in user ? 'from_user_id' : 'from_member_id']: user.id,
         inbox_rec: {
@@ -131,7 +131,17 @@ export class InboxService {
       orderBy: [{ inbox_rec: { sended_at: 'desc' } }],
       take: perpage,
       skip: (page - 1) * perpage,
-    });
+    };
+    const [items, count] = await this.prisma.$transaction([
+      this.prisma.inbox.findMany(findManyArgs),
+      this.prisma.inbox.count({ where: findManyArgs.where }),
+    ]);
+
+    return {
+      items,
+      count,
+      search,
+    };
   }
 
   findOne(id: number) {
