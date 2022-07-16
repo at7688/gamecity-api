@@ -21,7 +21,6 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly tasks: TasksService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 

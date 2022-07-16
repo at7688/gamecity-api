@@ -10,7 +10,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateInboxDto } from './dto/create-inbox.dto';
 import { UpdateInboxDto } from './dto/update-inbox.dto';
-import { SimpleMember } from './dto/types';
+import { LoginUser, SimpleMember } from '../types';
+import { SearchInboxsDto } from './dto/search-announcements.dto';
 
 @Injectable()
 export class InboxService {
@@ -44,7 +45,7 @@ export class InboxService {
     return newMembers;
   };
 
-  async create(data: CreateInboxDto, user: AdminUser | Member) {
+  async create(data: CreateInboxDto, user: LoginUser) {
     let toMembers: SimpleMember[] = [];
 
     switch (data.inbox_type) {
@@ -99,23 +100,37 @@ export class InboxService {
     });
   }
 
-  findAll() {
-    return this.prisma.inboxRec.findMany({
-      include: {
-        inboxs: {
-          include: {
-            from_user: {
-              select: { id: true, nickname: true, username: true },
-            },
-            from_member: {
-              select: { id: true, nickname: true, username: true },
-            },
-            to_member: {
-              select: { id: true, nickname: true, username: true },
-            },
+  findAll(search: SearchInboxsDto, user: LoginUser) {
+    const { page, perpage, title, username, nickname, type } = search;
+    return this.prisma.inbox.findMany({
+      where: {
+        ['admin_role_id' in user ? 'from_user_id' : 'from_member_id']: user.id,
+        inbox_rec: {
+          title: {
+            contains: title,
           },
+          inbox_type: type,
+        },
+        to_member: {
+          username,
+          nickname,
         },
       },
+      include: {
+        inbox_rec: true,
+        from_user: {
+          select: { id: true, nickname: true, username: true },
+        },
+        from_member: {
+          select: { id: true, nickname: true, username: true },
+        },
+        to_member: {
+          select: { id: true, nickname: true, username: true },
+        },
+      },
+      orderBy: [{ inbox_rec: { sended_at: 'desc' } }],
+      take: perpage,
+      skip: (page - 1) * perpage,
     });
   }
 
