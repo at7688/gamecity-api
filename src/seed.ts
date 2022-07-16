@@ -1,11 +1,54 @@
-import { PrismaClient } from '@prisma/client';
+import { MemberType, Prisma, PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
 const prisma = new PrismaClient();
 import * as dotenv from 'dotenv';
 
 dotenv.config(); // Load the environment variables
 
+const createMembers = async (username: string, nickname: string) => {
+  const getSubCreate = async (layer: number, type: MemberType) => {
+    const data: Prisma.MemberCreateInput = {
+      username: username + layer,
+      nickname: `${nickname}${layer}號`,
+      password: await argon2.hash(process.env.DEFAULT_PASSWORD),
+      type,
+      layer,
+    };
+    if (layer < +process.env.MAX_LEVEL_DEPTH) {
+      data.subs = {
+        connectOrCreate: {
+          where: { username: username + (layer + 1) },
+          create: await getSubCreate(layer + 1, type),
+        },
+      };
+    }
+    return data;
+  };
+  const length = await prisma.member.count({
+    where: { username: { contains: username } },
+  });
+  if (length > 0) {
+    return;
+  }
+  await prisma.member.create({
+    data: await getSubCreate(1, 'AGENT'),
+  });
+};
+
 async function main() {
+  await prisma.adminRole.createMany({
+    data: [
+      {
+        name: '客服',
+        code: 'SERVICE',
+      },
+      {
+        name: '代理',
+        code: 'AGENT',
+      },
+    ],
+    skipDuplicates: true,
+  });
   await prisma.adminUser.upsert({
     where: { username: 'superAdmin' },
     update: {},
@@ -24,6 +67,10 @@ async function main() {
       },
     },
   });
+
+  createMembers('apple', '小蘋果');
+  createMembers('kiwi', '奇異果');
+  createMembers('cherry', '我是櫻桃');
 
   await prisma.permission.createMany({
     data: [
@@ -221,6 +268,111 @@ async function main() {
         name: '獎項-選項',
         controller: 'PrizeController',
         handler: 'option',
+      },
+
+      {
+        name: '會員/代理管理-列表',
+        controller: 'MemberController',
+        handler: 'findAll',
+      },
+      {
+        name: '會員/代理管理-查看',
+        controller: 'MemberController',
+        handler: 'findOne',
+      },
+      {
+        name: '會員/代理管理-新增',
+        controller: 'MemberController',
+        handler: 'create',
+      },
+      {
+        name: '會員/代理管理-修改',
+        controller: 'MemberController',
+        handler: 'update',
+      },
+      // {
+      //   name: '會員/代理管理-刪除',
+      //   controller: 'MemberController',
+      //   handler: 'remove',
+      // },
+
+      {
+        name: '選單管理-列表',
+        controller: 'MenuController',
+        handler: 'findAll',
+      },
+      {
+        name: '選單管理-查看',
+        controller: 'MenuController',
+        handler: 'findOne',
+      },
+      {
+        name: '選單管理-新增',
+        controller: 'MenuController',
+        handler: 'create',
+      },
+      {
+        name: '選單管理-修改',
+        controller: 'MenuController',
+        handler: 'update',
+      },
+
+      {
+        name: '權限管理-列表',
+        controller: 'PermissionController',
+        handler: 'findAll',
+      },
+      {
+        name: '權限管理-查看',
+        controller: 'PermissionController',
+        handler: 'findOne',
+      },
+      {
+        name: '權限管理-新增',
+        controller: 'PermissionController',
+        handler: 'create',
+      },
+      {
+        name: '權限管理-修改',
+        controller: 'PermissionController',
+        handler: 'update',
+      },
+
+      {
+        name: '站內信-新增',
+        controller: 'InboxController',
+        handler: 'create',
+      },
+      {
+        name: '站內信-列表',
+        controller: 'InboxController',
+        handler: 'findAll',
+      },
+
+      {
+        name: '輪播圖管理-列表',
+        controller: 'BannerController',
+        handler: 'findAll',
+      },
+      {
+        name: '輪播圖管理-查看',
+        controller: 'BannerController',
+        handler: 'findOne',
+      },
+      {
+        name: '輪播圖管理-新增',
+        controller: 'BannerController',
+        handler: 'create',
+      },
+      {
+        name: '輪播圖管理-修改',
+        controller: 'BannerController',
+        handler: 'update',
+      },
+      {
+        name: '輪播圖管理-刪除',
+        controller: 'BannerController',
+        handler: 'remove',
       },
     ],
     skipDuplicates: true,
