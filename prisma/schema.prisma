@@ -77,7 +77,7 @@ model Menu {
   root_menu_id String?
   sort         Int          @default(autoincrement())
   icon         String?
-  path         String?
+  path         String?  @unique()
   root_menu    Menu?        @relation("root", fields: [root_menu_id], references: [id])
   sub_menus    Menu[]       @relation("root")
   admin_roles  AdminRole[]

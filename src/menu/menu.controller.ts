@@ -12,6 +12,9 @@ import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { Public } from 'src/metas/public.meta';
+import { Global } from 'src/metas/global.meta';
+import { User } from 'src/decorators/user.decorator';
+import { LoginUser } from 'src/types';
 
 @Controller('menus')
 export class MenuController {
@@ -23,9 +26,9 @@ export class MenuController {
   }
 
   @Get('path')
-  @Public()
-  pathGetSubMenus(@Query('path') path: string) {
-    return this.menuService.pathGetSubMenus(path);
+  @Global()
+  pathGetSubMenus(@Query('path') path: string, @User() user: LoginUser) {
+    return this.menuService.pathGetSubMenus(path, user);
   }
   @Get()
   findAll() {

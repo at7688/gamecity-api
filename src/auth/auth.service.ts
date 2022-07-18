@@ -64,6 +64,18 @@ export class AuthService {
             },
           },
           orderBy: { sort: 'asc' },
+          include: {
+            sub_menus: {
+              where: {
+                admin_roles: {
+                  some: {
+                    code: role,
+                  },
+                },
+              },
+              orderBy: { sort: 'asc' },
+            },
+          },
         },
       },
       orderBy: { sort: 'asc' },
@@ -74,7 +86,7 @@ export class AuthService {
     const user = await this.prisma.member.findUnique({
       where: { username },
     });
-    return await this.loginErrHandler(user, 'AGENT', password);
+    return await this.loginErrHandler(password, user, 'AGENT');
   }
 
   async passwordValidate(password: string, input_password: string) {
@@ -86,9 +98,9 @@ export class AuthService {
   }
 
   async loginErrHandler(
-    user: AdminUser | Member,
-    role: string,
     password: string,
+    user?: AdminUser | Member,
+    role?: string,
   ) {
     // 獲取帳戶失敗
     if (!user) {
@@ -192,7 +204,7 @@ export class AuthService {
         admin_role: true,
       },
     });
-    return await this.loginErrHandler(user, user.admin_role.code, password);
+    return await this.loginErrHandler(password, user, user?.admin_role?.code);
   }
 
   async getLoginInfo(user: LoginUser) {
