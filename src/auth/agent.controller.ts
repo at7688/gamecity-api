@@ -10,7 +10,7 @@ export class AgentController {
   @Post('login')
   @Public()
   async login(@Body() body: SigninDto) {
-    return this.authService.agentValidate(body);
+    return this.authService.agentLogin(body);
   }
 
   @Post('logout')

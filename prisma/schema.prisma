@@ -40,8 +40,6 @@ model AdminRole {
   code  String      @unique
   users AdminUser[]
   menu  Menu[]
-
-
 }
 
 model OperationRec {

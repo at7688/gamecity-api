@@ -48,9 +48,7 @@ export class RoleInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const permissions = await this.cacheManager.get<Permission[]>(
-      req.user.username,
-    );
+    const permissions = await this.cacheManager.get<Permission[]>(req.user.id);
 
     const i = permissions?.findIndex(
       (t) => t.controller === controller.name && t.handler === handler.name,

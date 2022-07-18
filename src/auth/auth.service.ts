@@ -69,48 +69,95 @@ export class AuthService {
     });
   }
 
-  async agentValidate({ username, password }: SigninDto) {
-    // 獲取玩家
-    const users = await this.prisma.member.findMany({
-      where: { username, type: 'AGENT' },
-      include: {
-        login_rec: true,
-      },
+  async agentLogin({ username, password }: SigninDto) {
+    const user = await this.prisma.member.findUnique({
+      where: { username },
     });
-    // 獲取玩家失敗
-    if (!users.length) {
+
+    // 獲取帳戶失敗
+    if (!user) {
       throw new BadRequestException('user is not exist');
     }
-    const user = users[0];
 
-    // 密碼驗證
-    const isPasswordValid = await argon2.verify(user.password, password);
-    if (!isPasswordValid) {
-      throw new BadRequestException('bad password');
+    try {
+      // 帳戶已封鎖，禁止登入
+      if (user.is_blocked) {
+        throw new BadRequestException();
+      }
+      // 密碼驗證
+      await this.passwordValidate(user.password, password);
+
+      // 獲取TOKEN
+      const token = this.jwtService.sign({
+        username: user.username,
+        sub: user.id,
+      });
+
+      // 登入成功紀錄
+      await this.prisma.loginRec.create({
+        data: {
+          agent: {
+            connect: {
+              username,
+            },
+          },
+          ip: IP.address(),
+          nums_failed: 0,
+        },
+      });
+
+      // 取得權限選單
+      const menu = await this.fetchRoleMenu('AGENT');
+
+      // 功能權限存入快取
+      const permissions = await this.fetchRolePermission('AGENT');
+      await this.cacheManager.set(user.id, permissions);
+
+      return {
+        user,
+        menu,
+        access_token: token,
+      };
+    } catch (err) {
+      const login_recs = await this.prisma.loginRec.findMany({
+        where: { agent: { username } },
+        orderBy: { login_at: 'desc' },
+      });
+      const nums_failed = login_recs[0] ? login_recs[0]?.nums_failed + 1 : 1;
+      let failed_msg = `${err.message}, 累積失敗次數：${nums_failed}次`;
+
+      // 超過失敗登入上限，封鎖帳戶
+      if (nums_failed >= +this.configService.get('FAILED_LOGIN_LIMIT')) {
+        failed_msg = `已達失敗上限，帳戶已鎖定`;
+        await this.prisma.member.update({
+          where: {
+            username,
+          },
+          data: {
+            is_blocked: true,
+          },
+        });
+      }
+
+      // 登入失敗紀錄
+      await this.prisma.loginRec.create({
+        data: {
+          agent: {
+            connect: {
+              username,
+            },
+          },
+          ip: IP.address(),
+          failed_msg,
+          nums_failed,
+        },
+      });
+
+      throw new BadRequestException(failed_msg);
     }
-
-    // 取得權限選單
-    const menu = await this.fetchRoleMenu('AGENT');
-
-    // 獲取TOKEN
-    const token = this.jwtService.sign({
-      username: user.username,
-      sub: user.id,
-      agent: user.type === 'AGENT',
-    });
-
-    // 功能權限存入快取
-    const permissions = await this.fetchRolePermission('AGENT');
-    await this.cacheManager.set(user.username, permissions);
-
-    return {
-      user: user,
-      menu,
-      access_token: token,
-    };
   }
 
-  async adminUserValidate(password: string, input_password: string) {
+  async passwordValidate(password: string, input_password: string) {
     // 密碼驗證
     const isPasswordValid = await argon2.verify(password, input_password);
     if (!isPasswordValid) {
@@ -137,7 +184,7 @@ export class AuthService {
         throw new BadRequestException();
       }
       // 密碼驗證
-      await this.adminUserValidate(user.password, password);
+      await this.passwordValidate(user.password, password);
 
       // 獲取TOKEN
       const token = this.jwtService.sign({
@@ -163,7 +210,7 @@ export class AuthService {
 
       // 功能權限存入快取
       const permissions = await this.fetchRolePermission(user.admin_role.code);
-      await this.cacheManager.set(user.username, permissions);
+      await this.cacheManager.set(user.id, permissions);
 
       return {
         user,
