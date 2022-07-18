@@ -44,3 +44,6 @@ lerna-debug.log*
 
 # REDIS
 dump.rdb
+
+# DB
+*.dump

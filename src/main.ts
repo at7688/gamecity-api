@@ -7,6 +7,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import * as requestIp from 'request-ip';
 const port = process.env.PORT || 8080;
 
 async function bootstrap() {
@@ -14,6 +15,7 @@ async function bootstrap() {
 
   app.enableCors();
   app.use(helmet());
+  app.use(requestIp.mw({ attributeName: 'ip' }));
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: VERSION_NEUTRAL,
