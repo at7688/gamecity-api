@@ -20,6 +20,16 @@ export class MenuService {
     });
   }
 
+  pathGetSubMenus(path: string) {
+    return this.prisma.menu.findMany({
+      where: {
+        root_menu: {
+          path,
+        },
+      },
+    });
+  }
+
   findAll() {
     return this.prisma.menu.findMany({
       where: {
@@ -28,7 +38,7 @@ export class MenuService {
       include: {
         sub_menus: {
           include: {
-            permissions: true,
+            sub_menus: true,
           },
         },
       },

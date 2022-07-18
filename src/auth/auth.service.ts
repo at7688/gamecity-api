@@ -13,6 +13,7 @@ import { TasksService } from 'src/tasks/tasks.service';
 import { SigninDto } from './dto/signin.dto';
 import * as IP from 'ip';
 import { ConfigService } from '@nestjs/config';
+import { LoginUser } from 'src/types';
 
 export type MenuWithSubMenu = Menu & {
   sub_menus: Menu[];
@@ -192,5 +193,14 @@ export class AuthService {
       },
     });
     return await this.loginErrHandler(user, user.admin_role.code, password);
+  }
+
+  async getLoginInfo(user: LoginUser) {
+    return {
+      user,
+      menu: await this.fetchRoleMenu(
+        'admin_role_id' in user ? user.admin_role.code : 'AGENT',
+      ),
+    };
   }
 }

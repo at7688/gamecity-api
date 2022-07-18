@@ -9,7 +9,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { Cache } from 'cache-manager';
-import { IS_PUBLIC_KEY } from 'src/meta-consts';
+import { IS_PUBLIC } from 'src/meta-consts';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -20,7 +20,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [
       context.getHandler(),
       context.getClass(),
     ]);
