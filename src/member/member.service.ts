@@ -7,6 +7,7 @@ import { SearchMembersDto } from './dto/search-members.dto';
 import { Member, Prisma } from '@prisma/client';
 import { LoginUser } from 'src/types';
 import { PaginateDto } from 'src/dto/paginate.dto';
+import { getAllSubsById } from './raw/fetchAllChild';
 @Injectable()
 export class MemberService {
   constructor(private readonly prisma: PrismaService) {}
@@ -30,14 +31,13 @@ export class MemberService {
 
   async findAll(search: SearchMembersDto, user: LoginUser) {
     const { page, perpage, type, username, parent_id } = search;
-    const default_parent_id = 'admin_role_id' in user ? undefined : user.id;
+    const default_parent_id = 'admin_role_id' in user ? null : user.id;
     const findManyArgs: Prisma.MemberFindManyArgs = {
       where: {
         type,
         username,
         parent_id: parent_id || default_parent_id,
       },
-      include: { _count: true },
       orderBy: {
         created_at: 'desc',
       },
@@ -50,8 +50,17 @@ export class MemberService {
       this.prisma.member.count({ where: findManyArgs.where }),
     ]);
 
+    const itemsWithSubs = await Promise.all(
+      items.map(async (m) => {
+        return {
+          ...m,
+          subs: await this.prisma.$queryRaw(getAllSubsById(m.id)),
+        };
+      }),
+    );
+
     return {
-      items,
+      items: itemsWithSubs,
       count,
       search,
     };
