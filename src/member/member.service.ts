@@ -38,6 +38,14 @@ export class MemberService {
         username,
         parent_id: parent_id || default_parent_id,
       },
+      include: {
+        login_rec: {
+          take: 5,
+          orderBy: {
+            login_at: 'desc',
+          },
+        },
+      },
       orderBy: {
         created_at: 'desc',
       },
@@ -71,13 +79,16 @@ export class MemberService {
   }
 
   async update(id: string, { password, ...data }: UpdateMemberDto) {
-    const hash = await argon2.hash(password);
+    if (password) {
+      const hash = await argon2.hash(password);
+      return this.prisma.member.update({
+        where: { id },
+        data: { ...data, password: hash },
+      });
+    }
     return this.prisma.member.update({
       where: { id },
-      data: {
-        ...data,
-        password: hash,
-      },
+      data,
     });
   }
 

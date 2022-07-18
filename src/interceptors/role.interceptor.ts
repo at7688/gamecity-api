@@ -44,6 +44,7 @@ export class RoleInterceptor implements NestInterceptor {
       return next.handle();
     }
 
+    // 可移除,即吃設定的選單權限
     if (req.user.admin_role?.code === 'MASTER') {
       return next.handle();
     }

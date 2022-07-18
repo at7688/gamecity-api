@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, AdminUser } from '@prisma/client';
+import { Prisma, AdminUser, LoginRec } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -42,6 +42,12 @@ export class UserService {
       },
       include: {
         admin_role: true,
+        login_rec: {
+          take: 5,
+          orderBy: {
+            login_at: 'desc',
+          },
+        },
       },
       orderBy: [{ id: 'desc' }],
       take: perpage || 10,
