@@ -4,10 +4,10 @@ import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import * as argon2 from 'argon2';
 import { SearchMembersDto } from './dto/search-members.dto';
-import { Member, Prisma } from '@prisma/client';
+import { Member, MemberType, Prisma } from '@prisma/client';
 import { LoginUser } from 'src/types';
 import { PaginateDto } from 'src/dto/paginate.dto';
-import { getAllSubsById } from './raw/fetchAllChild';
+import { getAllSubsById } from './raw/getAllSubsById';
 @Injectable()
 export class MemberService {
   constructor(private readonly prisma: PrismaService) {}
@@ -62,7 +62,15 @@ export class MemberService {
       items.map(async (m) => {
         return {
           ...m,
-          subs: await this.prisma.$queryRaw(getAllSubsById(m.id)),
+          self_agents: await this.prisma
+            .$queryRaw<Member[]>(getAllSubsById(m.id, 'AGENT'))
+            .then((arr) => arr.filter((t) => t.parent_id === m.id)),
+          all_agents: await this.prisma.$queryRaw(
+            getAllSubsById(m.id, 'AGENT'),
+          ),
+          all_players: await this.prisma.$queryRaw(
+            getAllSubsById(m.id, 'PLAYER'),
+          ),
         };
       }),
     );
