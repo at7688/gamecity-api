@@ -9,6 +9,7 @@ import { LoginUser } from 'src/types';
 import { PaginateDto } from 'src/dto/paginate.dto';
 import { getAllSubsById } from './raw/getAllSubsById';
 import { getAllParentsById } from './raw/getAllParentsById';
+import { getTreeNode, TreeNodeMember } from './raw/getTreeNode';
 @Injectable()
 export class MemberService {
   constructor(private readonly prisma: PrismaService) {}
@@ -32,7 +33,6 @@ export class MemberService {
 
   async findAll(search: SearchMembersDto, user: LoginUser) {
     const { page, perpage, type, username, parent_id, all } = search;
-    console.log(all);
     const default_parent_id = 'admin_role_id' in user ? null : user.id;
     const findManyArgs: Prisma.MemberFindManyArgs = {
       where: {
@@ -90,6 +90,13 @@ export class MemberService {
       search,
       parents: await this.prisma.$queryRaw(getAllParentsById(parent_id)),
     };
+  }
+
+  async findAllByParent(parent_id: string, user: LoginUser) {
+    const default_parent_id = 'admin_role_id' in user ? null : user.id;
+    return this.prisma.$queryRaw<TreeNodeMember[]>(
+      getTreeNode(parent_id || default_parent_id),
+    );
   }
 
   findOne(id: string) {

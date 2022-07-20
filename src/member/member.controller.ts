@@ -32,6 +32,13 @@ export class MemberController {
   findAll(@Query() query: SearchMembersDto, @User() user: LoginUser) {
     return this.memberService.findAll(query, user);
   }
+  @Get('parent')
+  findAllByParent(
+    @Query('parent_id') parent_id: string,
+    @User() user: LoginUser,
+  ) {
+    return this.memberService.findAllByParent(parent_id, user);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
