@@ -1,25 +1,27 @@
 import { Prisma } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
+  IsIn,
   IsInt,
   IsISO8601,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
-export class CreateBannerDto implements Prisma.BannerCreateInput {
+export class CreateBannerDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsString()
-  @IsNotEmpty()
-  pc_img: string;
+  // @IsNotEmpty()
+  // pc_img: string;
 
-  @IsString()
-  @IsNotEmpty()
-  mb_img: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // mb_img: string;
 
+  @Transform(({ value }) => value === 'true')
   @IsBoolean()
   is_active: boolean;
 

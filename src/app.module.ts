@@ -21,10 +21,11 @@ import { MenuModule } from './menu/menu.module';
 import { ActivityPromoModule } from './activity-promo/activity-promo.module';
 import { BannerModule } from './banner/banner.module';
 import { GameModule } from './game/game.module';
-import { JwtStrategy } from './auth/jwt.strategy';
-import { TasksService } from './tasks/tasks.service';
 import * as redisStore from 'cache-manager-redis-store';
 import { ScheduleModule } from '@nestjs/schedule';
+import { UploadsService } from './uploads/uploads.service';
+import { UploadsController } from './uploads/uploads.controller';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ActivityPromoModule,
     BannerModule,
     GameModule,
+    UploadsModule,
     ScheduleModule.forRoot(),
     CacheModule.registerAsync({
       imports: [ConfigModule],
@@ -61,7 +63,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AppController],
+  controllers: [AppController, UploadsController],
   providers: [
     AppService,
     {

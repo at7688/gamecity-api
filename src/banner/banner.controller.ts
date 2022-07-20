@@ -6,14 +6,29 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadsService } from 'src/uploads/uploads.service';
 import { BannerService } from './banner.service';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
 
-@Controller('banner')
+@Controller('banners')
 export class BannerController {
-  constructor(private readonly bannerService: BannerService) {}
+  constructor(
+    private readonly bannerService: BannerService,
+    private readonly uploadsService: UploadsService,
+  ) {}
+
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 1024 * 1024 } }),
+  )
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    return this.uploadsService.uploadFile(file);
+  }
 
   @Post()
   create(@Body() createBannerDto: CreateBannerDto) {

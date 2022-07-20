@@ -25,7 +25,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     iat: number;
     exp: number;
   }) {
-    console.log(payload);
     if (payload.agent) {
       return this.prisma.member.findUnique({
         where: { id: payload.sub },

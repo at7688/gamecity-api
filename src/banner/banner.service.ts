@@ -1,13 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UploadsService } from 'src/uploads/uploads.service';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
 
 @Injectable()
 export class BannerService {
-  constructor(private readonly prisma: PrismaService) {}
-  create(data: CreateBannerDto) {
-    return this.prisma.banner.create({ data });
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadsService: UploadsService,
+  ) {}
+  async create(data: CreateBannerDto, file?: Express.Multer.File) {
+    const { path } = await this.uploadsService.uploadFile(file);
+    return this.prisma.banner.create({
+      data: {
+        ...data,
+        pc_img: path,
+        mb_img: path,
+      },
+    });
   }
 
   findAll() {
