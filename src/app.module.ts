@@ -26,6 +26,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { UploadsService } from './uploads/uploads.service';
 import { UploadsController } from './uploads/uploads.controller';
 import { UploadsModule } from './uploads/uploads.module';
+import { InboxModule } from './inbox/inbox.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { UploadsModule } from './uploads/uploads.module';
       }),
       inject: [ConfigService],
     }),
+    InboxModule,
   ],
   controllers: [AppController, UploadsController],
   providers: [

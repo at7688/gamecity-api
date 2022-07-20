@@ -15,6 +15,8 @@ import { UpdateMemberDto } from './dto/update-member.dto';
 import { Serilizer } from 'src/interceptors/serializer.interceptor';
 import { MemberDto } from './dto/member.dto';
 import { SearchMembersDto } from './dto/search-members.dto';
+import { User } from 'src/decorators/user.decorator';
+import { LoginUser } from 'src/types';
 
 @Controller('members')
 @Serilizer(MemberDto)
@@ -27,8 +29,8 @@ export class MemberController {
   }
 
   @Get()
-  findAll(@Query() query?: SearchMembersDto) {
-    return this.memberService.findAll(query);
+  findAll(@Query() query: SearchMembersDto, @User() user: LoginUser) {
+    return this.memberService.findAll(query, user);
   }
 
   @Get(':id')
