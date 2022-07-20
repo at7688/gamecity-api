@@ -1,5 +1,6 @@
 import { MemberType } from '@prisma/client';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsBoolean, IsEnum, IsIn, IsOptional, IsString } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
 
 export class SearchMembersDto extends PaginateDto {
@@ -14,4 +15,9 @@ export class SearchMembersDto extends PaginateDto {
   @IsOptional()
   @IsString()
   parent_id: string;
+
+  @Transform(({ value }) => !!value)
+  @IsBoolean()
+  @IsOptional()
+  all: boolean;
 }
