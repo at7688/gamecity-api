@@ -122,6 +122,7 @@ export class AuthService {
       const token = this.jwtService.sign({
         username: user.username,
         sub: user.id,
+        agent: !isAdmin,
       });
 
       // 登入成功紀錄
