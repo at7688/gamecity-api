@@ -54,4 +54,8 @@ export class SearchLoginRecsDto extends PaginateDto {
   @IsDateString()
   @IsOptional()
   from_time?: string;
+
+  @IsDateString()
+  @IsOptional()
+  to_time?: string;
 }

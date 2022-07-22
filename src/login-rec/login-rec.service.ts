@@ -14,13 +14,27 @@ export class LoginRecService {
   }
 
   async findAll(search: SearchLoginRecsDto) {
-    const { page, perpage, ip, username, nickname, status, block, layer } =
-      search;
+    const {
+      page,
+      perpage,
+      ip,
+      username,
+      nickname,
+      status,
+      block,
+      layer,
+      from_time,
+      to_time,
+    } = search;
 
     const findManyArgs: Prisma.LoginRecFindManyArgs = {
       where: {
         ip,
         admin_user_id: null,
+        login_at: {
+          gte: from_time ? new Date(from_time) : undefined,
+          lte: to_time ? new Date(to_time) : undefined,
+        },
         agent: {
           username,
           nickname,
