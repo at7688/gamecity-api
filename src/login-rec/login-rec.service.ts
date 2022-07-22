@@ -31,6 +31,15 @@ export class LoginRecService {
       where: {
         ip,
         admin_user_id: null,
+        nums_failed: status
+          ? status.includes(1) && status.includes(2)
+            ? undefined
+            : status.includes(1)
+            ? { gte: 1 }
+            : status.includes(2)
+            ? { equals: 0 }
+            : undefined
+          : undefined,
         login_at: {
           gte: from_time ? new Date(from_time) : undefined,
           lte: to_time ? new Date(to_time) : undefined,
