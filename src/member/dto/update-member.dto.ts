@@ -1,11 +1,19 @@
-import { IsOptional, IsString } from 'class-validator';
+import { Exclude } from 'class-transformer';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class UpdateMemberDto {
-  @IsOptional()
-  @IsString()
-  nickname?: string;
+  @Exclude()
+  username: string;
 
-  @IsOptional()
   @IsString()
-  password?: string;
+  @IsOptional()
+  nickname: string;
+
+  @IsString()
+  @IsOptional()
+  password: string;
+
+  @IsBoolean()
+  @IsOptional()
+  is_blocked: boolean;
 }

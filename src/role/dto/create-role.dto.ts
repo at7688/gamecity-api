@@ -1,5 +1,4 @@
-import { Permission } from '@prisma/client';
-import { IsArray, IsString, ValidateNested } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class CreateRoleDto {
   @IsString()

@@ -1,14 +1,14 @@
 name: Dev Deploy
 on:
   push:
-    branches:
-      - "dev"
+    tags:
+      - v1.*
 
 env:
   REPO_PATH: https://github.com/${{ github.repository }}/commit/${{github.sha}}
   ACTION_PATH: https://github.com/${{ github.repository }}/actions/runs/${{github.run_id}}
   APP_NAME: gamecity-api
-  APP_ENV_NAME: gamecity-api-dev
+  APP_ENV_NAME: development
   AWS_REGION: ap-southeast-1
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:${{github.run_id}}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP_ENV_NAME }}:${{github.ref_name}}
 
   deploy:
     needs: [build]
@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Generate deployment package
-        run: zip -r deploy.zip . -x '*.git*'
+        run: zip -r deploy.zip docker-compose.yml -x '*.git*'
 
       - name: Deploy to EB
         uses: einaregilsson/beanstalk-deploy@v20
@@ -57,7 +57,7 @@ jobs:
           environment_name: ${{ env.APP_ENV_NAME }}
           use_existing_version_if_available: true
           wait_for_deployment: true
-          version_label: "${{ env.APP_ENV_NAME }}_${{ steps.current-time.outputs.formattedTime }}"
+          version_label: "${{ env.APP_ENV_NAME }}_${{ github.ref_name }}"
           region: ${{ env.AWS_REGION }}
           deployment_package: deploy.zip
 

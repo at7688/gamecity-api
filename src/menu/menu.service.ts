@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { LoginUser } from 'src/types';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 
@@ -20,6 +21,27 @@ export class MenuService {
     });
   }
 
+  pathGetSubMenus(path: string, user: LoginUser) {
+    const roleCode = 'admin_role_id' in user ? user.admin_role.code : 'AGENT';
+    return this.prisma.menu.findUnique({
+      where: {
+        path,
+      },
+      include: {
+        sub_menus: {
+          where: {
+            admin_roles: {
+              some: {
+                code: roleCode,
+              },
+            },
+          },
+        },
+        root_menu: true,
+      },
+    });
+  }
+
   findAll() {
     return this.prisma.menu.findMany({
       where: {
@@ -28,9 +50,19 @@ export class MenuService {
       include: {
         sub_menus: {
           include: {
-            permissions: true,
+            sub_menus: {
+              orderBy: {
+                sort: 'asc',
+              },
+            },
+          },
+          orderBy: {
+            sort: 'asc',
           },
         },
+      },
+      orderBy: {
+        sort: 'asc',
       },
     });
   }

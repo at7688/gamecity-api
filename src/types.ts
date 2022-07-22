@@ -1,4 +1,4 @@
-import { AdminUser, Member } from '@prisma/client';
+import { AdminRole, AdminUser, Member } from '@prisma/client';
 
 export interface SimpleMember {
   id: string;
@@ -6,5 +6,8 @@ export interface SimpleMember {
   nickname: string;
   subs?: SimpleMember[];
 }
+export type AdminUserWithRole = AdminUser & {
+  admin_role: AdminRole;
+};
 
-export type LoginUser = AdminUser | Member;
+export type LoginUser = AdminUserWithRole | Member;

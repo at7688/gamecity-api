@@ -13,13 +13,15 @@ model AdminUser {
   password      String
   nickname      String
   admin_role_id String
+  is_blocked    Boolean        @default(false)
   is_active     Boolean        @default(true)
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
   admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
   operations    OperationRec[]
 
-  inboxs Inbox[]
+  inboxs    Inbox[]
+  login_rec LoginRec[]
 }
 
 model Permission {
@@ -75,7 +77,7 @@ model Menu {
   root_menu_id String?
   sort         Int          @default(autoincrement())
   icon         String?
-  path         String?
+  path         String?  @unique()
   root_menu    Menu?        @relation("root", fields: [root_menu_id], references: [id])
   sub_menus    Menu[]       @relation("root")
   admin_roles  AdminRole[]
@@ -93,13 +95,32 @@ model Member {
   promo_code String?    @unique
   type       MemberType
   is_active  Boolean    @default(true)
+  is_blocked Boolean    @default(false)
   layer      Int        @default(1)
-  login_at   DateTime?
   parent     Member?    @relation("agent", fields: [parent_id], references: [id])
   subs       Member[]   @relation("agent")
 
   sended_inboxs   Inbox[] @relation("from")
   received_inboxs Inbox[] @relation("to")
+
+  login_rec LoginRec[]
+}
+
+model LoginRec {
+  id            Int        @id @default(autoincrement())
+  admin_user    AdminUser? @relation(fields: [admin_user_id], references: [id])
+  admin_user_id String?
+
+  agent    Member? @relation(fields: [agent_id], references: [id])
+  agent_id String?
+
+  ip String?
+
+  failed_msg String?
+
+  login_at DateTime @default(now())
+
+  nums_failed Int @default(0)
 }
 
 model ActivityPromo {
@@ -153,7 +174,7 @@ model Game {
 }
 
 model Inbox {
-  id           String    @id @default(cuid())
+  id           String     @id @default(cuid())
   from_user    AdminUser? @relation(fields: [from_user_id], references: [id])
   from_user_id String?
 
@@ -170,12 +191,12 @@ model Inbox {
 }
 
 model InboxRec {
-  id         String        @id @default(cuid())
-  title      String
-  content    String
-  inboxs     Inbox[]
+  id        String        @id @default(cuid())
+  title     String
+  content   String
+  inboxs    Inbox[]
   send_type InboxSendType
-  sended_at  DateTime      @default(now())
+  sended_at DateTime      @default(now())
 }
 
 enum InboxSendType {
