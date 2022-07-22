@@ -1,17 +1,12 @@
 import { SearchLoginRecsDto } from './dto/search-login-rec.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateLoginRecDto } from './dto/create-login-rec.dto';
-import { UpdateLoginRecDto } from './dto/update-login-rec.dto';
 import { Prisma } from '@prisma/client';
 import { numArrToBooleanSearch } from 'src/utils';
 
 @Injectable()
 export class LoginRecService {
   constructor(private readonly prisma: PrismaService) {}
-  create(createLoginRecDto: CreateLoginRecDto) {
-    return 'This action adds a new loginRec';
-  }
 
   async findAll(search: SearchLoginRecsDto) {
     const {
@@ -99,15 +94,7 @@ export class LoginRecService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} loginRec`;
-  }
-
-  update(id: number, updateLoginRecDto: UpdateLoginRecDto) {
-    return `This action updates a #${id} loginRec`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} loginRec`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} loginRec`;
+  // }
 }
