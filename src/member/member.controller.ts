@@ -10,11 +10,11 @@ import {
 } from '@nestjs/common';
 
 import { MemberService } from './member.service';
-import { CreateMemberDto } from './dto/create-member.dto';
+import { CreateAgentDto } from './dto/create-agent.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { Serilizer } from 'src/interceptors/serializer.interceptor';
 import { MemberDto } from './dto/member.dto';
-import { SearchMembersDto } from './dto/search-members.dto';
+import { SearchAgentsDto } from './dto/search-agents.dto';
 import { User } from 'src/decorators/user.decorator';
 import { LoginUser } from 'src/types';
 
@@ -24,13 +24,13 @@ export class MemberController {
   constructor(private readonly memberService: MemberService) {}
 
   @Post()
-  create(@Body() createMemberDto: CreateMemberDto) {
-    return this.memberService.create(createMemberDto);
+  createAgent(@Body() body: CreateAgentDto) {
+    return this.memberService.createAgent(body);
   }
 
   @Get()
-  findAll(@Query() query: SearchMembersDto, @User() user: LoginUser) {
-    return this.memberService.findAll(query, user);
+  findAllAgents(@Query() query: SearchAgentsDto, @User() user: LoginUser) {
+    return this.memberService.findAllAgents(query, user);
   }
   @Get('parent')
   findAllByParent(

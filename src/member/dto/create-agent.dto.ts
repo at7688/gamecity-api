@@ -1,7 +1,7 @@
 import { MemberType, Prisma } from '@prisma/client';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class CreateMemberDto implements Prisma.MemberCreateInput {
+export class CreateAgentDto implements Prisma.MemberCreateInput {
   @IsString()
   @IsNotEmpty()
   username: string;
