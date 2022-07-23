@@ -3,11 +3,7 @@ import { Transform } from 'class-transformer';
 import { IsBoolean, IsEnum, IsIn, IsOptional, IsString } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
 
-export class SearchMembersDto extends PaginateDto {
-  @IsEnum(MemberType)
-  @IsOptional()
-  type: MemberType;
-
+export class SearchAgentsDto extends PaginateDto {
   @IsOptional()
   @IsString()
   username: string;

@@ -199,6 +199,28 @@ model InboxRec {
   sended_at DateTime      @default(now())
 }
 
+model AgentWithSubNums {
+  id         String
+  username   String     @unique
+  nickname   String
+  created_at DateTime
+  updated_at DateTime
+  parent_id  String?
+  type       MemberType
+  is_active  Boolean
+  is_blocked Boolean
+  layer      Int
+
+  all_agents Int
+  all_players Int
+  self_agents Int
+  self_players Int
+
+  ip String?
+  login_at DateTime?
+  nums_failed Int?
+}
+
 enum InboxSendType {
   PRIVATE
   AGENTS
