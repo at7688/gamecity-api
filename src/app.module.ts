@@ -27,6 +27,7 @@ import { UploadsService } from './uploads/uploads.service';
 import { UploadsController } from './uploads/uploads.controller';
 import { UploadsModule } from './uploads/uploads.module';
 import { InboxModule } from './inbox/inbox.module';
+import { LoginRecModule } from './login-rec/login-rec.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { InboxModule } from './inbox/inbox.module';
       inject: [ConfigService],
     }),
     InboxModule,
+    LoginRecModule,
   ],
   controllers: [AppController, UploadsController],
   providers: [
