@@ -18,7 +18,7 @@ import { SearchAgentsDto } from './dto/search-agents.dto';
 import { User } from 'src/decorators/user.decorator';
 import { LoginUser } from 'src/types';
 
-@Controller('members')
+@Controller('agents')
 @Serilizer(MemberDto)
 export class MemberController {
   constructor(private readonly memberService: MemberService) {}

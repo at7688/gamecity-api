@@ -1,12 +1,35 @@
 import { MemberType } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsEnum, IsIn, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
 
 export class SearchAgentsDto extends PaginateDto {
   @IsOptional()
   @IsString()
   username: string;
+
+  @IsOptional()
+  @IsString()
+  nickname: string;
+
+  @IsInt({ each: true })
+  @IsOptional()
+  @Transform(({ value }) => {
+    return value.map(Number);
+  })
+  layers?: number[];
+
+  @IsIn([0, 1, 2])
+  @IsOptional()
+  @Transform(({ value }) => +value)
+  is_block?: number;
 
   @IsOptional()
   @IsString()
