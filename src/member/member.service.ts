@@ -41,7 +41,7 @@ export class MemberService {
       is_block,
       all,
     } = search;
-    // const default_parent_id = 'admin_role_id' in user ? null : user.id;
+    const default_parent_id = 'admin_role_id' in user ? null : user.id;
     const findManyArgs: Prisma.AgentWithSubNumsFindManyArgs = {
       where: {
         type: 'AGENT',
@@ -61,7 +61,7 @@ export class MemberService {
               ? await this.prisma
                   .$queryRaw<Member[]>(getAllSubsById(parent_id, 'AGENT'))
                   .then((arr) => arr.map((t) => t.id).concat(parent_id))
-              : parent_id,
+              : parent_id || default_parent_id,
         },
       },
       orderBy: [
