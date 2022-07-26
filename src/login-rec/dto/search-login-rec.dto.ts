@@ -43,12 +43,6 @@ export class SearchLoginRecsDto extends PaginateDto {
   @Transform(({ value }) => {
     return value.map(Number);
   })
-  // @Transform(({ value }) => {
-  //   if (typeof value === 'string') {
-  //     return value?.split(',').map(Number);
-  //   }
-  //   return value;
-  // })
   layer?: number[];
 
   @IsDateString()
