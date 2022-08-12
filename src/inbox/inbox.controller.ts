@@ -1,4 +1,4 @@
-import { SearchInboxsDto } from './dto/search-announcements.dto';
+import { SearchInboxsDto } from './dto/search-inboxs.dto';
 import {
   Controller,
   Get,

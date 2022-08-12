@@ -1,25 +1,26 @@
-import {
-  AdminUser,
-  Inbox,
-  InboxSendType,
-  Member,
-  MemberType,
-  Prisma,
-} from '@prisma/client';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateInboxDto } from './dto/create-inbox.dto';
-import { UpdateInboxDto } from './dto/update-inbox.dto';
-import { LoginUser, SimpleMember } from '../types';
-import { SearchInboxsDto } from './dto/search-announcements.dto';
+import { InboxSendType, MemberType, Prisma } from '@prisma/client';
 import { getAllSubsById } from 'src/member/raw/getAllSubsById';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { LoginUser } from '../types';
+import { CreateInboxDto } from './dto/create-inbox.dto';
+import { SearchInboxsDto } from './dto/search-inboxs.dto';
+import { UpdateInboxDto } from './dto/update-inbox.dto';
 
 @Injectable()
 export class InboxService {
   constructor(private readonly prisma: PrismaService) {}
 
   inboxInclude: Prisma.InboxInclude = {
-    inbox_rec: true,
+    inbox_rec: {
+      select: {
+        title: true,
+        content: true,
+        send_type: true,
+        sended_at: true,
+        _count: true,
+      },
+    },
     from_user: {
       select: {
         id: true,
@@ -113,8 +114,8 @@ export class InboxService {
           send_type,
         },
         to_member: {
-          username,
-          nickname,
+          username: { contains: username },
+          nickname: { contains: nickname },
         },
       },
       include: this.inboxInclude,
