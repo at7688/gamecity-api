@@ -1,4 +1,5 @@
 import { InboxSendType, Prisma } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateInboxDto {

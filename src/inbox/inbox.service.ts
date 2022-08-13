@@ -49,6 +49,51 @@ export class InboxService {
     },
   };
 
+  async checkCreateTargets(data: CreateInboxDto, user: LoginUser) {
+    const isAdmin = 'admin_role_id' in user;
+    let toMembers: {
+      id: string;
+      username: string;
+      nickname: string;
+      type: MemberType;
+      layer: number;
+    }[] = [];
+
+    switch (data.send_type) {
+      case InboxSendType.PRIVATE:
+        toMembers = await this.prisma.member.findMany({
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+            type: true,
+            layer: true,
+          },
+          where: {
+            username: {
+              in: data.username.split(',').map((t) => t.trim()),
+            },
+          },
+        });
+        break;
+      case InboxSendType.PLAYERS:
+        toMembers = await this.prisma.$queryRaw(
+          getAllSubsById(isAdmin ? null : user.id, MemberType.PLAYER),
+        );
+        break;
+      case InboxSendType.AGENTS:
+        toMembers = await this.prisma.$queryRaw(
+          getAllSubsById(isAdmin ? null : user.id, MemberType.AGENT),
+        );
+        break;
+
+      default:
+        break;
+    }
+
+    return toMembers;
+  }
+
   async create(data: CreateInboxDto, user: LoginUser) {
     const isAdmin = 'admin_role_id' in user;
     let toMembers: { id: string; username: string }[] = [];
@@ -61,7 +106,9 @@ export class InboxService {
             username: true,
           },
           where: {
-            username: data.username,
+            username: {
+              in: data.username.split(',').map((t) => t.trim()),
+            },
           },
         });
         break;

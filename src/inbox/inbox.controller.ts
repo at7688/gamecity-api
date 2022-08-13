@@ -1,28 +1,32 @@
-import { SearchInboxsDto } from './dto/search-inboxs.dto';
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Request,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
+  Request,
 } from '@nestjs/common';
-import { InboxService } from './inbox.service';
-import { CreateInboxDto } from './dto/create-inbox.dto';
-import { UpdateInboxDto } from './dto/update-inbox.dto';
-import { Serilizer } from 'src/interceptors/serializer.interceptor';
-import { UserDto } from 'src/user/dto/user.dto';
 import { User } from 'src/decorators/user.decorator';
-import { AdminUser, Member } from '@prisma/client';
 import { LoginUser } from 'src/types';
+import { CreateInboxDto } from './dto/create-inbox.dto';
+import { SearchInboxsDto } from './dto/search-inboxs.dto';
+import { UpdateInboxDto } from './dto/update-inbox.dto';
+import { InboxService } from './inbox.service';
 
 @Controller('inboxs')
 export class InboxController {
   constructor(private readonly inboxService: InboxService) {}
 
+  @Post('check')
+  checkCreateTargets(
+    @Body() createInboxDto: CreateInboxDto,
+    @User() user: LoginUser,
+  ) {
+    return this.inboxService.checkCreateTargets(createInboxDto, user);
+  }
   @Post()
   create(@Body() createInboxDto: CreateInboxDto, @User() user: LoginUser) {
     return this.inboxService.create(createInboxDto, user);
