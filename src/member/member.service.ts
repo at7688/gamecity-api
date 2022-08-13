@@ -61,7 +61,7 @@ export class MemberService {
               ? await this.prisma
                   .$queryRaw<Member[]>(getAllSubsById(parent_id, 'AGENT'))
                   .then((arr) => arr.map((t) => t.id).concat(parent_id))
-              : parent_id || default_parent_id,
+              : parent_id,
         },
       },
       orderBy: [
