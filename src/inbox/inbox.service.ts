@@ -1,19 +1,31 @@
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { InboxSendType, MemberType, Prisma } from '@prisma/client';
-import { getAllSubsById } from 'src/member/raw/getAllSubsById';
+import { getAllSubs } from 'src/member/raw/getAllSubs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from '../types';
 import { CreateInboxDto } from './dto/create-inbox.dto';
 import { SearchInboxsDto } from './dto/search-inboxs.dto';
 import { UpdateInboxDto } from './dto/update-inbox.dto';
+import { MemberService } from 'src/member/member.service';
 
 @Injectable()
 export class InboxService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly memberService: MemberService,
   ) {}
+
+  isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
+
+  simpleMemberSelect = {
+    id: true,
+    nickname: true,
+    username: true,
+    layer: true,
+    type: true,
+  };
 
   inboxInclude: Prisma.InboxInclude = {
     inbox_rec: {
@@ -34,27 +46,14 @@ export class InboxService {
       },
     },
     from_member: {
-      select: {
-        id: true,
-        nickname: true,
-        username: true,
-        layer: true,
-        type: true,
-      },
+      select: this.simpleMemberSelect,
     },
     to_member: {
-      select: {
-        id: true,
-        nickname: true,
-        username: true,
-        layer: true,
-        type: true,
-      },
+      select: this.simpleMemberSelect,
     },
   };
 
   async checkCreateTargets(data: CreateInboxDto, user: LoginUser) {
-    const isAdmin = 'admin_role_id' in user;
     let toMembers: {
       id: string;
       username: string;
@@ -66,14 +65,15 @@ export class InboxService {
     switch (data.send_type) {
       case InboxSendType.PRIVATE:
         toMembers = await this.prisma.member.findMany({
-          select: {
-            id: true,
-            username: true,
-            nickname: true,
-            type: true,
-            layer: true,
-          },
+          select: this.simpleMemberSelect,
           where: {
+            id: !this.isAdmin
+              ? {
+                  in: (
+                    await this.memberService.getAllSubs(user.id)
+                  ).map((t) => t.id),
+                }
+              : undefined,
             username: {
               in: data.username.split(',').map((t) => t.trim()),
             },
@@ -81,13 +81,15 @@ export class InboxService {
         });
         break;
       case InboxSendType.PLAYERS:
-        toMembers = await this.prisma.$queryRaw(
-          getAllSubsById(isAdmin ? null : user.id, MemberType.PLAYER),
+        toMembers = await this.memberService.getAllSubs(
+          user.id,
+          MemberType.PLAYER,
         );
         break;
       case InboxSendType.AGENTS:
-        toMembers = await this.prisma.$queryRaw(
-          getAllSubsById(isAdmin ? null : user.id, MemberType.AGENT),
+        toMembers = await this.memberService.getAllSubs(
+          user.id,
+          MemberType.AGENT,
         );
         break;
 
@@ -99,37 +101,8 @@ export class InboxService {
   }
 
   async create(data: CreateInboxDto, user: LoginUser) {
-    const isAdmin = 'admin_role_id' in user;
-    let toMembers: { id: string; username: string }[] = [];
-
-    switch (data.send_type) {
-      case InboxSendType.PRIVATE:
-        toMembers = await this.prisma.member.findMany({
-          select: {
-            id: true,
-            username: true,
-          },
-          where: {
-            username: {
-              in: data.username.split(',').map((t) => t.trim()),
-            },
-          },
-        });
-        break;
-      case InboxSendType.PLAYERS:
-        toMembers = await this.prisma.$queryRaw(
-          getAllSubsById(isAdmin ? null : user.id, MemberType.PLAYER),
-        );
-        break;
-      case InboxSendType.AGENTS:
-        toMembers = await this.prisma.$queryRaw(
-          getAllSubsById(isAdmin ? null : user.id, MemberType.AGENT),
-        );
-        break;
-
-      default:
-        break;
-    }
+    const toMembers: { id: string; username: string }[] =
+      await this.checkCreateTargets(data, user);
 
     return this.prisma.inboxRec.create({
       data: {
@@ -139,8 +112,7 @@ export class InboxService {
         inboxs: {
           createMany: {
             data: toMembers.map((m) => ({
-              ['admin_role_id' in user ? 'from_user_id' : 'from_member_id']:
-                user.id,
+              [this.isAdmin ? 'from_user_id' : 'from_member_id']: user.id,
               to_member_id: m.id,
             })),
           },
@@ -186,9 +158,7 @@ export class InboxService {
     if (type === 1) {
       where = {
         ...where,
-        [this.configService.get('SITE_TYPE') === 'ADMIN'
-          ? 'from_user_id'
-          : 'from_member_id']: user.id,
+        [this.isAdmin ? 'from_user_id' : 'from_member_id']: user.id,
         to_member: {
           username: { contains: username },
           nickname: { contains: nickname },

@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { Member, Prisma } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import { Member, MemberType, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { SearchAgentsDto } from './dto/search-agents.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
+import { getAllParents } from './raw/getAllParents';
 import { getAllParentsById } from './raw/getAllParentsById';
-import { getAllSubsById } from './raw/getAllSubsById';
+import { getAllSubs } from './raw/getAllSubs';
 import { getTreeNode, TreeNodeMember } from './raw/getTreeNode';
 @Injectable()
 export class MemberService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
   async createAgent({ password, ...data }: CreateAgentDto) {
     const hash = await argon2.hash(password);
     let parent: Member | null = null;
@@ -30,6 +35,14 @@ export class MemberService {
     });
   }
 
+  getAllSubs(id: string | null, type?: MemberType) {
+    return this.prisma.$queryRaw<Member[]>(getAllSubs(id, type));
+  }
+
+  getAllParents(parent_id: string) {
+    return this.prisma.$queryRaw<Member[]>(getAllParents(parent_id));
+  }
+
   async findAllAgents(search: SearchAgentsDto, user: LoginUser) {
     const {
       page,
@@ -41,10 +54,12 @@ export class MemberService {
       is_block,
       all,
     } = search;
-    const default_parent_id = 'admin_role_id' in user ? null : user.id;
     const findManyArgs: Prisma.AgentWithSubNumsFindManyArgs = {
       where: {
         type: 'AGENT',
+        id: {
+          in: await (await this.getAllSubs(user.id, 'AGENT')).map((t) => t.id),
+        },
         username: {
           contains: username,
         },
@@ -58,9 +73,9 @@ export class MemberService {
         parent_id: {
           in:
             all && parent_id
-              ? await this.prisma
-                  .$queryRaw<Member[]>(getAllSubsById(parent_id, 'AGENT'))
-                  .then((arr) => arr.map((t) => t.id).concat(parent_id))
+              ? await this.getAllSubs(parent_id, 'AGENT').then((arr) =>
+                  arr.map((t) => t.id).concat(parent_id),
+                )
               : parent_id,
         },
       },
@@ -76,6 +91,8 @@ export class MemberService {
       skip: (page - 1) * perpage,
     };
 
+    const parents = await this.getAllParents(parent_id);
+
     return this.prisma.listFormat({
       items: await this.prisma.agentWithSubNums.findMany(findManyArgs),
       count: await this.prisma.agentWithSubNums.count({
@@ -83,7 +100,10 @@ export class MemberService {
       }),
       search,
       extra: {
-        parents: await this.prisma.$queryRaw(getAllParentsById(parent_id)),
+        parents:
+          'admin_role_id' in user
+            ? parents
+            : parents.filter((t) => t.layer <= user.layer),
       },
     });
   }

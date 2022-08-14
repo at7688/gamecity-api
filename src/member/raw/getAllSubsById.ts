@@ -1,6 +1,6 @@
 import { MemberType, Prisma } from '@prisma/client';
 
-export const getAllSubsById = (id: string, type?: MemberType) => Prisma.sql`
+export const getAllSubs = (id: string, type?: MemberType) => Prisma.sql`
 WITH RECURSIVE get_childs(id, username, nickname, parent_id, type, layer) AS (
   SELECT
     id,
