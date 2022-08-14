@@ -13,4 +13,18 @@ export class PrismaService extends PrismaClient {
       },
     });
   }
+
+  listFormat<T, R extends object, E extends object>({
+    items,
+    count,
+    search,
+    extra,
+  }: {
+    items: T[];
+    count: number;
+    search?: R;
+    extra?: E;
+  }) {
+    return { items, count, search, ...extra };
+  }
 }

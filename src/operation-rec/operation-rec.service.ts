@@ -43,16 +43,13 @@ export class OperationRecService {
       skip: (page - 1) * perpage,
     };
 
-    const [items, count] = await this.prisma.$transaction([
-      this.prisma.operationRec.findMany(findManyArgs),
-      this.prisma.operationRec.count({ where: findManyArgs.where }),
-    ]);
-
-    return {
-      items,
-      count,
+    return this.prisma.listFormat({
+      items: await this.prisma.operationRec.findMany(findManyArgs),
+      count: await this.prisma.operationRec.count({
+        where: findManyArgs.where,
+      }),
       search,
-    };
+    });
   }
 
   async findAuthAll(search: SearchAuthOperationRecDto) {
@@ -81,16 +78,13 @@ export class OperationRecService {
       skip: (page - 1) * perpage,
     };
 
-    const [items, count] = await this.prisma.$transaction([
-      this.prisma.operationRec.findMany(findManyArgs),
-      this.prisma.operationRec.count({ where: findManyArgs.where }),
-    ]);
-
-    return {
-      items,
-      count,
+    return this.prisma.listFormat({
+      items: await this.prisma.operationRec.findMany(findManyArgs),
+      count: await this.prisma.operationRec.count({
+        where: findManyArgs.where,
+      }),
       search,
-    };
+    });
   }
 
   findOne(id: number) {

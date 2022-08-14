@@ -76,19 +76,16 @@ export class MemberService {
       skip: (page - 1) * perpage,
     };
 
-    const [items, count] = await this.prisma.$transaction([
-      this.prisma.agentWithSubNums.findMany(findManyArgs),
-      this.prisma.agentWithSubNums.count({
+    return this.prisma.listFormat({
+      items: await this.prisma.agentWithSubNums.findMany(findManyArgs),
+      count: await this.prisma.agentWithSubNums.count({
         where: findManyArgs.where,
       }),
-    ]);
-
-    return {
-      items,
-      count,
       search,
-      parents: await this.prisma.$queryRaw(getAllParentsById(parent_id)),
-    };
+      extra: {
+        parents: await this.prisma.$queryRaw(getAllParentsById(parent_id)),
+      },
+    });
   }
 
   async findAllByParent(parent_id: string, user: LoginUser) {

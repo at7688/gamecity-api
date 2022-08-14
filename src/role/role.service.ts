@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { AppService } from 'src/app.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -20,11 +22,15 @@ export class RoleService {
     });
   }
 
-  findAll() {
-    return this.prisma.adminRole.findMany({
+  async findAll() {
+    const findManyArgs: Prisma.AdminRoleFindManyArgs = {
       include: {
         menu: true,
       },
+    };
+    return this.prisma.listFormat({
+      items: await this.prisma.adminRole.findMany(findManyArgs),
+      count: await this.prisma.adminRole.count({ where: findManyArgs.where }),
     });
   }
 

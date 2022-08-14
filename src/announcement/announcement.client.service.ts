@@ -19,19 +19,13 @@ export class AnnouncementClientService {
       skip: (+page - 1) * +perpage,
     };
 
-    const [items, total] = await this.prisma.$transaction([
-      this.prisma.announcement.findMany(findManyArgs),
-      this.prisma.announcement.count({ where: findManyArgs.where }),
-    ]);
-
-    return {
-      items,
-      paginator: {
-        page,
-        perpage,
-        total,
-      },
-    };
+    return this.prisma.listFormat({
+      items: await this.prisma.announcement.findMany(findManyArgs),
+      count: await this.prisma.announcement.count({
+        where: findManyArgs.where,
+      }),
+      search,
+    });
   }
 
   findOne(id: string) {

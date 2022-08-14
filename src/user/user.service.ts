@@ -54,22 +54,11 @@ export class UserService {
       skip: (page - 1) * perpage || 0,
     };
 
-    const [items, count_all, count_is_active] = await this.prisma.$transaction([
-      this.prisma.adminUser.findMany(findManyArgs),
-      this.prisma.adminUser.count({ where: findManyArgs.where }),
-      this.prisma.adminUser.count({
-        where: { ...findManyArgs.where, is_active: true },
-      }),
-    ]);
-
-    return {
-      items,
-      counts: {
-        all: count_all,
-        is_active: count_is_active,
-      },
+    return this.prisma.listFormat({
+      items: await this.prisma.adminUser.findMany(findManyArgs),
+      count: await this.prisma.adminUser.count({ where: findManyArgs.where }),
       search,
-    };
+    });
   }
 
   async create({ password, ...data }: CreateUserDto): Promise<AdminUser> {
