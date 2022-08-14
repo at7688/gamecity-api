@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
 import { InboxSendType, MemberType, Prisma } from '@prisma/client';
 import { getAllSubsById } from 'src/member/raw/getAllSubsById';
@@ -9,7 +10,10 @@ import { UpdateInboxDto } from './dto/update-inbox.dto';
 
 @Injectable()
 export class InboxService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   inboxInclude: Prisma.InboxInclude = {
     inbox_rec: {
@@ -149,33 +153,69 @@ export class InboxService {
   }
 
   async findAll(search: SearchInboxsDto, user: LoginUser) {
-    const { page, perpage, title, username, nickname, send_type } = search;
+    const {
+      page,
+      perpage,
+      title,
+      username,
+      nickname,
+      send_type,
+      type,
+      is_read,
+    } = search;
 
-    const findManyArgs: Prisma.InboxFindManyArgs = {
-      where: {
-        ['admin_role_id' in user ? 'from_user_id' : 'from_member_id']: user.id,
-        inbox_rec: {
-          title: {
-            contains: title,
-          },
-          send_type,
+    let where: Prisma.InboxWhereInput = {
+      inbox_rec: {
+        title: {
+          contains: title,
         },
+        send_type,
+      },
+      opened_at:
+        is_read === 1
+          ? {
+              not: null,
+            }
+          : is_read === 2
+          ? {
+              equals: null,
+            }
+          : undefined,
+    };
+
+    if (type === 1) {
+      where = {
+        ...where,
+        [this.configService.get('SITE_TYPE') === 'ADMIN'
+          ? 'from_user_id'
+          : 'from_member_id']: user.id,
         to_member: {
           username: { contains: username },
           nickname: { contains: nickname },
         },
-      },
+      };
+    } else {
+      where = {
+        ...where,
+        to_member: {
+          id: user.id,
+        },
+      };
+    }
+
+    const findManyArgs: Prisma.InboxFindManyArgs = {
+      where,
       include: this.inboxInclude,
       orderBy: [{ inbox_rec: { sended_at: 'desc' } }],
       take: perpage,
       skip: (page - 1) * perpage,
     };
 
-    return {
+    return this.prisma.listFormat({
       items: await this.prisma.inbox.findMany(findManyArgs),
       count: await this.prisma.inbox.count({ where: findManyArgs.where }),
       search,
-    };
+    });
   }
 
   findOne(id: string) {

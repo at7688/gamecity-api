@@ -87,11 +87,11 @@ export class LoginRecService {
       },
     };
 
-    return {
+    return this.prisma.listFormat({
       items: await this.prisma.loginRec.findMany(findManyArgs),
       count: await this.prisma.loginRec.count({ where: findManyArgs.where }),
       search,
-    };
+    });
   }
 
   // findOne(id: number) {
