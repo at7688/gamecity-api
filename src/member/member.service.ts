@@ -17,6 +17,8 @@ export class MemberService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {}
+  isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
+
   async createAgent({ password, ...data }: CreateAgentDto) {
     const hash = await argon2.hash(password);
     let parent: Member | null = null;
@@ -57,9 +59,13 @@ export class MemberService {
     const findManyArgs: Prisma.AgentWithSubNumsFindManyArgs = {
       where: {
         type: 'AGENT',
-        id: {
-          in: await (await this.getAllSubs(user.id, 'AGENT')).map((t) => t.id),
-        },
+        id: !this.isAdmin
+          ? {
+              in: await (
+                await this.getAllSubs(user.id, 'AGENT')
+              ).map((t) => t.id),
+            }
+          : undefined,
         username: {
           contains: username,
         },
