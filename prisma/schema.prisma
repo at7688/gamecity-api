@@ -99,11 +99,45 @@ model Member {
   layer      Int        @default(1)
   parent     Member?    @relation("agent", fields: [parent_id], references: [id])
   subs       Member[]   @relation("agent")
+  players Player[]
 
   sended_inboxs   Inbox[] @relation("from")
   received_inboxs Inbox[] @relation("to")
 
   login_rec LoginRec[]
+}
+
+model Player {
+  id         String     @id @default(cuid())
+  username   String     @unique
+  password   String
+  nickname   String
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  is_active  Boolean    @default(true)
+  is_blocked Boolean    @default(false)
+  balance Float @default(0)
+  promo_code String?    @unique
+  vip Vip @relation(fields: [vip_id], references: [id])
+  vip_id String
+  agent Member @relation(fields: [agent_id], references: [id])
+  agent_id String
+  inviter     Player?    @relation("player", fields: [inviter_id], references: [id])
+  inviter_id String
+  invites       Player[]   @relation("player")
+
+  inboxs Inbox[]
+}
+
+model Vip {
+  id String @id @default(cuid())
+  name String
+  icon String
+  ebet_min Int
+  deposite_min Int
+  withdraw_min Int
+  withdraw_max Int
+  players Player[]
 }
 
 model LoginRec {
@@ -183,6 +217,9 @@ model Inbox {
 
   to_member    Member @relation("to", fields: [to_member_id], references: [id])
   to_member_id String
+
+  to_player Player @relation(fields: [to_player_id], references: [id])
+  to_player_id String
 
   opened_at DateTime?
 
