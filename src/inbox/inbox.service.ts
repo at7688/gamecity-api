@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InboxSendType, MemberType, Prisma } from '@prisma/client';
 import { getAllSubs } from 'src/member/raw/getAllSubs';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -195,11 +195,24 @@ export class InboxService {
     });
   }
 
-  update(id: number, updateInboxDto: UpdateInboxDto) {
+  async updateRead(id: string, user: LoginUser) {
+    const target = await this.prisma.inbox.findUnique({
+      where: { id },
+    });
+    if (target.to_member_id !== user.id) {
+      throw new BadRequestException('非信件接收者');
+    }
+    return this.prisma.inbox.update({
+      where: { id },
+      data: { opened_at: new Date() },
+    });
+  }
+
+  update(id: string, updateInboxDto: UpdateInboxDto) {
     return `This action updates a #${id} inbox`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} inbox`;
   }
 }

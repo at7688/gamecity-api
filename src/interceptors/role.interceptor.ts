@@ -58,6 +58,8 @@ export class RoleInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    throw new ForbiddenException('無操作權限');
+    throw new ForbiddenException(
+      `無操作權限 (${controller.name}/${handler.name})`,
+    );
   }
 }

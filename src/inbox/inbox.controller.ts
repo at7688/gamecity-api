@@ -42,13 +42,18 @@ export class InboxController {
     return this.inboxService.findOne(id);
   }
 
+  @Patch('read/:id')
+  updateRead(@Param('id') id: string, @User() user: LoginUser) {
+    return this.inboxService.updateRead(id, user);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateInboxDto: UpdateInboxDto) {
-    return this.inboxService.update(+id, updateInboxDto);
+    return this.inboxService.update(id, updateInboxDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.inboxService.remove(+id);
+    return this.inboxService.remove(id);
   }
 }
