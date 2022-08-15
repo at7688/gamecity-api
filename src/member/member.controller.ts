@@ -32,12 +32,9 @@ export class MemberController {
   findAllAgents(@Query() query: SearchAgentsDto, @User() user: LoginUser) {
     return this.memberService.findAllAgents(query, user);
   }
-  @Get('parent')
-  findAllByParent(
-    @Query('parent_id') parent_id: string,
-    @User() user: LoginUser,
-  ) {
-    return this.memberService.findAllByParent(parent_id, user);
+  @Get('tree')
+  getTreeNode(@Query('parent_id') parent_id: string, @User() user: LoginUser) {
+    return this.memberService.getTreeNode(parent_id, user);
   }
 
   @Get(':id')

@@ -108,7 +108,7 @@ export class MemberService {
     });
   }
 
-  async findAllByParent(parent_id: string, user: LoginUser) {
+  async getTreeNode(parent_id: string, user: LoginUser) {
     const default_parent_id = 'admin_role_id' in user ? null : user.id;
     return this.prisma.$queryRaw<TreeNodeMember[]>(
       getTreeNode(parent_id || default_parent_id),
