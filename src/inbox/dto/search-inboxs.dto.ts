@@ -1,4 +1,3 @@
-import { InboxSendType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsEnum,
@@ -8,6 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
+import { InboxTargetType, InboxViewType, ReadStatus } from '../enums';
 
 export class SearchInboxsDto extends PaginateDto {
   @IsString()
@@ -22,17 +22,18 @@ export class SearchInboxsDto extends PaginateDto {
   @IsOptional()
   nickname?: string;
 
-  @IsEnum(InboxSendType)
+  @IsEnum(InboxTargetType)
   @IsOptional()
-  send_type: InboxSendType;
+  @Transform(({ value }) => +value)
+  target_type?: InboxTargetType;
 
-  @IsIn([1, 2]) // 1 寄信, 2 收信
+  @IsEnum(InboxViewType) // 1 寄信, 2 收信
   @IsNotEmpty()
   @Transform(({ value }) => +value)
-  type: number;
+  view_type: InboxViewType;
 
-  @IsIn([0, 1, 2]) // 0 全部, 1: 已讀取, 2: 未讀取
+  @IsEnum(ReadStatus) // 0 全部, 1: 已讀取, 2: 未讀取
   @IsOptional()
   @Transform(({ value }) => +value)
-  is_read: number;
+  is_read: ReadStatus;
 }

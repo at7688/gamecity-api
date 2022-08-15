@@ -1,5 +1,5 @@
 import { SearchPlayersDto } from './dto/search-players.dto';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
@@ -7,16 +7,20 @@ import { UpdatePlayerDto } from './dto/update-player.dto';
 import { LoginUser } from 'src/types';
 import { Member, Player, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { MemberService } from 'src/member/member.service';
+import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
+import { SubAgent, subAgents } from './raw/subAgents';
 
 @Injectable()
 export class PlayerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly memberService: MemberService,
   ) {}
   isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
 
-  async create({ password, ...data }: CreatePlayerDto) {
+  async create({ password, ...data }: CreatePlayerDto, user: LoginUser) {
     const hash = await argon2.hash(password);
 
     // 如果有初始化VIP, 則同時綁定
@@ -26,6 +30,15 @@ export class PlayerService {
         orderBy: { name: 'asc' },
       })
     )[0];
+
+    if (!this.isAdmin) {
+      const agents = await this.prisma.$queryRaw<SubAgent[]>(
+        subAgents(user.id),
+      );
+      if (agents.findIndex((t) => t.id === data.agent_id) === -1) {
+        throw new BadRequestException('無此下線');
+      }
+    }
 
     return this.prisma.player.create({
       data: {
@@ -50,13 +63,13 @@ export class PlayerService {
 
     const findManyArgs: Prisma.PlayerFindManyArgs = {
       where: {
-        // id: !this.isAdmin
-        //   ? {
-        //       in: await (
-        //         await this.getAllSubs(user.id, 'AGENT')
-        //       ).map((t) => t.id),
-        //     }
-        //   : undefined,
+        id: !this.isAdmin
+          ? {
+              in: (
+                await this.prisma.$queryRaw<SubPlayer[]>(subPlayers(user.id))
+              ).map((t) => t.id),
+            }
+          : undefined,
         username: {
           contains: username,
         },

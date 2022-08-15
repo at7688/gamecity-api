@@ -1,6 +1,6 @@
 import { MemberType, Prisma } from '@prisma/client';
 
-export const getAllSubs = (id: string | null, type?: MemberType) => Prisma.sql`
+export const getAllSubs = (id: string | null) => Prisma.sql`
 WITH RECURSIVE getAllSubs (id, username) AS (
 	(
 		SELECT id, username FROM "Member" AS a
@@ -19,5 +19,4 @@ WITH RECURSIVE getAllSubs (id, username) AS (
 
 SELECT "Member".* FROM getAllSubs
 JOIN "Member" ON getAllSubs.id = "Member".id
-${type ? Prisma.sql`WHERE type = ${type}` : Prisma.empty}
 `;

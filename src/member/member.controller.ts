@@ -24,13 +24,13 @@ export class MemberController {
   constructor(private readonly memberService: MemberService) {}
 
   @Post()
-  createAgent(@Body() body: CreateAgentDto) {
-    return this.memberService.createAgent(body);
+  create(@Body() body: CreateAgentDto) {
+    return this.memberService.create(body);
   }
 
   @Get()
-  findAllAgents(@Query() query: SearchAgentsDto, @User() user: LoginUser) {
-    return this.memberService.findAllAgents(query, user);
+  findAll(@Query() query: SearchAgentsDto, @User() user: LoginUser) {
+    return this.memberService.findAll(query, user);
   }
   @Get('tree')
   getTreeNode(@Query('parent_id') parent_id: string, @User() user: LoginUser) {

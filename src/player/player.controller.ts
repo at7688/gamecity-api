@@ -20,8 +20,8 @@ export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
 
   @Post()
-  create(@Body() createPlayerDto: CreatePlayerDto) {
-    return this.playerService.create(createPlayerDto);
+  create(@Body() createPlayerDto: CreatePlayerDto, @User() user: LoginUser) {
+    return this.playerService.create(createPlayerDto, user);
   }
 
   @Get()

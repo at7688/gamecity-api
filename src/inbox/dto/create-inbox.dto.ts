@@ -1,6 +1,11 @@
-import { InboxSendType, Prisma } from '@prisma/client';
-import { Transform } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { InboxTargetType } from '../enums';
 
 export class CreateInboxDto {
   @IsString()
@@ -15,7 +20,7 @@ export class CreateInboxDto {
   @IsOptional()
   username?: string;
 
-  @IsEnum(InboxSendType)
+  @IsEnum(InboxTargetType)
   @IsNotEmpty()
-  send_type: InboxSendType;
+  target_type: InboxTargetType; // 1: 代理, 2: 玩家
 }

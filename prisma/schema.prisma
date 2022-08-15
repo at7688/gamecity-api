@@ -141,7 +141,7 @@ model Player {
 model Vip {
   id String @id @default(cuid())
   name String
-  icon String
+  icon String?
   ebet_min Int
   deposite_min Int
   withdraw_min Int
@@ -241,7 +241,7 @@ model InboxRec {
   title     String
   content   String
   inboxs    Inbox[]
-  send_type InboxSendType
+  target_type Int
   sended_at DateTime      @default(now())
 }
 
@@ -267,13 +267,6 @@ model AgentWithSubNums {
   ip String?
   login_at DateTime?
   nums_failed Int?
-}
-
-enum InboxSendType {
-  PRIVATE
-  AGENTS
-  PLAYERS
-  SYSTEM
 }
 
 enum AnnouncementType {

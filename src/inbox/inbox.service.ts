@@ -1,13 +1,14 @@
-import { ConfigService } from '@nestjs/config';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InboxSendType, MemberType, Prisma } from '@prisma/client';
-import { getAllSubs } from 'src/member/raw/getAllSubs';
+import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
+import { MemberService } from 'src/member/member.service';
+import { SubAgent, subAgents } from 'src/player/raw/subAgents';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from '../types';
 import { CreateInboxDto } from './dto/create-inbox.dto';
 import { SearchInboxsDto } from './dto/search-inboxs.dto';
 import { UpdateInboxDto } from './dto/update-inbox.dto';
-import { MemberService } from 'src/member/member.service';
+import { InboxTargetType, InboxViewType, ReadStatus } from './enums';
 
 @Injectable()
 export class InboxService {
@@ -24,7 +25,6 @@ export class InboxService {
     nickname: true,
     username: true,
     layer: true,
-    type: true,
   };
 
   inboxInclude: Prisma.InboxInclude = {
@@ -32,7 +32,7 @@ export class InboxService {
       select: {
         title: true,
         content: true,
-        send_type: true,
+        target_type: true,
         sended_at: true,
         _count: true,
       },
@@ -51,69 +51,101 @@ export class InboxService {
     to_member: {
       select: this.simpleMemberSelect,
     },
+    to_player: {
+      select: {
+        id: true,
+        nickname: true,
+        username: true,
+        agent: {
+          select: this.simpleMemberSelect,
+        },
+      },
+    },
   };
 
   async checkCreateTargets(data: CreateInboxDto, user: LoginUser) {
-    let toMembers: {
-      id: string;
-      username: string;
-      nickname: string;
-      type: MemberType;
-      layer: number;
-    }[] = [];
-
-    switch (data.send_type) {
-      case InboxSendType.PRIVATE:
-        toMembers = await this.prisma.member.findMany({
-          select: this.simpleMemberSelect,
+    if (this.isAdmin) {
+      // 管理站
+      if (data.target_type === InboxTargetType.AGENT) {
+        return this.prisma.member.findMany({
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
           where: {
-            id: !this.isAdmin
-              ? {
-                  in: (
-                    await this.memberService.getAllSubs(user.id)
-                  ).map((t) => t.id),
-                }
-              : undefined,
-            username: {
-              in: data.username.split(',').map((t) => t.trim()),
+            username: data.username,
+          },
+        });
+      } else {
+        return this.prisma.player.findMany({
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+          },
+          where: {
+            username: data.username,
+          },
+        });
+      }
+    } else {
+      // 代理站
+      if (data.target_type === InboxTargetType.AGENT) {
+        return this.prisma.member.findMany({
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+          where: {
+            id: {
+              in: (await this.memberService.getAllSubs(user.id)).map(
+                (t) => t.id,
+              ),
+            },
+            username: data.username,
+          },
+        });
+      } else {
+        return this.prisma.player.findMany({
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+          },
+          where: {
+            username: data.username,
+            agent: {
+              id: {
+                in: (
+                  await this.prisma.$queryRaw<SubAgent[]>(subAgents(user.id))
+                ).map((t) => t.id),
+              },
             },
           },
         });
-        break;
-      case InboxSendType.PLAYERS:
-        toMembers = await this.memberService.getAllSubs(
-          user.id,
-          MemberType.PLAYER,
-        );
-        break;
-      case InboxSendType.AGENTS:
-        toMembers = await this.memberService.getAllSubs(
-          user.id,
-          MemberType.AGENT,
-        );
-        break;
-
-      default:
-        break;
+      }
     }
-
-    return toMembers;
   }
 
   async create(data: CreateInboxDto, user: LoginUser) {
-    const toMembers: { id: string; username: string }[] =
-      await this.checkCreateTargets(data, user);
-
+    const toMembers = await this.checkCreateTargets(data, user);
+    if (toMembers.length === 0) {
+      throw new BadRequestException('發信對象為空');
+    }
     return this.prisma.inboxRec.create({
       data: {
         title: data.title,
         content: data.content,
-        send_type: data.send_type,
+        target_type: data.target_type,
         inboxs: {
           createMany: {
             data: toMembers.map((m) => ({
               [this.isAdmin ? 'from_user_id' : 'from_member_id']: user.id,
-              to_member_id: m.id,
+              [data.target_type === InboxTargetType.AGENT
+                ? 'to_member_id'
+                : 'to_player_id']: m.id,
             })),
           },
         },
@@ -131,8 +163,8 @@ export class InboxService {
       title,
       username,
       nickname,
-      send_type,
-      type,
+      target_type,
+      view_type,
       is_read,
     } = search;
 
@@ -141,29 +173,43 @@ export class InboxService {
         title: {
           contains: title,
         },
-        send_type,
+        target_type,
       },
       opened_at:
-        is_read === 1
+        is_read === ReadStatus.READ
           ? {
               not: null,
             }
-          : is_read === 2
+          : is_read === ReadStatus.UNREAD
           ? {
               equals: null,
             }
           : undefined,
     };
 
-    if (type === 1) {
+    if (view_type === InboxViewType.SEND) {
       where = {
         ...where,
         [this.isAdmin ? 'from_user_id' : 'from_member_id']: user.id,
-        to_member: {
-          username: { contains: username },
-          nickname: { contains: nickname },
-        },
       };
+      if (target_type === InboxTargetType.AGENT) {
+        where = {
+          ...where,
+          to_member: {
+            username: { contains: username },
+            nickname: { contains: nickname },
+          },
+        };
+        console.log(where);
+      } else if (target_type === InboxTargetType.PLAYER) {
+        where = {
+          ...where,
+          to_player: {
+            username: { contains: username },
+            nickname: { contains: nickname },
+          },
+        };
+      }
     } else {
       where = {
         ...where,

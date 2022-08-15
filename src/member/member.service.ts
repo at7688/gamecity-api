@@ -18,7 +18,7 @@ export class MemberService {
   ) {}
   isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
 
-  async createAgent({ password, ...data }: CreateAgentDto) {
+  async create({ password, ...data }: CreateAgentDto) {
     const hash = await argon2.hash(password);
     let parent: Member | null = null;
     if (data.parent_id) {
@@ -36,15 +36,15 @@ export class MemberService {
     });
   }
 
-  getAllSubs(id: string | null, type?: MemberType) {
-    return this.prisma.$queryRaw<Member[]>(getAllSubs(id, type));
+  getAllSubs(id: string | null) {
+    return this.prisma.$queryRaw<Member[]>(getAllSubs(id));
   }
 
   getAllParents(parent_id: string) {
     return this.prisma.$queryRaw<Member[]>(getAllParents(parent_id));
   }
 
-  async findAllAgents(search: SearchAgentsDto, user: LoginUser) {
+  async findAll(search: SearchAgentsDto, user: LoginUser) {
     const {
       page,
       perpage,
@@ -60,9 +60,7 @@ export class MemberService {
         type: 'AGENT',
         id: !this.isAdmin
           ? {
-              in: await (
-                await this.getAllSubs(user.id, 'AGENT')
-              ).map((t) => t.id),
+              in: (await this.getAllSubs(user.id)).map((t) => t.id),
             }
           : undefined,
         username: {
@@ -78,7 +76,7 @@ export class MemberService {
         parent_id: {
           in:
             all && parent_id
-              ? await this.getAllSubs(parent_id, 'AGENT').then((arr) =>
+              ? await this.getAllSubs(parent_id).then((arr) =>
                   arr.map((t) => t.id).concat(parent_id),
                 )
               : parent_id,

@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { InboxService } from './inbox.service';
+import { MemberModule } from 'src/member/member.module';
 import { InboxController } from './inbox.controller';
-import { MemberService } from 'src/member/member.service';
+import { InboxService } from './inbox.service';
 
 @Module({
+  imports: [MemberModule],
   controllers: [InboxController],
-  providers: [InboxService, MemberService],
+  providers: [InboxService],
 })
 export class InboxModule {}
