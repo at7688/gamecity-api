@@ -28,6 +28,8 @@ import { UploadsController } from './uploads/uploads.controller';
 import { UploadsModule } from './uploads/uploads.module';
 import { InboxModule } from './inbox/inbox.module';
 import { LoginRecModule } from './login-rec/login-rec.module';
+import { VipModule } from './vip/vip.module';
+import { PlayerModule } from './player/player.module';
 
 @Module({
   imports: [
@@ -66,6 +68,8 @@ import { LoginRecModule } from './login-rec/login-rec.module';
     }),
     InboxModule,
     LoginRecModule,
+    VipModule,
+    PlayerModule,
   ],
   controllers: [AppController, UploadsController],
   providers: [

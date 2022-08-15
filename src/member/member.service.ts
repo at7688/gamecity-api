@@ -8,7 +8,6 @@ import { CreateAgentDto } from './dto/create-agent.dto';
 import { SearchAgentsDto } from './dto/search-agents.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { getAllParents } from './raw/getAllParents';
-import { getAllParentsById } from './raw/getAllParentsById';
 import { getAllSubs } from './raw/getAllSubs';
 import { getTreeNode, TreeNodeMember } from './raw/getTreeNode';
 @Injectable()

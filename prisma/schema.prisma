@@ -84,6 +84,12 @@ model Menu {
   permissions  Permission[]
 }
 
+model PromoCode {
+  code String @id
+  member Member?
+  player Player?
+}
+
 model Member {
   id         String     @id @default(cuid())
   username   String     @unique
@@ -92,7 +98,6 @@ model Member {
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
   parent_id  String?
-  promo_code String?    @unique
   type       MemberType
   is_active  Boolean    @default(true)
   is_blocked Boolean    @default(false)
@@ -105,6 +110,8 @@ model Member {
   received_inboxs Inbox[] @relation("to")
 
   login_rec LoginRec[]
+  promo PromoCode? @relation(fields: [promo_code], references: [code])
+  promo_code String? @unique
 }
 
 model Player {
@@ -117,16 +124,18 @@ model Player {
   is_active  Boolean    @default(true)
   is_blocked Boolean    @default(false)
   balance Float @default(0)
-  promo_code String?    @unique
-  vip Vip @relation(fields: [vip_id], references: [id])
-  vip_id String
+  vip Vip? @relation(fields: [vip_id], references: [id])
+  vip_id String?
   agent Member @relation(fields: [agent_id], references: [id])
   agent_id String
   inviter     Player?    @relation("player", fields: [inviter_id], references: [id])
-  inviter_id String
+  inviter_id String?
   invites       Player[]   @relation("player")
 
   inboxs Inbox[]
+
+  promo PromoCode? @relation(fields: [promo_code], references: [code])
+  promo_code String? @unique
 }
 
 model Vip {
@@ -215,11 +224,11 @@ model Inbox {
   from_member    Member? @relation("from", fields: [from_member_id], references: [id])
   from_member_id String?
 
-  to_member    Member @relation("to", fields: [to_member_id], references: [id])
-  to_member_id String
+  to_member    Member? @relation("to", fields: [to_member_id], references: [id])
+  to_member_id String?
 
-  to_player Player @relation(fields: [to_player_id], references: [id])
-  to_player_id String
+  to_player Player? @relation(fields: [to_player_id], references: [id])
+  to_player_id String?
 
   opened_at DateTime?
 
