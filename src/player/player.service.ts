@@ -10,6 +10,7 @@ import * as argon2 from 'argon2';
 import { MemberService } from 'src/member/member.service';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { SubAgent, subAgents } from './raw/subAgents';
+import { playerList } from './raw/playerList';
 
 @Injectable()
 export class PlayerService {
@@ -77,14 +78,6 @@ export class PlayerService {
           contains: nickname,
         },
         is_blocked: { 0: undefined, 1: true, 2: false }[is_block],
-        // inviter_id: {
-        //   in:
-        //     all && inviter_id
-        //       ? await this.getAllSubs(inviter_id, 'AGENT').then((arr) =>
-        //           arr.map((t) => t.id).concat(inviter_id),
-        //         )
-        //       : inviter_id,
-        // },
       },
       orderBy: [
         {
@@ -95,8 +88,10 @@ export class PlayerService {
       skip: (page - 1) * perpage,
     };
 
+    const _items = await this.prisma.player.findMany(findManyArgs);
+
     return this.prisma.listFormat({
-      items: await this.prisma.player.findMany(findManyArgs),
+      items: await this.prisma.$queryRaw(playerList(_items.map((t) => t.id))),
       count: await this.prisma.player.count({
         where: findManyArgs.where,
       }),

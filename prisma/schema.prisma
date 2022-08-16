@@ -13,15 +13,14 @@ model AdminUser {
   password      String
   nickname      String
   admin_role_id String
-  is_blocked    Boolean        @default(false)
   is_active     Boolean        @default(true)
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
+  is_blocked    Boolean        @default(false)
   admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
+  inboxs        Inbox[]
+  login_rec     LoginRec[]
   operations    OperationRec[]
-
-  inboxs    Inbox[]
-  login_rec LoginRec[]
 }
 
 model Permission {
@@ -77,7 +76,7 @@ model Menu {
   root_menu_id String?
   sort         Int          @default(autoincrement())
   icon         String?
-  path         String?  @unique()
+  path         String?      @unique
   root_menu    Menu?        @relation("root", fields: [root_menu_id], references: [id])
   sub_menus    Menu[]       @relation("root")
   admin_roles  AdminRole[]
@@ -85,33 +84,31 @@ model Menu {
 }
 
 model PromoCode {
-  code String @id
+  code   String  @id
   member Member?
   player Player?
 }
 
 model Member {
-  id         String     @id @default(cuid())
-  username   String     @unique
-  password   String
-  nickname   String
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-  parent_id  String?
-  type       MemberType
-  is_active  Boolean    @default(true)
-  is_blocked Boolean    @default(false)
-  layer      Int        @default(1)
-  parent     Member?    @relation("agent", fields: [parent_id], references: [id])
-  subs       Member[]   @relation("agent")
-  players Player[]
-
-  sended_inboxs   Inbox[] @relation("from")
-  received_inboxs Inbox[] @relation("to")
-
-  login_rec LoginRec[]
-  promo PromoCode? @relation(fields: [promo_code], references: [code])
-  promo_code String? @unique
+  id              String     @id @default(cuid())
+  username        String     @unique
+  password        String
+  nickname        String
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+  parent_id       String?
+  promo_code      String?    @unique
+  type            MemberType
+  is_active       Boolean    @default(true)
+  layer           Int        @default(1)
+  is_blocked      Boolean    @default(false)
+  parent          Member?    @relation("agent", fields: [parent_id], references: [id])
+  promo           PromoCode? @relation(fields: [promo_code], references: [code])
+  sended_inboxs   Inbox[]    @relation("from")
+  received_inboxs Inbox[]    @relation("to")
+  login_rec       LoginRec[]
+  subs            Member[]   @relation("agent")
+  players         Player[]
 }
 
 model Player {
@@ -123,47 +120,42 @@ model Player {
   updated_at DateTime   @updatedAt
   is_active  Boolean    @default(true)
   is_blocked Boolean    @default(false)
-  balance Float @default(0)
-  vip Vip? @relation(fields: [vip_id], references: [id])
-  vip_id String?
-  agent Member @relation(fields: [agent_id], references: [id])
-  agent_id String
-  inviter     Player?    @relation("player", fields: [inviter_id], references: [id])
+  balance    Float      @default(0)
+  promo_code String?    @unique
+  vip_id     String?
+  agent_id   String
   inviter_id String?
-  invites       Player[]   @relation("player")
-
-  inboxs Inbox[]
-
-  promo PromoCode? @relation(fields: [promo_code], references: [code])
-  promo_code String? @unique
+  agent      Member     @relation(fields: [agent_id], references: [id])
+  inviter    Player?    @relation("player", fields: [inviter_id], references: [id])
+  promo      PromoCode? @relation(fields: [promo_code], references: [code])
+  vip        Vip?       @relation(fields: [vip_id], references: [id])
+  inboxs     Inbox[]
+  invites    Player[]   @relation("player")
 }
 
+
+
 model Vip {
-  id String @id @default(cuid())
-  name String
-  icon String?
-  ebet_min Int
+  id           String   @id @default(cuid())
+  name         String
+  icon         String?
+  ebet_min     Int
   deposite_min Int
   withdraw_min Int
   withdraw_max Int
-  players Player[]
+  players      Player[]
 }
 
 model LoginRec {
   id            Int        @id @default(autoincrement())
-  admin_user    AdminUser? @relation(fields: [admin_user_id], references: [id])
   admin_user_id String?
-
-  agent    Member? @relation(fields: [agent_id], references: [id])
-  agent_id String?
-
-  ip String?
-
-  failed_msg String?
-
-  login_at DateTime @default(now())
-
-  nums_failed Int @default(0)
+  agent_id      String?
+  ip            String?
+  login_at      DateTime   @default(now())
+  nums_failed   Int        @default(0)
+  failed_msg    String?
+  admin_user    AdminUser? @relation(fields: [admin_user_id], references: [id])
+  agent         Member?    @relation(fields: [agent_id], references: [id])
 }
 
 model ActivityPromo {
@@ -217,56 +209,27 @@ model Game {
 }
 
 model Inbox {
-  id           String     @id @default(cuid())
-  from_user    AdminUser? @relation(fields: [from_user_id], references: [id])
-  from_user_id String?
-
-  from_member    Member? @relation("from", fields: [from_member_id], references: [id])
+  id             String     @id @default(cuid())
+  from_user_id   String?
   from_member_id String?
-
-  to_member    Member? @relation("to", fields: [to_member_id], references: [id])
-  to_member_id String?
-
-  to_player Player? @relation(fields: [to_player_id], references: [id])
-  to_player_id String?
-
-  opened_at DateTime?
-
-  inbox_rec    InboxRec @relation(fields: [inbox_rec_id], references: [id], onDelete: Cascade)
-  inbox_rec_id String
+  to_member_id   String?
+  opened_at      DateTime?
+  inbox_rec_id   String
+  to_player_id   String?
+  from_member    Member?    @relation("from", fields: [from_member_id], references: [id])
+  from_user      AdminUser? @relation(fields: [from_user_id], references: [id])
+  inbox_rec      InboxRec   @relation(fields: [inbox_rec_id], references: [id], onDelete: Cascade)
+  to_member      Member?    @relation("to", fields: [to_member_id], references: [id])
+  to_player      Player?    @relation(fields: [to_player_id], references: [id])
 }
 
 model InboxRec {
-  id        String        @id @default(cuid())
-  title     String
-  content   String
-  inboxs    Inbox[]
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  sended_at   DateTime @default(now())
   target_type Int
-  sended_at DateTime      @default(now())
-}
-
-model AgentWithSubNums {
-  id         String
-  username   String     @unique
-  nickname   String
-  created_at DateTime
-  updated_at DateTime
-  parent_id  String?
-  type       MemberType
-  is_active  Boolean
-  is_blocked Boolean
-  layer      Int
-
-  all_agents Int
-  all_players Int
-  self_agents Int
-  self_players Int
-
-  parents Json? @db.Json
-
-  ip String?
-  login_at DateTime?
-  nums_failed Int?
+  inboxs      Inbox[]
 }
 
 enum AnnouncementType {
@@ -285,4 +248,11 @@ enum GamePlatformStatus {
   ONLINE
   OFFLINE
   MAINTENANCE
+}
+
+enum InboxSendType {
+  PRIVATE
+  AGENTS
+  PLAYERS
+  SYSTEM
 }
