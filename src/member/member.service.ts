@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Member, MemberType, Prisma } from '@prisma/client';
+import { Member, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { SearchAgentsDto } from './dto/search-agents.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
+import { agentWithSubNums } from './raw/agentWithSubNums';
 import { getAllParents } from './raw/getAllParents';
 import { getAllSubs } from './raw/getAllSubs';
 import { getTreeNode, TreeNodeMember } from './raw/getTreeNode';
@@ -55,7 +56,7 @@ export class MemberService {
       is_block,
       all,
     } = search;
-    const findManyArgs: Prisma.AgentWithSubNumsFindManyArgs = {
+    const findManyArgs: Prisma.MemberFindManyArgs = {
       where: {
         type: 'AGENT',
         id: !this.isAdmin
@@ -96,9 +97,13 @@ export class MemberService {
 
     const parents = await this.getAllParents(parent_id);
 
+    const _items = await this.prisma.member.findMany(findManyArgs);
+    console.log(_items);
     return this.prisma.listFormat({
-      items: await this.prisma.agentWithSubNums.findMany(findManyArgs),
-      count: await this.prisma.agentWithSubNums.count({
+      items: await this.prisma.$queryRaw(
+        agentWithSubNums(_items.map((t) => t.id)),
+      ),
+      count: await this.prisma.member.count({
         where: findManyArgs.where,
       }),
       search,
