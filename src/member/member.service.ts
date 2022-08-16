@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Member, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
@@ -19,19 +19,33 @@ export class MemberService {
   ) {}
   isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
 
-  async create({ password, ...data }: CreateAgentDto) {
+  async create({ password, ...data }: CreateAgentDto, user: LoginUser) {
     const hash = await argon2.hash(password);
     let parent: Member | null = null;
-    if (data.parent_id) {
-      parent = await this.prisma.member.findUnique({
-        where: { id: data.parent_id },
-      });
+    if ('admin_role_id' in user) {
+      if (data.parent_id) {
+        parent = await this.prisma.member.findUnique({
+          where: { id: data.parent_id },
+        });
+      }
+    } else {
+      if (data.parent_id) {
+        parent = (await this.getAllSubs(user.id)).find(
+          (t) => t.id === data.parent_id,
+        );
+        if (!parent) {
+          throw new BadRequestException('上層錯誤');
+        }
+      } else {
+        parent = user;
+      }
     }
 
     return this.prisma.member.create({
       data: {
         ...data,
         password: hash,
+        parent_id: parent?.id,
         layer: parent ? ++parent.layer : 1,
       },
     });
@@ -58,7 +72,6 @@ export class MemberService {
     } = search;
     const findManyArgs: Prisma.MemberFindManyArgs = {
       where: {
-        type: 'AGENT',
         id: !this.isAdmin
           ? {
               in: (await this.getAllSubs(user.id)).map((t) => t.id),
@@ -83,14 +96,6 @@ export class MemberService {
               : parent_id,
         },
       },
-      orderBy: [
-        {
-          layer: 'asc',
-        },
-        {
-          created_at: 'desc',
-        },
-      ],
       take: perpage,
       skip: (page - 1) * perpage,
     };
@@ -98,7 +103,6 @@ export class MemberService {
     const parents = await this.getAllParents(parent_id);
 
     const _items = await this.prisma.member.findMany(findManyArgs);
-    console.log(_items);
     return this.prisma.listFormat({
       items: await this.prisma.$queryRaw(
         agentWithSubNums(_items.map((t) => t.id)),

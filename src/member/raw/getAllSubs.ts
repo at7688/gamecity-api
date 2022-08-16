@@ -1,4 +1,4 @@
-import { MemberType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const getAllSubs = (id: string | null) => Prisma.sql`
 WITH RECURSIVE getAllSubs (id, username) AS (

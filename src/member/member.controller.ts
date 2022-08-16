@@ -24,8 +24,8 @@ export class MemberController {
   constructor(private readonly memberService: MemberService) {}
 
   @Post()
-  create(@Body() body: CreateAgentDto) {
-    return this.memberService.create(body);
+  create(@Body() body: CreateAgentDto, @User() user: LoginUser) {
+    return this.memberService.create(body, user);
   }
 
   @Get()

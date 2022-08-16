@@ -54,4 +54,5 @@ export const agentWithSubNums = (ids: string[]) => Prisma.sql`
     ) login
   FROM "Member" m
   WHERE id = ANY(${ids})
+  ORDER BY id DESC
 `;

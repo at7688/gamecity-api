@@ -98,7 +98,6 @@ model Member {
   updated_at      DateTime   @updatedAt
   parent_id       String?
   promo_code      String?    @unique
-  type            MemberType
   is_active       Boolean    @default(true)
   layer           Int        @default(1)
   is_blocked      Boolean    @default(false)
@@ -109,6 +108,9 @@ model Member {
   login_rec       LoginRec[]
   subs            Member[]   @relation("agent")
   players         Player[]
+
+  contact Contact? @relation(fields: [contact_id], references: [id])
+  contact_id Int? @unique
 }
 
 model Player {
@@ -131,8 +133,21 @@ model Player {
   vip        Vip?       @relation(fields: [vip_id], references: [id])
   inboxs     Inbox[]
   invites    Player[]   @relation("player")
+
+  contact Contact? @relation(fields: [contact_id], references: [id])
+  contact_id Int? @unique
 }
 
+model Contact {
+  id Int @id @default(autoincrement())
+  phone String
+  lineID String
+  telegram String
+  email String
+
+  player Player?
+  agent Member?
+}
 
 
 model Vip {
@@ -239,10 +254,6 @@ enum AnnouncementType {
   SERVICE
 }
 
-enum MemberType {
-  PLAYER
-  AGENT
-}
 
 enum GamePlatformStatus {
   ONLINE
@@ -250,9 +261,4 @@ enum GamePlatformStatus {
   MAINTENANCE
 }
 
-enum InboxSendType {
-  PRIVATE
-  AGENTS
-  PLAYERS
-  SYSTEM
-}
+

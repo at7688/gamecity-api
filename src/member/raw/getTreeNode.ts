@@ -5,7 +5,6 @@ export interface TreeNodeMember {
   nickname: string;
   username: string;
   parent_id: null;
-  type: string;
   layer: number;
   num_subs: number;
 }
@@ -18,7 +17,6 @@ LEFT JOIN
 	(
 		SELECT parent_id, COUNT(*)
 		FROM "Member"
-		WHERE type = 'AGENT'
 		GROUP BY parent_id
 	) AS p
 ON p.parent_id = "Member".id

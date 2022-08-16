@@ -1,11 +1,8 @@
-import { AnnouncementType, MemberType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsDateString,
-  IsEnum,
   IsIn,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
