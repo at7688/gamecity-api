@@ -134,6 +134,8 @@ model CompanyCard {
   rotation_id Int
 
   records BankDepositRec[]
+
+  vip Vip[]
 }
 
 model BankDepositRec {
@@ -227,6 +229,9 @@ model Vip {
   withdraw_min Int
   withdraw_max Int
   players      Player[]
+
+  card       CompanyCard @relation(fields: [card_id], references: [id])
+  card_id    String
 }
 
 enum PlatformType {
