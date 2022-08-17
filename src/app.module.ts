@@ -30,6 +30,9 @@ import { InboxModule } from './inbox/inbox.module';
 import { LoginRecModule } from './login-rec/login-rec.module';
 import { VipModule } from './vip/vip.module';
 import { PlayerModule } from './player/player.module';
+import { PBankcardModule } from './p-bankcard/p-bankcard.module';
+import { CBankcardModule } from './c-bankcard/c-bankcard.module';
+import { RotationModule } from './rotation/rotation.module';
 
 @Module({
   imports: [
@@ -70,6 +73,9 @@ import { PlayerModule } from './player/player.module';
     LoginRecModule,
     VipModule,
     PlayerModule,
+    PBankcardModule,
+    CBankcardModule,
+    RotationModule,
   ],
   controllers: [AppController, UploadsController],
   providers: [

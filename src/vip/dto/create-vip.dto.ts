@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateVipDto {
   @IsString()
@@ -9,19 +9,27 @@ export class CreateVipDto {
   @IsNotEmpty()
   icon: string;
 
-  @IsNumber()
+  @IsInt()
   @IsNotEmpty()
   ebet_min: number;
 
-  @IsNumber()
+  @IsInt()
   @IsNotEmpty()
   deposite_min: number;
 
-  @IsNumber()
+  @IsInt()
   @IsNotEmpty()
   withdraw_min: number;
 
-  @IsNumber()
+  @IsInt()
   @IsNotEmpty()
   withdraw_max: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  card_rotate_id: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  payment_rotate_id: number;
 }

@@ -102,8 +102,11 @@ model RotationGroup {
   id        Int           @id @default(autoincrement())
   sort      Int
   name      String
-  type      Int
+  type      Int // 金流/銀行卡
   bank_card CompanyCard[]
+
+  card_vip Vip[] @relation("card")
+  payment_vip Vip[] @relation("payment")
 }
 
 model PlayerCard {
@@ -130,12 +133,12 @@ model CompanyCard {
   min         Int
   max         Int
   total_max   Int
-  rotation    RotationGroup @relation(fields: [rotation_id], references: [id])
+  bankcard    RotationGroup @relation(fields: [rotation_id], references: [id])
   rotation_id Int
+  is_active Boolean @default(true)
 
   records BankDepositRec[]
 
-  vip Vip[]
 }
 
 model BankDepositRec {
@@ -230,8 +233,11 @@ model Vip {
   withdraw_max Int
   players      Player[]
 
-  card       CompanyCard @relation(fields: [card_id], references: [id])
-  card_id    String
+  card_rotate RotationGroup @relation("card", fields: [card_rotate_id], references: [id])
+  card_rotate_id Int
+
+  payment_rotate RotationGroup @relation("payment", fields: [payment_rotate_id], references: [id])
+  payment_rotate_id Int
 }
 
 enum PlatformType {

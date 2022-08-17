@@ -8,7 +8,9 @@ import { UpdateVipDto } from './dto/update-vip.dto';
 export class VipService {
   constructor(private readonly prisma: PrismaService) {}
   create(data: CreateVipDto) {
-    return this.prisma.vip.create({ data });
+    return this.prisma.vip.create({
+      data,
+    });
   }
 
   async findAll() {
