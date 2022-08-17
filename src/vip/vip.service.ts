@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateVipDto } from './dto/create-vip.dto';
 import { UpdateVipDto } from './dto/update-vip.dto';
+import { vipList } from './raw/vipList';
 
 @Injectable()
 export class VipService {
@@ -14,11 +14,8 @@ export class VipService {
   }
 
   async findAll() {
-    const findManyArgs: Prisma.VipFindManyArgs = {};
-    return this.prisma.listFormat({
-      items: await this.prisma.vip.findMany(findManyArgs),
-      count: await this.prisma.vip.count({ where: findManyArgs.where }),
-    });
+    const records = await this.prisma.$queryRaw(vipList());
+    return this.prisma.listFormat(records[0]);
   }
 
   findOne(id: string) {
