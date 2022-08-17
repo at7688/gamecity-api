@@ -21,7 +21,8 @@ export class PlayerService {
   ) {}
   isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
 
-  async create({ password, ...data }: CreatePlayerDto, user: LoginUser) {
+  async create(createData: CreatePlayerDto, user: LoginUser) {
+    const { password, username, nickname, agent_id, phone, email } = createData;
     const hash = await argon2.hash(password);
 
     // 如果有初始化VIP, 則同時綁定
@@ -36,16 +37,24 @@ export class PlayerService {
       const agents = await this.prisma.$queryRaw<SubAgent[]>(
         subAgents(user.id),
       );
-      if (agents.findIndex((t) => t.id === data.agent_id) === -1) {
+      if (agents.findIndex((t) => t.id === agent_id) === -1) {
         throw new BadRequestException('無此下線');
       }
     }
 
     return this.prisma.player.create({
       data: {
-        ...data,
+        username,
+        nickname,
+        agent_id,
         password: hash,
         vip_id: vip?.id,
+        contact: {
+          create: {
+            phone,
+            email: email || null,
+          },
+        },
       },
     });
   }

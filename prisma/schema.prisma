@@ -85,9 +85,101 @@ model Menu {
 
 model PromoCode {
   code   String  @id
-  member Member?
+  agent Member?
   player Player?
 }
+
+model ChipsRec {
+  id         String   @id @default(cuid())
+  player     Player   @relation(fields: [player_id], references: [id])
+  player_id  String
+  qty        Float
+  created_at DateTime @default(now())
+  type       Int
+}
+
+model RotationGroup {
+  id        Int           @id @default(autoincrement())
+  sort      Int
+  name      String
+  type      Int
+  bank_card CompanyCard[]
+}
+
+model PlayerCard {
+  id           String   @id @default(cuid())
+  bank_code    String
+  branch       String
+  name         String
+  account      String
+  player       Player   @relation(fields: [player_id], references: [id])
+  player_id    String
+  is_default   Boolean
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  valid_status Int // 等待驗證/通過驗證/未通過驗證
+  imgs         String[]
+}
+
+model CompanyCard {
+  id          String        @id @default(cuid())
+  bank_code   String
+  branch      String
+  name        String
+  account     String
+  min         Int
+  max         Int
+  total_max   Int
+  rotation    RotationGroup @relation(fields: [rotation_id], references: [id])
+  rotation_id Int
+
+  records BankDepositRec[]
+}
+
+model BankDepositRec {
+  id         String      @id @default(cuid())
+  player     Player      @relation(fields: [player_id], references: [id])
+  player_id  String
+  amount     Float
+  card       CompanyCard @relation(fields: [card_id], references: [id])
+  card_id    String
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+  status     Int // 等待付款/等待審核/完成核發/取消申請/拒絕退回/已過期
+  acc_tail   String // 末五碼
+  note       String
+}
+
+
+model Player {
+  id         String     @id @default(cuid())
+  username   String     @unique
+  password   String
+  nickname   String
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  is_active  Boolean    @default(true)
+  is_blocked Boolean    @default(false)
+  agent      Member     @relation(fields: [agent_id], references: [id])
+  agent_id   String
+  inviter    Player?    @relation("player", fields: [inviter_id], references: [id])
+  inviter_id String?
+  promo      PromoCode? @relation(fields: [promo_code], references: [code])
+  promo_code String?    @unique
+  vip        Vip?       @relation(fields: [vip_id], references: [id])
+  vip_id     String?
+  inboxs     Inbox[]
+  invites    Player[]   @relation("player")
+
+  contact    Contact?
+
+  chips_records ChipsRec[]
+  bank_deposits BankDepositRec[]
+  bankcard      PlayerCard[]
+
+  login_rec       LoginRec[]
+}
+
 
 model Member {
   id              String     @id @default(cuid())
@@ -109,46 +201,22 @@ model Member {
   subs            Member[]   @relation("agent")
   players         Player[]
 
-  contact Contact? @relation(fields: [contact_id], references: [id])
-  contact_id Int? @unique
-}
-
-model Player {
-  id         String     @id @default(cuid())
-  username   String     @unique
-  password   String
-  nickname   String
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-  is_active  Boolean    @default(true)
-  is_blocked Boolean    @default(false)
-  balance    Float      @default(0)
-  promo_code String?    @unique
-  vip_id     String?
-  agent_id   String
-  inviter_id String?
-  agent      Member     @relation(fields: [agent_id], references: [id])
-  inviter    Player?    @relation("player", fields: [inviter_id], references: [id])
-  promo      PromoCode? @relation(fields: [promo_code], references: [code])
-  vip        Vip?       @relation(fields: [vip_id], references: [id])
-  inboxs     Inbox[]
-  invites    Player[]   @relation("player")
-
-  contact Contact? @relation(fields: [contact_id], references: [id])
-  contact_id Int? @unique
+  contact    Contact?
 }
 
 model Contact {
-  id Int @id @default(autoincrement())
-  phone String
-  lineID String
-  telegram String
-  email String
+  id       Int    @id @default(autoincrement())
+  phone    String
+  line_id   String?
+  telegram String?
+  email    String?
 
-  player Player?
-  agent Member?
+  player Player? @relation(fields: [player_id], references: [id])
+  player_id String? @unique
+
+  agent Member? @relation(fields: [agent_id], references: [id])
+  agent_id String? @unique
 }
-
 
 model Vip {
   id           String   @id @default(cuid())
@@ -169,8 +237,11 @@ model LoginRec {
   login_at      DateTime   @default(now())
   nums_failed   Int        @default(0)
   failed_msg    String?
+  platform Int // 管端/代理端/會員端
   admin_user    AdminUser? @relation(fields: [admin_user_id], references: [id])
   agent         Member?    @relation(fields: [agent_id], references: [id])
+  player Player? @relation(fields: [player_id], references: [id])
+  player_id String?
 }
 
 model ActivityPromo {
@@ -254,11 +325,8 @@ enum AnnouncementType {
   SERVICE
 }
 
-
 enum GamePlatformStatus {
   ONLINE
   OFFLINE
   MAINTENANCE
 }
-
-

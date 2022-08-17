@@ -16,4 +16,12 @@ export class CreatePlayerDto {
   @IsString()
   @IsNotEmpty()
   agent_id: string;
+
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
+
+  @IsString()
+  @IsOptional()
+  email?: string;
 }
