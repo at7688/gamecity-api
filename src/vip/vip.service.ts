@@ -19,11 +19,14 @@ export class VipService {
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} vip`;
+    return this.prisma.vip.findUnique({ where: { id } });
   }
 
-  update(id: string, updateVipDto: UpdateVipDto) {
-    return `This action updates a #${id} vip`;
+  update(id: string, data: UpdateVipDto) {
+    return this.prisma.vip.update({
+      where: { id },
+      data,
+    });
   }
 
   remove(id: string) {
