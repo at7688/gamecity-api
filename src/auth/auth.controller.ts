@@ -5,7 +5,7 @@ import { Platforms } from 'src/metas/platforms.meta';
 import { Public } from 'src/metas/public.meta';
 import { LoginUser } from 'src/types';
 import { AuthService } from './auth.service';
-import { SigninDto } from './dto/signin.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -18,7 +18,7 @@ export class AuthController {
 
   @Post('login')
   @Public()
-  async login(@Body() body: SigninDto) {
+  async login(@Body() body: LoginDto) {
     switch (this.platform) {
       case 'ADMIN':
         return this.authService.adminUserLogin(body);

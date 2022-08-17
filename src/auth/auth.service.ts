@@ -12,7 +12,7 @@ import { Cache } from 'cache-manager';
 import * as IP from 'ip';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
-import { SigninDto } from './dto/signin.dto';
+import { LoginDto } from './dto/login.dto';
 
 export type MenuWithSubMenu = Menu & {
   sub_menus: Menu[];
@@ -102,7 +102,7 @@ export class AuthService {
     });
   }
 
-  async adminUserLogin({ username, password }: SigninDto) {
+  async adminUserLogin({ username, password }: LoginDto) {
     const user = await this.prisma.adminUser.findUnique({
       where: { username },
       include: {
@@ -118,7 +118,7 @@ export class AuthService {
     });
   }
 
-  async agentLogin({ username, password }: SigninDto) {
+  async agentLogin({ username, password }: LoginDto) {
     const user = await this.prisma.member.findUnique({
       where: { username },
     });
@@ -128,7 +128,7 @@ export class AuthService {
       user,
     });
   }
-  async playerLogin({ username, password }: SigninDto) {
+  async playerLogin({ username, password }: LoginDto) {
     const user = await this.prisma.player.findUnique({
       where: { username },
     });
