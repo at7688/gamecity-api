@@ -17,7 +17,7 @@ export class MemberService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {}
-  isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
+  isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
 
   async create({ password, ...data }: CreateAgentDto, user: LoginUser) {
     const hash = await argon2.hash(password);

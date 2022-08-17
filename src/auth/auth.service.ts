@@ -4,20 +4,38 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { AdminRole, AdminUser, Member, Menu } from '@prisma/client';
+import { AdminUser, Member, Menu, Player, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { Cache } from 'cache-manager';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { TasksService } from 'src/tasks/tasks.service';
-import { SigninDto } from './dto/signin.dto';
 import * as IP from 'ip';
-import { ConfigService } from '@nestjs/config';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
+import { SigninDto } from './dto/signin.dto';
 
 export type MenuWithSubMenu = Menu & {
   sub_menus: Menu[];
 };
+
+interface AdminRoleLogin {
+  platform: 'ADMIN';
+  user: AdminUser;
+  role: string;
+  password: string;
+}
+interface AgentLogin {
+  platform: 'AGENT';
+  user: Member;
+  password: string;
+}
+interface PlayerLogin {
+  platform: 'PLAYER';
+  user: Player;
+  password: string;
+}
+
+export type LoginHandlerParams = AdminRoleLogin | AgentLogin | PlayerLogin;
 
 @Injectable()
 export class AuthService {
@@ -27,6 +45,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
+
+  platform = this.configService.get('PLATFORM');
 
   fetchRolePermission(role: string) {
     return this.prisma.permission.findMany({
@@ -82,11 +102,41 @@ export class AuthService {
     });
   }
 
+  async adminUserLogin({ username, password }: SigninDto) {
+    const user = await this.prisma.adminUser.findUnique({
+      where: { username },
+      include: {
+        admin_role: true,
+      },
+    });
+
+    return await this.loginErrHandler({
+      platform: 'ADMIN',
+      password,
+      user,
+      role: user?.admin_role.code,
+    });
+  }
+
   async agentLogin({ username, password }: SigninDto) {
     const user = await this.prisma.member.findUnique({
       where: { username },
     });
-    return await this.loginErrHandler(password, user, 'AGENT');
+    return await this.loginErrHandler({
+      platform: 'AGENT',
+      password,
+      user,
+    });
+  }
+  async playerLogin({ username, password }: SigninDto) {
+    const user = await this.prisma.player.findUnique({
+      where: { username },
+    });
+    return await this.loginErrHandler({
+      platform: 'PLAYER',
+      password,
+      user,
+    });
   }
 
   async passwordValidate(password: string, input_password: string) {
@@ -97,53 +147,63 @@ export class AuthService {
     }
   }
 
-  async loginErrHandler(
-    password: string,
-    user?: AdminUser | Member,
-    role?: string,
-  ) {
+  async loginErrHandler({ user, password, ...params }: LoginHandlerParams) {
     // 獲取帳戶失敗
     if (!user) {
       throw new BadRequestException('user is not exist');
     }
 
-    // 是否為管理員
-    const isAdmin = role !== 'AGENT';
+    // 帳戶已封鎖，禁止登入
+    if (user.is_blocked) {
+      throw new BadRequestException('帳戶已鎖定');
+    }
+    // 密碼驗證
+    await this.passwordValidate(user.password, password);
 
     try {
-      // 帳戶已封鎖，禁止登入
-      if (user.is_blocked) {
-        throw new BadRequestException('帳戶已鎖定');
-      }
-      // 密碼驗證
-      await this.passwordValidate(user.password, password);
-
       // 獲取TOKEN
       const token = this.jwtService.sign({
         username: user.username,
         sub: user.id,
-        agent: !isAdmin,
+        platform: this.platform,
       });
 
       // 登入成功紀錄
       await this.prisma.loginRec.create({
         data: {
-          [isAdmin ? 'admin_user' : 'agent']: {
+          [{ ADMIN: 'admin_user', AGENT: 'agent', PLAYER: 'player' }[
+            this.platform
+          ]]: {
             connect: {
               username: user.username,
             },
           },
           ip: IP.address(),
           nums_failed: 0,
+          platform: this.platform,
         },
       });
 
+      if (params.platform === 'PLAYER') {
+        return {
+          user,
+          access_token: token,
+        };
+      }
+
+      let role = 'AGENT';
+
+      if (params.platform === 'ADMIN') {
+        role = params.role;
+      }
       // 取得權限選單
-      const menu = await this.fetchRoleMenu(isAdmin ? role : 'AGENT');
+      const menu = await this.fetchRoleMenu(
+        this.platform === 'ADMIN' ? role : 'AGENT',
+      );
 
       // 功能權限存入快取
       const permissions = await this.fetchRolePermission(
-        isAdmin ? role : 'AGENT',
+        this.platform === 'ADMIN' ? role : 'AGENT',
       );
       await this.cacheManager.set(user.id, permissions);
 
@@ -155,7 +215,11 @@ export class AuthService {
     } catch (err) {
       const login_recs = await this.prisma.loginRec.findMany({
         where: {
-          [isAdmin ? 'admin_user' : 'agent']: { username: user.username },
+          [{ ADMIN: 'admin_user', AGENT: 'agent', PLAYER: 'player' }[
+            this.platform
+          ]]: {
+            username: user.username,
+          },
         },
         orderBy: { login_at: 'desc' },
       });
@@ -166,7 +230,11 @@ export class AuthService {
       if (nums_failed >= +this.configService.get('FAILED_LOGIN_LIMIT')) {
         failed_msg = `已達失敗上限，帳戶已鎖定`;
 
-        await this.prisma[isAdmin ? 'AdminUser' : 'Member'].update({
+        await this.prisma[
+          { ADMIN: 'AdminUser', AGENT: 'Member', PLAYER: 'Player' }[
+            this.platform
+          ]
+        ].update({
           where: {
             username: user.username,
           },
@@ -183,7 +251,9 @@ export class AuthService {
       // 登入失敗紀錄
       await this.prisma.loginRec.create({
         data: {
-          [isAdmin ? 'admin_user' : 'agent']: {
+          [{ ADMIN: 'admin_user', AGENT: 'agent', PLAYER: 'player' }[
+            this.platform
+          ]]: {
             connect: {
               username: user.username,
             },
@@ -191,21 +261,12 @@ export class AuthService {
           ip: IP.address(),
           failed_msg,
           nums_failed,
+          platform: this.platform,
         },
       });
 
       throw new BadRequestException(failed_msg);
     }
-  }
-
-  async adminUserLogin({ username, password }: SigninDto) {
-    const user = await this.prisma.adminUser.findUnique({
-      where: { username },
-      include: {
-        admin_role: true,
-      },
-    });
-    return await this.loginErrHandler(password, user, user?.admin_role?.code);
   }
 
   async getLoginInfo(user: LoginUser) {

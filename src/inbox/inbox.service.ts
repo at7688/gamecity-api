@@ -18,7 +18,7 @@ export class InboxService {
     private readonly memberService: MemberService,
   ) {}
 
-  isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
+  isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
 
   simpleMemberSelect = {
     id: true,

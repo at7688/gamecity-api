@@ -1,2 +1,2 @@
-export const IS_PUBLIC = 'isPublic';
-export const IS_GLOBAL = 'isGlobal';
+export const IS_PUBLIC = 'IS_PUBLIC';
+export const PLATFORMS = 'PLATFORMS';

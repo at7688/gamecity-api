@@ -19,7 +19,7 @@ export class PlayerService {
     private readonly configService: ConfigService,
     private readonly memberService: MemberService,
   ) {}
-  isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
+  isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
 
   async create(createData: CreatePlayerDto, user: LoginUser) {
     const { password, username, nickname, agent_id, phone, email } = createData;

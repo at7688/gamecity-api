@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Request } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/decorators/user.decorator';
-import { Global } from 'src/metas/global.meta';
+import { Platforms } from 'src/metas/platforms.meta';
 import { Public } from 'src/metas/public.meta';
 import { LoginUser } from 'src/types';
 import { AuthService } from './auth.service';
@@ -14,15 +14,22 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
-  isAdmin = this.configService.get('SITE_TYPE') === 'ADMIN';
+  platform = this.configService.get('PLATFORM');
 
   @Post('login')
   @Public()
   async login(@Body() body: SigninDto) {
-    if (this.isAdmin) {
-      return this.authService.adminUserLogin(body);
+    switch (this.platform) {
+      case 'ADMIN':
+        return this.authService.adminUserLogin(body);
+      case 'AGENT':
+        return this.authService.agentLogin(body);
+      case 'PLAYER':
+        return this.authService.playerLogin(body);
+
+      default:
+        break;
     }
-    return this.authService.agentLogin(body);
   }
 
   @Post('logout')
@@ -32,7 +39,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @Global()
+  @Platforms(['ADMIN', 'AGENT'])
   async me(@User() user: LoginUser) {
     return this.authService.getLoginInfo(user);
   }

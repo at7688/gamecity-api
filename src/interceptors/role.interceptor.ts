@@ -7,17 +7,19 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
-import { Permission } from '@prisma/client';
+import { Permission, PlatformType } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { Observable } from 'rxjs';
-import { IS_GLOBAL, IS_PUBLIC } from 'src/meta-consts';
+import { IS_PUBLIC, PLATFORMS } from 'src/meta-consts';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class RoleInterceptor implements NestInterceptor {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
     private readonly reflector: Reflector,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
@@ -34,12 +36,14 @@ export class RoleInterceptor implements NestInterceptor {
       context.getHandler(),
       context.getClass(),
     ]);
-    const isGlobal = this.reflector.getAllAndOverride<boolean>(IS_GLOBAL, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const platforms = this.reflector.getAllAndOverride<PlatformType[]>(
+      PLATFORMS,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (isPublic || isGlobal) {
+    const currentPlatform = this.configService.get<PlatformType>('PLATFORM');
+
+    if (isPublic || platforms?.includes(currentPlatform)) {
       return next.handle();
     }
 

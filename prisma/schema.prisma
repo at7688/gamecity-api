@@ -229,6 +229,12 @@ model Vip {
   players      Player[]
 }
 
+enum PlatformType {
+  ADMIN
+  AGENT
+  PLAYER
+}
+
 model LoginRec {
   id            Int        @id @default(autoincrement())
   admin_user_id String?
@@ -237,7 +243,7 @@ model LoginRec {
   login_at      DateTime   @default(now())
   nums_failed   Int        @default(0)
   failed_msg    String?
-  platform Int // 管端/代理端/會員端
+  platform PlatformType // 管端/代理端/會員端
   admin_user    AdminUser? @relation(fields: [admin_user_id], references: [id])
   agent         Member?    @relation(fields: [agent_id], references: [id])
   player Player? @relation(fields: [player_id], references: [id])

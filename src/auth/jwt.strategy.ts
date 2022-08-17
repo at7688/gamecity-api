@@ -1,8 +1,8 @@
-import { UserService } from './../user/user.service';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
+import { PlatformType } from '@prisma/client';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -21,20 +21,29 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: {
     username: string;
     sub: string; // id
-    agent: boolean;
+    platform: PlatformType;
     iat: number;
     exp: number;
   }) {
-    if (payload.agent) {
-      return this.prisma.member.findUnique({
-        where: { id: payload.sub },
-      });
+    switch (payload.platform) {
+      case 'AGENT':
+        return this.prisma.member.findUnique({
+          where: { id: payload.sub },
+        });
+      case 'ADMIN':
+        return this.prisma.adminUser.findUnique({
+          where: { id: payload.sub },
+          include: {
+            admin_role: true,
+          },
+        });
+      case 'PLAYER':
+        return this.prisma.player.findUnique({
+          where: { id: payload.sub },
+        });
+
+      default:
+        break;
     }
-    return this.prisma.adminUser.findUnique({
-      where: { id: payload.sub },
-      include: {
-        admin_role: true,
-      },
-    });
   }
 }
