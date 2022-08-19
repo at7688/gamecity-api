@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { RotationService } from './rotation.service';
 import { CreateRotationDto } from './dto/create-rotation.dto';
@@ -23,6 +25,11 @@ export class RotationController {
   @Get()
   findAll() {
     return this.rotationService.findAll();
+  }
+
+  @Get('options/:type')
+  options(@Param('type', ParseIntPipe) type: number) {
+    return this.rotationService.options(type);
   }
 
   @Get(':id')

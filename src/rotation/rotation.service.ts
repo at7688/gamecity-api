@@ -11,6 +11,12 @@ export class RotationService {
     return this.prisma.rotationGroup.create({ data });
   }
 
+  async options(type: number) {
+    return this.prisma.rotationGroup.findMany({
+      where: { type },
+      select: { id: true, name: true },
+    });
+  }
   async findAll() {
     const findManyArg: Prisma.RotationGroupFindManyArgs = {};
     return this.prisma.listFormat({

@@ -1,3 +1,4 @@
+import { getAllParents } from './../member/raw/getAllParents';
 import { SearchPlayersDto } from './dto/search-players.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -21,8 +22,8 @@ export class PlayerService {
   ) {}
   isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
 
-  async create(createData: CreatePlayerDto, user: LoginUser) {
-    const { password, username, nickname, agent_id, phone, email } = createData;
+  async create(data: CreatePlayerDto, user: LoginUser) {
+    const { password, username, nickname, agent_id, phone, email } = data;
     const hash = await argon2.hash(password);
 
     // 如果有初始化VIP, 則同時綁定
@@ -65,14 +66,16 @@ export class PlayerService {
       perpage,
       username,
       nickname,
-      vips,
+      vip_ids,
       inviter_id,
       is_block,
       all,
     } = search;
-
     const findManyArgs: Prisma.PlayerFindManyArgs = {
       where: {
+        vip_id: {
+          in: vip_ids?.length ? vip_ids : undefined,
+        },
         id: !this.isAdmin
           ? {
               in: (
@@ -108,12 +111,61 @@ export class PlayerService {
     });
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} player`;
+  async findOne(id: string) {
+    const player = await this.prisma.player.findUnique({
+      where: { id },
+      include: {
+        contact: {
+          select: {
+            email: true,
+            phone: true,
+            line_id: true,
+            telegram: true,
+          },
+        },
+      },
+    });
+    return {
+      parents: await this.prisma.$queryRaw(getAllParents(player.agent_id)),
+      player,
+    };
   }
 
-  update(id: string, updatePlayerDto: UpdatePlayerDto) {
-    return `This action updates a #${id} player`;
+  async updatePassword(id: string, password: string) {
+    const hash = await argon2.hash(password);
+    return this.prisma.player.update({
+      where: { id },
+      data: { password: hash },
+    });
+  }
+
+  async update(id: string, data: UpdatePlayerDto) {
+    const { nickname, phone, email, line_id, telegram } = data;
+
+    return this.prisma.player.update({
+      where: { id },
+      data: {
+        nickname,
+        contact: {
+          update: {
+            phone,
+            email: email || null,
+            line_id: line_id || null,
+            telegram: telegram || null,
+          },
+        },
+      },
+      include: {
+        contact: {
+          select: {
+            phone: true,
+            email: true,
+            line_id: true,
+            telegram: true,
+          },
+        },
+      },
+    });
   }
 
   remove(id: string) {

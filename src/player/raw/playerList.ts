@@ -24,10 +24,19 @@ export const playerList = (ids: string[]) => {
         SELECT phone, email, line_id FROM "Contact"
         WHERE player_id = p.id
       ) pp
-    ) contact
+    ) contact,
+    (SELECT json_build_object(
+        'login_at', l.login_at,
+        'ip', l.ip,
+        'nums_failed', l.nums_failed
+      ) login FROM "LoginRec" l WHERE l.player_id = p.id
+      ORDER BY l.login_at DESC
+      LIMIT 1
+    ) login
 
     FROM "Player" p
 
   WHERE id = ANY(${ids})
+  ORDER BY id
   `;
 };

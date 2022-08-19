@@ -13,8 +13,10 @@ export class SearchPlayersDto extends PaginateDto {
 
   @IsOptional()
   @IsString({ each: true })
-  @Transform(({ value }) => value.split(',').map((s) => s.trim()))
-  vips: string[];
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value?.split(',').map((s) => s.trim()) : value,
+  )
+  vip_ids: string[];
 
   @IsIn([0, 1, 2])
   @IsOptional()

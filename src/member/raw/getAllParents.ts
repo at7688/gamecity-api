@@ -13,6 +13,7 @@ WITH RECURSIVE getAllParents (id, parent_id, username) AS (
 	)
 )
 
-SELECT "Member".* FROM getAllParents
-JOIN "Member" ON getAllParents.id = "Member".id
+SELECT m.id, m.username, m.nickname, m.parent_id, m.layer FROM getAllParents
+JOIN "Member" m ON getAllParents.id = m.id
+ORDER BY layer
 `;

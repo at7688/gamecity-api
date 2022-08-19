@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateVipDto {
   @IsString()
@@ -6,7 +6,7 @@ export class CreateVipDto {
   name: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   icon: string;
 
   @IsInt()

@@ -35,6 +35,7 @@ export const vipList = () => Prisma.sql`
         WHERE p.vip_id = v.id
       ) nums_player
     FROM "Vip" v
+    ORDER BY id
   )
 
   SELECT
