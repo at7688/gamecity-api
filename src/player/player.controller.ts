@@ -1,19 +1,19 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
 } from '@nestjs/common';
-import { PlayerService } from './player.service';
-import { CreatePlayerDto } from './dto/create-player.dto';
-import { UpdatePlayerDto } from './dto/update-player.dto';
-import { SearchPlayersDto } from './dto/search-players.dto';
-import { LoginUser } from 'src/types';
 import { User } from 'src/decorators/user.decorator';
+import { LoginUser } from 'src/types';
+import { CreatePlayerDto } from './dto/create-player.dto';
+import { SearchPlayersDto } from './dto/search-players.dto';
+import { UpdatePlayerDto } from './dto/update-player.dto';
+import { PlayerService } from './player.service';
 
 @Controller('players')
 export class PlayerController {
@@ -32,6 +32,18 @@ export class PlayerController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.playerService.findOne(id);
+  }
+
+  @Patch(':id/password')
+  updatePw(@Param('id') id: string, @Body('password') password: string) {
+    return this.playerService.updatePw(id, password);
+  }
+  @Patch(':id/blocked')
+  updateBlocked(
+    @Param('id') id: string,
+    @Body('is_blocked') is_blocked: boolean,
+  ) {
+    return this.playerService.updateBlocked(id, is_blocked);
   }
 
   @Patch(':id')

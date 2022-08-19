@@ -67,7 +67,7 @@ export class MemberService {
       nickname,
       layers,
       parent_id,
-      is_block,
+      is_blocked,
       all,
     } = search;
     const findManyArgs: Prisma.MemberFindManyArgs = {
@@ -86,7 +86,7 @@ export class MemberService {
         layer: {
           in: layers,
         },
-        is_blocked: { 0: undefined, 1: true, 2: false }[is_block],
+        is_blocked: { 0: undefined, 1: true, 2: false }[is_blocked],
         parent_id: {
           in:
             all && parent_id

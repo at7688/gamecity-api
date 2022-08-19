@@ -25,6 +25,11 @@ export class VipController {
     return this.vipService.findAll();
   }
 
+  @Get('options')
+  options() {
+    return this.vipService.options();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.vipService.findOne(id);

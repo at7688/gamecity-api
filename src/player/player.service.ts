@@ -68,11 +68,26 @@ export class PlayerService {
       nickname,
       vip_ids,
       inviter_id,
-      is_block,
-      all,
+      is_blocked,
+      created_start_at,
+      created_end_at,
+      phone,
+      email,
+      is_lock_bet,
+      agent_id,
     } = search;
+
     const findManyArgs: Prisma.PlayerFindManyArgs = {
       where: {
+        agent_id,
+        contact: {
+          phone,
+          email,
+        },
+        created_at: {
+          gte: created_start_at,
+          lte: created_end_at,
+        },
         vip_id: {
           in: vip_ids?.length ? vip_ids : undefined,
         },
@@ -89,7 +104,8 @@ export class PlayerService {
         nickname: {
           contains: nickname,
         },
-        is_blocked: { 0: undefined, 1: true, 2: false }[is_block],
+        is_blocked: { 0: undefined, 1: true, 2: false }[is_blocked],
+        is_lock_bet: { 0: undefined, 1: true, 2: false }[is_lock_bet],
       },
       orderBy: [
         {
@@ -131,11 +147,17 @@ export class PlayerService {
     };
   }
 
-  async updatePassword(id: string, password: string) {
+  async updatePw(id: string, password: string) {
     const hash = await argon2.hash(password);
     return this.prisma.player.update({
       where: { id },
       data: { password: hash },
+    });
+  }
+  async updateBlocked(id: string, is_blocked: boolean) {
+    return this.prisma.player.update({
+      where: { id },
+      data: { is_blocked },
     });
   }
 

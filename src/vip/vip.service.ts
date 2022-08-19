@@ -18,6 +18,12 @@ export class VipService {
     return this.prisma.listFormat(records[0]);
   }
 
+  async options() {
+    return this.prisma.vip.findMany({
+      select: { id: true, name: true },
+    });
+  }
+
   findOne(id: string) {
     return this.prisma.vip.findUnique({ where: { id } });
   }

@@ -21,7 +21,7 @@ export class SearchAgentsDto extends PaginateDto {
   @IsIn([0, 1, 2])
   @IsOptional()
   @Transform(({ value }) => +value)
-  is_block?: number;
+  is_blocked?: number;
 
   @IsOptional()
   @IsString()
