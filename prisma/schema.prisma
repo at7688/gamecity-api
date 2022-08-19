@@ -85,28 +85,28 @@ model Menu {
 
 model PromoCode {
   code   String  @id
-  agent Member?
+  agent  Member?
   player Player?
 }
 
 model ChipsRec {
   id         String   @id @default(cuid())
-  player     Player   @relation(fields: [player_id], references: [id])
   player_id  String
   qty        Float
   created_at DateTime @default(now())
   type       Int
+  player     Player   @relation(fields: [player_id], references: [id])
 }
 
 model RotationGroup {
-  id        Int           @id @default(autoincrement())
-  sort      Int
-  name      String
-  type      Int // 金流/銀行卡
-  bank_card CompanyCard[]
-
-  card_vip Vip[] @relation("card")
-  payment_vip Vip[] @relation("payment")
+  id           Int           @id @default(autoincrement())
+  sort         Int
+  name         String
+  type         Int
+  company_card CompanyCard[]
+  payment_tool PaymentTool[]
+  card_vip     Vip[]         @relation("card")
+  payment_vip  Vip[]         @relation("payment")
 }
 
 model PlayerCard {
@@ -115,78 +115,70 @@ model PlayerCard {
   branch       String
   name         String
   account      String
-  player       Player   @relation(fields: [player_id], references: [id])
   player_id    String
   is_default   Boolean
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
-  valid_status Int // 等待驗證/通過驗證/未通過驗證
+  valid_status Int
   imgs         String[]
+  player       Player   @relation(fields: [player_id], references: [id])
 }
 
 model CompanyCard {
-  id          String        @id @default(cuid())
-  bank_code   String
-  branch      String
-  name        String
-  account     String
-  min         Int
-  max         Int
-  total_max   Int
-  bankcard    RotationGroup @relation(fields: [rotation_id], references: [id])
-  rotation_id Int
-  is_active Boolean @default(true)
-
-  records BankDepositRec[]
-
+  id           String           @id @default(cuid())
+  bank_code    String
+  branch       String
+  name         String
+  account      String
+  rotation_id  Int
+  is_active    Boolean          @default(true)
+  deposit_max  Int
+  deposit_min  Int
+  recharge_max Int
+  rotation     RotationGroup    @relation(fields: [rotation_id], references: [id])
+  records      BankDepositRec[]
 }
 
 model BankDepositRec {
   id         String      @id @default(cuid())
-  player     Player      @relation(fields: [player_id], references: [id])
   player_id  String
   amount     Float
-  card       CompanyCard @relation(fields: [card_id], references: [id])
   card_id    String
   created_at DateTime    @default(now())
   updated_at DateTime    @updatedAt
-  status     Int // 等待付款/等待審核/完成核發/取消申請/拒絕退回/已過期
-  acc_tail   String // 末五碼
+  status     Int
+  acc_tail   String
   note       String
+  card       CompanyCard @relation(fields: [card_id], references: [id])
+  player     Player      @relation(fields: [player_id], references: [id])
 }
-
 
 model Player {
-  id         String     @id @default(cuid())
-  username   String     @unique
-  password   String
-  nickname   String
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-  is_active  Boolean    @default(true)
-  is_blocked Boolean    @default(false)
-  is_lock_bet Boolean    @default(false)
-  agent      Member     @relation(fields: [agent_id], references: [id])
-  agent_id   String
-  inviter    Player?    @relation("player", fields: [inviter_id], references: [id])
-  inviter_id String?
-  promo      PromoCode? @relation(fields: [promo_code], references: [code])
-  promo_code String?    @unique
-  vip        Vip?       @relation(fields: [vip_id], references: [id])
-  vip_id     String?
-  inboxs     Inbox[]
-  invites    Player[]   @relation("player")
-
-  contact    Contact?
-
-  chips_records ChipsRec[]
+  id            String           @id @default(cuid())
+  username      String           @unique
+  password      String
+  nickname      String
+  created_at    DateTime         @default(now())
+  updated_at    DateTime         @updatedAt
+  is_active     Boolean          @default(true)
+  is_blocked    Boolean          @default(false)
+  promo_code    String?          @unique
+  vip_id        String?
+  agent_id      String
+  inviter_id    String?
+  is_lock_bet   Boolean          @default(false)
+  agent         Member           @relation(fields: [agent_id], references: [id])
+  inviter       Player?          @relation("player", fields: [inviter_id], references: [id])
+  promo         PromoCode?       @relation(fields: [promo_code], references: [code])
+  vip           Vip?             @relation(fields: [vip_id], references: [id])
   bank_deposits BankDepositRec[]
+  chips_records ChipsRec[]
+  contact       Contact?
+  inboxs        Inbox[]
+  login_rec     LoginRec[]
+  invites       Player[]         @relation("player")
   bankcard      PlayerCard[]
-
-  login_rec       LoginRec[]
-
 }
-
 
 model Member {
   id              String     @id @default(cuid())
@@ -202,65 +194,54 @@ model Member {
   is_blocked      Boolean    @default(false)
   parent          Member?    @relation("agent", fields: [parent_id], references: [id])
   promo           PromoCode? @relation(fields: [promo_code], references: [code])
+  contact         Contact?
   sended_inboxs   Inbox[]    @relation("from")
   received_inboxs Inbox[]    @relation("to")
   login_rec       LoginRec[]
   subs            Member[]   @relation("agent")
   players         Player[]
-
-  contact    Contact?
 }
 
 model Contact {
-  id       Int    @id @default(autoincrement())
-  phone    String
-  line_id   String?
-  telegram String?
-  email    String?
-
-  player Player? @relation(fields: [player_id], references: [id])
+  id        Int     @id @default(autoincrement())
+  phone     String
+  telegram  String?
+  email     String?
+  agent_id  String? @unique
   player_id String? @unique
-
-  agent Member? @relation(fields: [agent_id], references: [id])
-  agent_id String? @unique
+  line_id   String?
+  agent     Member? @relation(fields: [agent_id], references: [id])
+  player    Player? @relation(fields: [player_id], references: [id])
 }
 
 model Vip {
-  id           String   @id @default(cuid())
-  name         String
-  icon         String?
-  ebet_min     Int
-  deposite_min Int
-  withdraw_min Int
-  withdraw_max Int
-  players      Player[]
-
-  card_rotate RotationGroup @relation("card", fields: [card_rotate_id], references: [id])
-  card_rotate_id Int
-
-  payment_rotate RotationGroup @relation("payment", fields: [payment_rotate_id], references: [id])
+  id                String        @id @default(cuid())
+  name              String
+  icon              String?
+  ebet_min          Int
+  deposite_min      Int
+  withdraw_min      Int
+  withdraw_max      Int
+  card_rotate_id    Int
   payment_rotate_id Int
-}
-
-enum PlatformType {
-  ADMIN
-  AGENT
-  PLAYER
+  card_rotate       RotationGroup @relation("card", fields: [card_rotate_id], references: [id])
+  payment_rotate    RotationGroup @relation("payment", fields: [payment_rotate_id], references: [id])
+  players           Player[]
 }
 
 model LoginRec {
-  id            Int        @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   admin_user_id String?
   agent_id      String?
   ip            String?
-  login_at      DateTime   @default(now())
-  nums_failed   Int        @default(0)
+  login_at      DateTime     @default(now())
+  nums_failed   Int          @default(0)
   failed_msg    String?
-  platform PlatformType // 管端/代理端/會員端
-  admin_user    AdminUser? @relation(fields: [admin_user_id], references: [id])
-  agent         Member?    @relation(fields: [agent_id], references: [id])
-  player Player? @relation(fields: [player_id], references: [id])
-  player_id String?
+  player_id     String?
+  platform      PlatformType
+  admin_user    AdminUser?   @relation(fields: [admin_user_id], references: [id])
+  agent         Member?      @relation(fields: [agent_id], references: [id])
+  player        Player?      @relation(fields: [player_id], references: [id])
 }
 
 model ActivityPromo {
@@ -335,6 +316,65 @@ model InboxRec {
   sended_at   DateTime @default(now())
   target_type Int
   inboxs      Inbox[]
+}
+
+model Payway {
+  id                 String      @id @default(cuid())
+  type               PayWayType
+  code               String
+  player_fee_amount  Float
+  player_fee_percent Float
+  player_fee_min     Float
+  player_fee_max     Float
+  fee_amount         Float
+  fee_percent        Float
+  fee_min            Float
+  fee_max            Float
+  tool_id            String
+  deposit_max        Int
+  deposit_min        Int
+  tool               PaymentTool @relation(fields: [tool_id], references: [id])
+}
+
+model MerchantField {
+  code        String
+  name        String
+  merchant_id String
+  merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
+
+  @@unique([merchant_id, code])
+}
+
+model PaymentMerchant {
+  id           String          @id @default(cuid())
+  name         String
+  is_active    Boolean
+  payway_types PayWayType[]
+  fields       MerchantField[]
+}
+
+model PaymentTool {
+  id           String        @id @default(cuid())
+  tool_name    String
+  rotation_id  Int
+  is_active    Boolean
+  recharge_max Int
+  note         String?
+  rotation     RotationGroup @relation(fields: [rotation_id], references: [id])
+  payways      Payway[]
+}
+
+enum PlatformType {
+  ADMIN
+  AGENT
+  PLAYER
+}
+
+enum PayWayType {
+  CVS
+  BARCODE
+  CREDIT
+  ATM
 }
 
 enum AnnouncementType {
