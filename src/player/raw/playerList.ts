@@ -25,6 +25,14 @@ export const playerList = (ids: string[]) => {
         WHERE player_id = p.id
       ) pp
     ) contact,
+    (
+      SELECT json_build_object(
+        'id', v.id,
+        'name', v.name,
+        'icon', v.icon
+      ) FROM "Vip" v
+      WHERE id = p.vip_id
+    ) vip,
     (SELECT json_build_object(
         'login_at', l.login_at,
         'ip', l.ip,
