@@ -334,6 +334,7 @@ model Payway {
   deposit_max        Int
   deposit_min        Int
   tool               PaymentTool @relation(fields: [tool_id], references: [id])
+  is_active Boolean @default(false)
 }
 
 model MerchantField {
@@ -345,12 +346,15 @@ model MerchantField {
   @@unique([merchant_id, code])
 }
 
+// 金流廠商
 model PaymentMerchant {
   id           String          @id @default(cuid())
   name         String
+  code String @unique
   is_active    Boolean
   payway_types PayWayType[]
   fields       MerchantField[]
+  paymentTools PaymentTool[]
 }
 
 model PaymentTool {
@@ -361,6 +365,8 @@ model PaymentTool {
   recharge_max Int
   note         String?
   rotation     RotationGroup @relation(fields: [rotation_id], references: [id])
+  merchant PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant_id String
   payways      Payway[]
 }
 
