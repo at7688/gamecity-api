@@ -100,9 +100,9 @@ model ChipsRec {
 
 model RotationGroup {
   id           Int           @id @default(autoincrement())
-  sort         Int
+  sort         Int @default(autoincrement())
   name         String
-  type         Int
+  type         Int // 銀行卡/支付工具
   company_card CompanyCard[]
   payment_tool PaymentTool[]
   card_vip     Vip[]         @relation("card")
@@ -137,47 +137,51 @@ model CompanyCard {
   recharge_max Int
   rotation     RotationGroup    @relation(fields: [rotation_id], references: [id])
   records      BankDepositRec[]
+  sort Int @default(autoincrement())
+  is_rotate Boolean @default(true)
 }
 
 model BankDepositRec {
   id         String      @id @default(cuid())
   player_id  String
   amount     Float
-  card_id    String
   created_at DateTime    @default(now())
   updated_at DateTime    @updatedAt
-  status     Int
+  card_id    String
+  status     Int  // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
   acc_tail   String
   note       String
   card       CompanyCard @relation(fields: [card_id], references: [id])
   player     Player      @relation(fields: [player_id], references: [id])
 }
 
+
 model Player {
-  id            String           @id @default(cuid())
-  username      String           @unique
-  password      String
-  nickname      String
-  created_at    DateTime         @default(now())
-  updated_at    DateTime         @updatedAt
-  is_active     Boolean          @default(true)
-  is_blocked    Boolean          @default(false)
-  promo_code    String?          @unique
-  vip_id        String?
-  agent_id      String
-  inviter_id    String?
-  is_lock_bet   Boolean          @default(false)
-  agent         Member           @relation(fields: [agent_id], references: [id])
-  inviter       Player?          @relation("player", fields: [inviter_id], references: [id])
-  promo         PromoCode?       @relation(fields: [promo_code], references: [code])
-  vip           Vip?             @relation(fields: [vip_id], references: [id])
-  bank_deposits BankDepositRec[]
-  chips_records ChipsRec[]
-  contact       Contact?
-  inboxs        Inbox[]
-  login_rec     LoginRec[]
-  invites       Player[]         @relation("player")
-  bankcard      PlayerCard[]
+  id               String              @id @default(cuid())
+  username         String              @unique
+  password         String
+  nickname         String
+  created_at       DateTime            @default(now())
+  updated_at       DateTime            @updatedAt
+  is_active        Boolean             @default(true)
+  is_blocked       Boolean             @default(false)
+  promo_code       String?             @unique
+  vip_id           String?
+  agent_id         String
+  inviter_id       String?
+  is_lock_bet      Boolean             @default(false)
+  agent            Member              @relation(fields: [agent_id], references: [id])
+  inviter          Player?             @relation("player", fields: [inviter_id], references: [id])
+  promo            PromoCode?          @relation(fields: [promo_code], references: [code])
+  vip              Vip?                @relation(fields: [vip_id], references: [id])
+  bank_deposits    BankDepositRec[]
+  payment_deposits PaymentDepositRec[]
+  chips_records    ChipsRec[]
+  contact          Contact?
+  inboxs           Inbox[]
+  login_rec        LoginRec[]
+  invites          Player[]            @relation("player")
+  bankcard         PlayerCard[]
 }
 
 model Member {
@@ -318,9 +322,10 @@ model InboxRec {
   inboxs      Inbox[]
 }
 
+// 支付方式
 model Payway {
   id                 String      @id @default(cuid())
-  type               PayWayType
+  type               PayType
   code               String
   player_fee_amount  Float
   player_fee_percent Float
@@ -334,9 +339,12 @@ model Payway {
   deposit_max        Int
   deposit_min        Int
   tool               PaymentTool @relation(fields: [tool_id], references: [id])
-  is_active Boolean @default(false)
+  is_active          Boolean     @default(false)
+
+  records PaymentDepositRec[]
 }
 
+// 金流商Hash欄位
 model MerchantField {
   code        String
   name        String
@@ -350,24 +358,73 @@ model MerchantField {
 model PaymentMerchant {
   id           String          @id @default(cuid())
   name         String
-  code String @unique
+  code         String          @unique
   is_active    Boolean
-  payway_types PayWayType[]
+  pay_types PayType[]
   fields       MerchantField[]
   paymentTools PaymentTool[]
+
+  records PaymentDepositRec[]
+  bills MerchantBill[]
 }
 
+// 支付工具
 model PaymentTool {
-  id           String        @id @default(cuid())
+  id           String          @id @default(cuid())
   tool_name    String
   rotation_id  Int
   is_active    Boolean
   recharge_max Int
   note         String?
-  rotation     RotationGroup @relation(fields: [rotation_id], references: [id])
+  rotation     RotationGroup   @relation(fields: [rotation_id], references: [id])
+  merchant     PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant_id  String
+  payways      Payway[]
+
+  sort Int @default(autoincrement())
+  is_rotate Boolean @default(true)
+}
+
+// 支付工具儲值紀錄(站內)
+model PaymentDepositRec {
+  id          String    @id @default(cuid())
+  amount      Float
+  created_at  DateTime  @default(now())
+  paid_at     DateTime?
+  finished_at DateTime?
+  canceled_at DateTime?
+  expired_at  DateTime?
+  payway    Payway @relation(fields: [payway_id], references: [id])
+  payway_id String
+  player            Player @relation(fields: [player_id], references: [id])
+  player_id         String
+  fee_on_player Float // 會員負擔手續費
+  fee_on_company Float // 公司負擔手續費
   merchant PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id String
-  payways      Payway[]
+
+  trade_no String @unique //繳費單編號
+  bill MerchantBill? @relation(fields: [trade_no], references: [trade_no])
+  status Int? // 尚未付款 已付款 等待入點 已過期 拒絕退回
+}
+
+// 金流商回傳資料紀錄
+model MerchantBill {
+  trade_no String @id
+  record PaymentDepositRec?
+  created_at  DateTime  @default(now())
+  expired_at  DateTime?
+  paid_at     DateTime?
+  price Float
+  status Int // 等待付款 已繳費 已過期 拒絕退回
+
+  merchant PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant_id String
+
+  pay_type PayType
+  pay_code String? // 超商付款代碼
+  bank_code String? // 銀行代碼
+  bank_account String? // ATM付款帳號
 }
 
 enum PlatformType {
@@ -376,7 +433,7 @@ enum PlatformType {
   PLAYER
 }
 
-enum PayWayType {
+enum PayType {
   CVS
   BARCODE
   CREDIT
