@@ -1,4 +1,10 @@
-import { IsBoolean, IsInt, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateCBankcardDto {
   @IsString()
@@ -17,23 +23,31 @@ export class CreateCBankcardDto {
   @IsNotEmpty()
   account: string;
 
-  @IsInt()
-  @IsNotEmpty()
-  min: number;
+  @IsBoolean()
+  @IsOptional()
+  is_active?: boolean;
 
   @IsInt()
   @IsNotEmpty()
-  max: number;
+  deposit_max: number;
 
   @IsInt()
   @IsNotEmpty()
-  total_max: number;
+  deposit_min: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  recharge_max: number;
 
   @IsInt()
   @IsNotEmpty()
   rotation_id: number;
 
-  // @IsBoolean()
-  // @IsNotEmpty()
-  // is_active: boolean;
+  @IsInt()
+  @IsOptional()
+  sort?: number;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  is_rotate?: boolean;
 }

@@ -17,8 +17,19 @@ export class RotationService {
       select: { id: true, name: true },
     });
   }
-  async findAll() {
-    const findManyArg: Prisma.RotationGroupFindManyArgs = {};
+  async findAll(type: number) {
+    const findManyArg: Prisma.RotationGroupFindManyArgs = {
+      where: {
+        type,
+      },
+      include: {
+        _count: {
+          select: {
+            company_card: true,
+          },
+        },
+      },
+    };
     return this.prisma.listFormat({
       items: await this.prisma.rotationGroup.findMany(findManyArg),
       count: await this.prisma.rotationGroup.count({

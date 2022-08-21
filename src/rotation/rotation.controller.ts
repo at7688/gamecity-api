@@ -23,8 +23,8 @@ export class RotationController {
   }
 
   @Get()
-  findAll() {
-    return this.rotationService.findAll();
+  findAll(@Query('type', ParseIntPipe) type: number) {
+    return this.rotationService.findAll(type);
   }
 
   @Get('options/:type')

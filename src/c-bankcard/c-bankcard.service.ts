@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCBankcardDto } from './dto/create-c-bankcard.dto';
 import { UpdateCBankcardDto } from './dto/update-c-bankcard.dto';
+import { companyCardList } from './raw/companyCardList';
 
 @Injectable()
 export class CBankcardService {
@@ -13,12 +14,9 @@ export class CBankcardService {
     });
   }
 
-  async findAll() {
-    const findManyArg: Prisma.CompanyCardFindManyArgs = {};
-    return this.prisma.listFormat({
-      items: await this.prisma.companyCard.findMany(findManyArg),
-      count: await this.prisma.companyCard.count({ where: findManyArg.where }),
-    });
+  async findAll(rotation_id: number) {
+    const records = await this.prisma.$queryRaw(companyCardList(rotation_id));
+    return this.prisma.listFormat(records[0]);
   }
 
   findOne(id: string) {

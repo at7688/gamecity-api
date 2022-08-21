@@ -17,6 +17,10 @@ export class CreateRotationDto {
   @IsNotEmpty()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  note?: string;
+
   @IsEnum(RotateType)
   @IsNotEmpty()
   type: RotateType;

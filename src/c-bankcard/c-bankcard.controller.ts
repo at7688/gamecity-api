@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CBankcardService } from './c-bankcard.service';
 import { CreateCBankcardDto } from './dto/create-c-bankcard.dto';
@@ -21,8 +23,8 @@ export class CBankcardController {
   }
 
   @Get()
-  findAll() {
-    return this.cBankcardService.findAll();
+  findAll(@Query('rotation_id', ParseIntPipe) rotation_id: number) {
+    return this.cBankcardService.findAll(rotation_id);
   }
 
   @Get(':id')

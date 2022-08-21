@@ -102,6 +102,7 @@ model RotationGroup {
   id           Int           @id @default(autoincrement())
   sort         Int @default(autoincrement())
   name         String
+  note  String?
   type         Int // 銀行卡/支付工具
   company_card CompanyCard[]
   payment_tool PaymentTool[]
@@ -139,13 +140,15 @@ model CompanyCard {
   records      BankDepositRec[]
   sort Int @default(autoincrement())
   is_rotate Boolean @default(true)
+
+  accumulate_from DateTime @default(now())
 }
 
 model BankDepositRec {
   id         String      @id @default(cuid())
   player_id  String
   amount     Float
-  created_at DateTime    @default(now())
+  created_at DateTime    @db.Timestamptz() @default(now())
   updated_at DateTime    @updatedAt
   card_id    String
   status     Int  // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
