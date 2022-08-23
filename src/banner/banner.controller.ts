@@ -10,6 +10,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ImageType } from 'src/uploads/enums';
 import { UploadsService } from 'src/uploads/uploads.service';
 import { BannerService } from './banner.service';
 import { CreateBannerDto } from './dto/create-banner.dto';
@@ -27,7 +28,7 @@ export class BannerController {
     FileInterceptor('file', { limits: { fileSize: 1024 * 1024 } }),
   )
   uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.uploadsService.uploadFile(file);
+    return this.uploadsService.uploadFile(file, ImageType.BANNER);
   }
 
   @Post()

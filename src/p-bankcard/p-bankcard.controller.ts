@@ -6,14 +6,30 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { PBankcardService } from './p-bankcard.service';
 import { CreatePBankcardDto } from './dto/create-p-bankcard.dto';
 import { UpdatePBankcardDto } from './dto/update-p-bankcard.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadsService } from 'src/uploads/uploads.service';
+import { ImageType } from 'src/uploads/enums';
 
 @Controller('p-bankcards')
 export class PBankcardController {
-  constructor(private readonly pBankcardService: PBankcardService) {}
+  constructor(
+    private readonly pBankcardService: PBankcardService,
+    private readonly uploadsService: UploadsService,
+  ) {}
+
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 1024 * 200 } }),
+  )
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    return this.uploadsService.uploadFile(file, ImageType.PLAYER_CARD);
+  }
 
   @Post()
   create(@Body() createPBankcardDto: CreatePBankcardDto) {

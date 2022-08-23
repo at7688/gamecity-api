@@ -10,14 +10,9 @@ export class BannerService {
     private readonly prisma: PrismaService,
     private readonly uploadsService: UploadsService,
   ) {}
-  async create(data: CreateBannerDto, file?: Express.Multer.File) {
-    const { path } = await this.uploadsService.uploadFile(file);
+  async create(data: CreateBannerDto) {
     return this.prisma.banner.create({
-      data: {
-        ...data,
-        pc_img: path,
-        mb_img: path,
-      },
+      data,
     });
   }
 

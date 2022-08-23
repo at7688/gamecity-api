@@ -14,12 +14,13 @@ export class CreateBannerDto {
   @IsNotEmpty()
   name: string;
 
-  // @IsNotEmpty()
-  // pc_img: string;
+  @IsInt()
+  @IsNotEmpty()
+  pc_img_id: number;
 
-  // @IsString()
-  // @IsNotEmpty()
-  // mb_img: string;
+  @IsInt()
+  @IsNotEmpty()
+  mb_img_id: number;
 
   @Transform(({ value }) => value === 'true')
   @IsBoolean()

@@ -122,7 +122,10 @@ model PlayerCard {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
   valid_status Int
-  imgs         String[]
+  img        Image @relation("p-card-1", fields: [img_id], references: [id])
+  img_id Int  @unique
+  img2         Image? @relation("p-card-2", fields: [img2_id], references: [id])
+  img2_id Int? @unique
   player       Player   @relation(fields: [player_id], references: [id])
 }
 
@@ -267,8 +270,10 @@ model ActivityPromo {
 
 model Banner {
   id        String    @id @default(cuid())
-  pc_img    String
-  mb_img    String
+  pc_img    Image @relation("banner-pc", fields: [pc_img_id], references: [id])
+  pc_img_id Int @unique
+  mb_img    Image @relation("banner-mb", fields: [mb_img_id], references: [id])
+  mb_img_id Int @unique
   name      String
   is_active Boolean
   sort      Int
@@ -429,6 +434,20 @@ model MerchantBill {
   pay_code String? // 超商付款代碼
   bank_code String? // 銀行代碼
   bank_account String? // ATM付款帳號
+}
+
+model Image {
+  id Int @id @default(autoincrement())
+  path String
+  filename String
+  type Int // 會員銀行存摺, ...
+  created_at  DateTime  @default(now())
+
+  p_card_img PlayerCard? @relation("p-card-1")
+  p_card_img2 PlayerCard? @relation("p-card-2")
+
+  banner_mb Banner? @relation("banner-mb")
+  banner_pc Banner? @relation("banner-pc")
 }
 
 model Bank {

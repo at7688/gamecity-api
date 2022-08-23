@@ -11,7 +11,7 @@ export class PBankcardService {
   }
 
   findAll() {
-    return `This action returns all pBankcard`;
+    return this.prisma.playerCard.findMany();
   }
 
   findOne(id: number) {
