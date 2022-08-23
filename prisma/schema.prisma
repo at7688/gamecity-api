@@ -118,10 +118,10 @@ model PlayerCard {
   name         String
   account      String
   player_id    String
-  is_default   Boolean
+  is_default   Boolean @default(false)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
-  valid_status Int
+  valid_status Int @default(1) // 尚未審核 審核中 審核通過 退回
   img        Image @relation("p-card-1", fields: [img_id], references: [id])
   img_id Int  @unique
   img2         Image? @relation("p-card-2", fields: [img2_id], references: [id])

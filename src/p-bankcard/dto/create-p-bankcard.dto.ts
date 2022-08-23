@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import {
   IsBoolean,
   IsInt,
@@ -23,9 +24,9 @@ export class CreatePBankcardDto {
   @IsNotEmpty()
   account: string;
 
-  @IsBoolean()
-  @IsOptional()
-  is_default?: boolean;
+  // @IsBoolean()
+  // @IsNotEmpty()
+  // is_default: boolean;
 
   @IsInt()
   @IsNotEmpty()
@@ -33,5 +34,5 @@ export class CreatePBankcardDto {
 
   @IsInt()
   @IsOptional()
-  img2_id: number;
+  img2_id?: number;
 }
