@@ -35,6 +35,7 @@ import { CBankcardModule } from './c-bankcard/c-bankcard.module';
 import { RotationModule } from './rotation/rotation.module';
 import { BankService } from './bank/bank.service';
 import { BankController } from './bank/bank.controller';
+import { BankDepositRecModule } from './bank-deposit-rec/bank-deposit-rec.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { BankController } from './bank/bank.controller';
     PBankcardModule,
     CBankcardModule,
     RotationModule,
+    BankDepositRecModule,
   ],
   controllers: [AppController, UploadsController, BankController],
   providers: [

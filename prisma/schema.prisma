@@ -152,9 +152,9 @@ model BankDepositRec {
   created_at DateTime    @db.Timestamptz() @default(now())
   updated_at DateTime    @updatedAt
   card_id    String
-  status     Int  // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
-  acc_tail   String
-  note       String
+  status     Int @default(1)  // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
+  acc_tail   String?
+  note       String?
   card       CompanyCard @relation(fields: [card_id], references: [id])
   player     Player      @relation(fields: [player_id], references: [id])
 }

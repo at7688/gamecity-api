@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "BankDepositRec" ALTER COLUMN "acc_tail" DROP NOT NULL,
+ALTER COLUMN "note" DROP NOT NULL;
