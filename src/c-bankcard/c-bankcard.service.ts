@@ -20,14 +20,14 @@ export class CBankcardService {
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} cBankcard`;
+    return this.prisma.companyCard.findUnique({ where: { id } });
   }
 
-  update(id: string, updateCBankcardDto: UpdateCBankcardDto) {
-    return `This action updates a #${id} cBankcard`;
+  update(id: string, data: UpdateCBankcardDto) {
+    return this.prisma.companyCard.update({ where: { id }, data });
   }
 
   remove(id: string) {
-    return `This action removes a #${id} cBankcard`;
+    return this.prisma.companyCard.delete({ where: { id } });
   }
 }

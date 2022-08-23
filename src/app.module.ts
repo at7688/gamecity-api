@@ -33,6 +33,8 @@ import { PlayerModule } from './player/player.module';
 import { PBankcardModule } from './p-bankcard/p-bankcard.module';
 import { CBankcardModule } from './c-bankcard/c-bankcard.module';
 import { RotationModule } from './rotation/rotation.module';
+import { BankService } from './bank/bank.service';
+import { BankController } from './bank/bank.controller';
 
 @Module({
   imports: [
@@ -77,13 +79,14 @@ import { RotationModule } from './rotation/rotation.module';
     CBankcardModule,
     RotationModule,
   ],
-  controllers: [AppController, UploadsController],
+  controllers: [AppController, UploadsController, BankController],
   providers: [
     AppService,
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
+    BankService,
   ],
   // exports: [AppService],
 })

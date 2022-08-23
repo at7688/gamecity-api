@@ -24,6 +24,7 @@ SELECT
 	) last_record
 	FROM "CompanyCard" c
   WHERE rotation_id = ${rotation_id}
+	ORDER BY id
 )
 
 SELECT

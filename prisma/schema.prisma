@@ -83,6 +83,7 @@ model Menu {
   permissions  Permission[]
 }
 
+
 model PromoCode {
   code   String  @id
   agent  Member?
@@ -428,6 +429,12 @@ model MerchantBill {
   pay_code String? // 超商付款代碼
   bank_code String? // 銀行代碼
   bank_account String? // ATM付款帳號
+}
+
+model Bank {
+  code String @id
+  name String
+  is_active Boolean @default(true)
 }
 
 enum PlatformType {

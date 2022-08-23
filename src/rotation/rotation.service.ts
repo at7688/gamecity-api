@@ -14,7 +14,8 @@ export class RotationService {
   async options(type: number) {
     return this.prisma.rotationGroup.findMany({
       where: { type },
-      select: { id: true, name: true },
+      select: { id: true, name: true, sort: true },
+      orderBy: [{ sort: 'asc' }, { id: 'asc' }],
     });
   }
   async findAll(type: number) {
@@ -28,7 +29,17 @@ export class RotationService {
             company_card: true,
           },
         },
+        card_vip: {
+          select: {
+            id: true,
+            name: true,
+          },
+          orderBy: {
+            id: 'asc',
+          },
+        },
       },
+      orderBy: [{ sort: 'asc' }, { id: 'asc' }],
     };
     return this.prisma.listFormat({
       items: await this.prisma.rotationGroup.findMany(findManyArg),
@@ -41,11 +52,16 @@ export class RotationService {
     return `This action returns a #${id} rotation`;
   }
 
-  update(id: number, updateRotationDto: UpdateRotationDto) {
-    return `This action updates a #${id} rotation`;
+  update(id: number, data: UpdateRotationDto) {
+    return this.prisma.rotationGroup.update({
+      where: { id },
+      data,
+    });
   }
 
   remove(id: number) {
-    return `This action removes a #${id} rotation`;
+    return this.prisma.rotationGroup.delete({
+      where: { id },
+    });
   }
 }
