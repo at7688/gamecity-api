@@ -1,12 +1,9 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class CreateBankDepositRecDto {
+export class CreateBankDepositDto {
   @IsNumber()
   @IsNotEmpty()
   amount: number;
-
-  // acc_tail?: string;
-  // note?: string;
 
   @IsString()
   @IsNotEmpty()

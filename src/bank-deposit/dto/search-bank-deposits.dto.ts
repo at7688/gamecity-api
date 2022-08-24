@@ -2,7 +2,7 @@ import { Transform } from 'class-transformer';
 import { IsDate, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
 
-export class SearchBankDepositRecsDto extends PaginateDto {
+export class SearchBankDepositsDto extends PaginateDto {
   @IsString()
   @IsOptional()
   username?: string;

@@ -36,6 +36,8 @@ import { RotationModule } from './rotation/rotation.module';
 import { BankService } from './bank/bank.service';
 import { BankController } from './bank/bank.controller';
 import { BankDepositRecModule } from './bank-deposit-rec/bank-deposit-rec.module';
+import { BankWithdrawModule } from './bank-withdraw/bank-withdraw.module';
+import { BankDepositModule } from './bank-deposit/bank-deposit.module';
 
 @Module({
   imports: [
@@ -80,6 +82,8 @@ import { BankDepositRecModule } from './bank-deposit-rec/bank-deposit-rec.module
     CBankcardModule,
     RotationModule,
     BankDepositRecModule,
+    BankWithdrawModule,
+    BankDepositModule,
   ],
   controllers: [AppController, UploadsController, BankController],
   providers: [
