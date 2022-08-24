@@ -83,7 +83,6 @@ model Menu {
   permissions  Permission[]
 }
 
-
 model PromoCode {
   code   String  @id
   agent  Member?
@@ -101,9 +100,9 @@ model ChipsRec {
 
 model RotationGroup {
   id           Int           @id @default(autoincrement())
-  sort         Int @default(autoincrement())
+  sort         Int           @default(autoincrement())
   name         String
-  note  String?
+  note         String?
   type         Int // 銀行卡/支付工具
   company_card CompanyCard[]
   payment_tool PaymentTool[]
@@ -118,50 +117,72 @@ model PlayerCard {
   name         String
   account      String
   player_id    String
-  is_default   Boolean @default(false)
+  is_default   Boolean  @default(false)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
-  valid_status Int @default(1) // 尚未審核 審核中 審核通過 退回
-  img        Image @relation("p-card-1", fields: [img_id], references: [id])
-  img_id Int  @unique
-  img2         Image? @relation("p-card-2", fields: [img2_id], references: [id])
-  img2_id Int? @unique
+  valid_status Int      @default(1) // 尚未審核 審核中 審核通過 退回
+  img          Image    @relation("p-card-1", fields: [img_id], references: [id])
+  img_id       Int      @unique
+  img2         Image?   @relation("p-card-2", fields: [img2_id], references: [id])
+  img2_id      Int?     @unique
   player       Player   @relation(fields: [player_id], references: [id])
+
+  bank_deposits  BankDepositRec[]
+  bank_withdraws BankWithdrawRec[]
 }
 
 model CompanyCard {
-  id           String           @id @default(cuid())
-  bank_code    String
-  branch       String
-  name         String
-  account      String
-  rotation_id  Int
-  is_active    Boolean          @default(true)
-  deposit_max  Int
-  deposit_min  Int
-  recharge_max Int
-  rotation     RotationGroup    @relation(fields: [rotation_id], references: [id])
-  records      BankDepositRec[]
-  sort Int @default(autoincrement())
-  is_rotate Boolean @default(true)
+  id             String            @id @default(cuid())
+  bank_code      String
+  branch         String
+  name           String
+  account        String
+  rotation_id    Int
+  is_active      Boolean           @default(true)
+  deposit_max    Int
+  deposit_min    Int
+  recharge_max   Int
+  rotation       RotationGroup     @relation(fields: [rotation_id], references: [id])
+  bank_deposits  BankDepositRec[]
+  bank_withdraws BankWithdrawRec[]
+  sort           Int               @default(autoincrement())
+  is_rotate      Boolean           @default(true)
 
   accumulate_from DateTime @default(now())
 }
 
 model BankDepositRec {
-  id         String      @id @default(cuid())
-  player_id  String
-  amount     Float
-  created_at DateTime    @db.Timestamptz() @default(now())
-  updated_at DateTime    @updatedAt
-  card_id    String
-  status     Int @default(1)  // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
-  acc_tail   String?
-  note       String?
-  card       CompanyCard @relation(fields: [card_id], references: [id])
-  player     Player      @relation(fields: [player_id], references: [id])
+  id             String      @id @default(cuid())
+  player_id      String
+  amount         Float
+  created_at     DateTime    @default(now()) @db.Timestamptz()
+  updated_at     DateTime    @updatedAt
+  card_id        String
+  status         Int         @default(1) // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
+  player_card    PlayerCard  @relation(fields: [player_card_id], references: [id])
+  player_card_id String
+  inner_note     String?
+  outter_note    String?
+  card           CompanyCard @relation(fields: [card_id], references: [id])
+  player         Player      @relation(fields: [player_id], references: [id])
 }
 
+model BankWithdrawRec {
+  id             String      @id @default(cuid())
+  player_id      String
+  amount         Float
+  created_at     DateTime    @default(now()) @db.Timestamptz()
+  updated_at     DateTime    @updatedAt
+  card_id        String
+  status         Int         @default(1) // 等待審核 同意出金 完成出金 會員取消 拒絕退回
+  player_card    PlayerCard  @relation(fields: [player_card_id], references: [id])
+  player_card_id String
+  inner_note     String?
+  outter_note    String?
+  card           CompanyCard @relation(fields: [card_id], references: [id])
+  player         Player      @relation(fields: [player_id], references: [id])
+  withdraw_fee   Float       @default(0)
+}
 
 model Player {
   id               String              @id @default(cuid())
@@ -182,6 +203,7 @@ model Player {
   promo            PromoCode?          @relation(fields: [promo_code], references: [code])
   vip              Vip?                @relation(fields: [vip_id], references: [id])
   bank_deposits    BankDepositRec[]
+  bank_withdraws   BankWithdrawRec[]
   payment_deposits PaymentDepositRec[]
   chips_records    ChipsRec[]
   contact          Contact?
@@ -270,10 +292,10 @@ model ActivityPromo {
 
 model Banner {
   id        String    @id @default(cuid())
-  pc_img    Image @relation("banner-pc", fields: [pc_img_id], references: [id])
-  pc_img_id Int @unique
-  mb_img    Image @relation("banner-mb", fields: [mb_img_id], references: [id])
-  mb_img_id Int @unique
+  pc_img    Image     @relation("banner-pc", fields: [pc_img_id], references: [id])
+  pc_img_id Int       @unique
+  mb_img    Image     @relation("banner-mb", fields: [mb_img_id], references: [id])
+  mb_img_id Int       @unique
   name      String
   is_active Boolean
   sort      Int
@@ -369,12 +391,12 @@ model PaymentMerchant {
   name         String
   code         String          @unique
   is_active    Boolean
-  pay_types PayType[]
+  pay_types    PayType[]
   fields       MerchantField[]
   paymentTools PaymentTool[]
 
   records PaymentDepositRec[]
-  bills MerchantBill[]
+  bills   MerchantBill[]
 }
 
 // 支付工具
@@ -390,60 +412,60 @@ model PaymentTool {
   merchant_id  String
   payways      Payway[]
 
-  sort Int @default(autoincrement())
+  sort      Int     @default(autoincrement())
   is_rotate Boolean @default(true)
 }
 
 // 支付工具儲值紀錄(站內)
 model PaymentDepositRec {
-  id          String    @id @default(cuid())
-  amount      Float
-  created_at  DateTime  @default(now())
-  paid_at     DateTime?
-  finished_at DateTime?
-  canceled_at DateTime?
-  expired_at  DateTime?
-  payway    Payway @relation(fields: [payway_id], references: [id])
-  payway_id String
-  player            Player @relation(fields: [player_id], references: [id])
-  player_id         String
-  fee_on_player Float // 會員負擔手續費
+  id             String          @id @default(cuid())
+  amount         Float
+  created_at     DateTime        @default(now())
+  paid_at        DateTime?
+  finished_at    DateTime?
+  canceled_at    DateTime?
+  expired_at     DateTime?
+  payway         Payway          @relation(fields: [payway_id], references: [id])
+  payway_id      String
+  player         Player          @relation(fields: [player_id], references: [id])
+  player_id      String
+  fee_on_player  Float // 會員負擔手續費
   fee_on_company Float // 公司負擔手續費
-  merchant PaymentMerchant @relation(fields: [merchant_id], references: [id])
-  merchant_id String
+  merchant       PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant_id    String
 
-  trade_no String @unique //繳費單編號
-  bill MerchantBill? @relation(fields: [trade_no], references: [trade_no])
-  status Int? // 尚未付款 已付款 等待入點 已過期 拒絕退回
+  trade_no String        @unique //繳費單編號
+  bill     MerchantBill? @relation(fields: [trade_no], references: [trade_no])
+  status   Int? // 尚未付款 已付款 等待入點 已過期 拒絕退回
 }
 
 // 金流商回傳資料紀錄
 model MerchantBill {
-  trade_no String @id
-  record PaymentDepositRec?
-  created_at  DateTime  @default(now())
-  expired_at  DateTime?
-  paid_at     DateTime?
-  price Float
-  status Int // 等待付款 已繳費 已過期 拒絕退回
+  trade_no   String             @id
+  record     PaymentDepositRec?
+  created_at DateTime           @default(now())
+  expired_at DateTime?
+  paid_at    DateTime?
+  price      Float
+  status     Int // 等待付款 已繳費 已過期 拒絕退回
 
-  merchant PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id String
 
-  pay_type PayType
-  pay_code String? // 超商付款代碼
-  bank_code String? // 銀行代碼
+  pay_type     PayType
+  pay_code     String? // 超商付款代碼
+  bank_code    String? // 銀行代碼
   bank_account String? // ATM付款帳號
 }
 
 model Image {
-  id Int @id @default(autoincrement())
-  path String
-  filename String
-  type Int // 會員銀行存摺, ...
-  created_at  DateTime  @default(now())
+  id         Int      @id @default(autoincrement())
+  path       String
+  filename   String
+  type       Int // 會員銀行存摺, ...
+  created_at DateTime @default(now())
 
-  p_card_img PlayerCard? @relation("p-card-1")
+  p_card_img  PlayerCard? @relation("p-card-1")
   p_card_img2 PlayerCard? @relation("p-card-2")
 
   banner_mb Banner? @relation("banner-mb")
@@ -451,8 +473,8 @@ model Image {
 }
 
 model Bank {
-  code String @id
-  name String
+  code      String  @id
+  name      String
   is_active Boolean @default(true)
 }
 
