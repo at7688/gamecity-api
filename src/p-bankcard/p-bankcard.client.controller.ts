@@ -18,7 +18,7 @@ import { CreatePBankcardDto } from './dto/create-p-bankcard.dto';
 import { UpdatePBankcardDto } from './dto/update-p-bankcard.dto';
 import { PBankcardClientService } from './p-bankcard.client.service';
 
-@Controller('client/p-bankcards')
+@Controller('bankcards')
 @Platforms([PlatformType.PLAYER])
 export class PBankcardClientController {
   constructor(

@@ -1,28 +1,28 @@
-import { SearchBankDepositsDto } from './dto/search-bank-deposits.dto';
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
 } from '@nestjs/common';
-import { BankDepositService } from './bank-deposit.service';
-import { CreateBankDepositDto } from './dto/create-bank-deposit.dto';
-import { UpdateBankDepositDto } from './dto/update-bank-deposit.dto';
-import { LoginUser } from 'src/types';
+import { PlatformType } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
 import { Platforms } from 'src/metas/platforms.meta';
-import { PlatformType } from '@prisma/client';
+import { LoginUser } from 'src/types';
+import { BankDepositClientService } from './bank-deposit.client.service';
+import { CreateBankDepositDto } from './dto/create-bank-deposit.dto';
+import { SearchBankDepositsDto } from './dto/search-bank-deposits.dto';
+import { UpdateBankDepositDto } from './dto/update-bank-deposit.dto';
 
-@Controller('bank-deposits')
-export class BankDepositController {
-  constructor(private readonly bankDepositService: BankDepositService) {}
+@Controller('deposits')
+@Platforms([PlatformType.PLAYER])
+export class BankDepositClientController {
+  constructor(private readonly bankDepositService: BankDepositClientService) {}
 
   @Post()
-  @Platforms([PlatformType.PLAYER])
   create(@Body() createBankDepositDto: CreateBankDepositDto) {
     return this.bankDepositService.create(createBankDepositDto);
   }

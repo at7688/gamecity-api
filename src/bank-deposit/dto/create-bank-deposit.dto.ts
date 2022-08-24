@@ -7,9 +7,9 @@ export class CreateBankDepositDto {
 
   @IsString()
   @IsNotEmpty()
-  card_id: string;
+  player_card_id: string;
 
-  @IsString()
-  @IsNotEmpty()
-  player_id: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // player_id: string;
 }
