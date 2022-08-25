@@ -138,7 +138,6 @@ model CompanyCard {
   name           String
   account        String
   rotation_id    Int
-  is_active      Boolean           @default(true)
   deposit_max    Int
   deposit_min    Int
   recharge_max   Int
@@ -146,9 +145,10 @@ model CompanyCard {
   bank_deposits  BankDepositRec[]
   bank_withdraws BankWithdrawRec[]
   sort           Int               @default(autoincrement())
-  is_rotate      Boolean           @default(true)
+  is_active      Boolean           @default(false)
+  is_current      Boolean           @default(false)
 
-  accumulate_from DateTime @default(now())
+  accumulate_from DateTime @default(now()) @db.Timestamptz()
 }
 
 model BankDepositRec {
@@ -156,7 +156,7 @@ model BankDepositRec {
   player_id      String
   amount         Float
   created_at     DateTime    @default(now()) @db.Timestamptz()
-  updated_at     DateTime    @updatedAt
+  updated_at     DateTime    @updatedAt @db.Timestamptz()
   card_id        String
   status         Int         @default(1) // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
   player_card    PlayerCard  @relation(fields: [player_card_id], references: [id])
@@ -172,7 +172,7 @@ model BankWithdrawRec {
   player_id      String
   amount         Float
   created_at     DateTime    @default(now()) @db.Timestamptz()
-  updated_at     DateTime    @updatedAt
+  updated_at     DateTime    @updatedAt @db.Timestamptz()
   card_id        String
   status         Int         @default(1) // 等待審核 同意出金 完成出金 會員取消 拒絕退回
   player_card    PlayerCard  @relation(fields: [player_card_id], references: [id])
@@ -189,8 +189,8 @@ model Player {
   username         String              @unique
   password         String
   nickname         String
-  created_at       DateTime            @default(now())
-  updated_at       DateTime            @updatedAt
+  created_at       DateTime            @default(now()) @db.Timestamptz()
+  updated_at       DateTime            @updatedAt @db.Timestamptz()
   is_active        Boolean             @default(true)
   is_blocked       Boolean             @default(false)
   promo_code       String?             @unique
@@ -218,8 +218,8 @@ model Member {
   username        String     @unique
   password        String
   nickname        String
-  created_at      DateTime   @default(now())
-  updated_at      DateTime   @updatedAt
+  created_at      DateTime   @default(now()) @db.Timestamptz()
+  updated_at      DateTime   @updatedAt @db.Timestamptz()
   parent_id       String?
   promo_code      String?    @unique
   is_active       Boolean    @default(true)
@@ -267,7 +267,7 @@ model LoginRec {
   admin_user_id String?
   agent_id      String?
   ip            String?
-  login_at      DateTime     @default(now())
+  login_at      DateTime     @default(now()) @db.Timestamptz()
   nums_failed   Int          @default(0)
   failed_msg    String?
   player_id     String?
@@ -277,18 +277,6 @@ model LoginRec {
   player        Player?      @relation(fields: [player_id], references: [id])
 }
 
-model ActivityPromo {
-  id        String    @id @default(cuid())
-  pc_img    String
-  mb_img    String
-  title     String
-  sub_title String
-  content   String
-  is_active Boolean
-  sort      Int
-  start_at  DateTime? @db.Timestamp(6)
-  end_at    DateTime? @db.Timestamp(6)
-}
 
 model Banner {
   id        String    @id @default(cuid())
@@ -299,8 +287,8 @@ model Banner {
   name      String
   is_active Boolean
   sort      Int
-  start_at  DateTime? @db.Timestamp(6)
-  end_at    DateTime? @db.Timestamp(6)
+  start_at  DateTime? @db.Timestamptz()
+  end_at    DateTime? @db.Timestamptz()
 }
 
 model GameCategory {
@@ -334,7 +322,7 @@ model Inbox {
   from_user_id   String?
   from_member_id String?
   to_member_id   String?
-  opened_at      DateTime?
+  opened_at      DateTime? @db.Timestamptz()
   inbox_rec_id   String
   to_player_id   String?
   from_member    Member?    @relation("from", fields: [from_member_id], references: [id])
@@ -348,7 +336,7 @@ model InboxRec {
   id          String   @id @default(cuid())
   title       String
   content     String
-  sended_at   DateTime @default(now())
+  sended_at   DateTime @default(now()) @db.Timestamptz()
   target_type Int
   inboxs      Inbox[]
 }
@@ -413,18 +401,18 @@ model PaymentTool {
   payways      Payway[]
 
   sort      Int     @default(autoincrement())
-  is_rotate Boolean @default(true)
+  is_current Boolean @default(true)
 }
 
 // 支付工具儲值紀錄(站內)
 model PaymentDepositRec {
   id             String          @id @default(cuid())
   amount         Float
-  created_at     DateTime        @default(now())
-  paid_at        DateTime?
-  finished_at    DateTime?
-  canceled_at    DateTime?
-  expired_at     DateTime?
+  created_at     DateTime        @default(now()) @db.Timestamptz()
+  paid_at        DateTime? @db.Timestamptz()
+  finished_at    DateTime? @db.Timestamptz()
+  canceled_at    DateTime? @db.Timestamptz()
+  expired_at     DateTime? @db.Timestamptz()
   payway         Payway          @relation(fields: [payway_id], references: [id])
   payway_id      String
   player         Player          @relation(fields: [player_id], references: [id])
@@ -443,9 +431,9 @@ model PaymentDepositRec {
 model MerchantBill {
   trade_no   String             @id
   record     PaymentDepositRec?
-  created_at DateTime           @default(now())
-  expired_at DateTime?
-  paid_at    DateTime?
+  created_at DateTime           @default(now()) @db.Timestamptz()
+  expired_at DateTime? @db.Timestamptz()
+  paid_at    DateTime? @db.Timestamptz()
   price      Float
   status     Int // 等待付款 已繳費 已過期 拒絕退回
 
@@ -463,7 +451,7 @@ model Image {
   path       String
   filename   String
   type       Int // 會員銀行存摺, ...
-  created_at DateTime @default(now())
+  created_at DateTime @default(now()) @db.Timestamptz()
 
   p_card_img  PlayerCard? @relation("p-card-1")
   p_card_img2 PlayerCard? @relation("p-card-2")

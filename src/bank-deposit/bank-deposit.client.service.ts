@@ -23,16 +23,50 @@ export class BankDepositClientService {
   async create(data: CreateBankDepositDto) {
     const { amount, player_card_id } = data;
 
-    const card = (
-      await this.prisma.$queryRaw<CardInfo[]>(getCurrentCard(this.player.id))
+    // 驗證客戶的卡片
+    const playerCard = (
+      await this.prisma.playerCard.findMany({
+        where: {
+          id: player_card_id,
+          player_id: this.player.id,
+        },
+      })
     )[0];
+    if (!playerCard) {
+      return new BadRequestException('查無卡片');
+    }
 
-    if (!card) {
+    // 取得當前輪替的卡片們
+    const cards = await this.prisma.$queryRaw<CardInfo[]>(
+      getCurrentCard(this.player.id),
+    );
+
+    // 若無限額內可用卡片則提示錯誤
+    if (cards.length === 0) {
       throw new BadRequestException('暫無提供儲值，請聯繫客服');
     }
 
-    console.log(card);
+    // 取得當前運作的卡片
+    let card = cards.find((t) => t.is_current);
 
+    // 若無當前運作中卡片則開啟限額內的備用卡片
+    if (!card) {
+      card = cards[0];
+      await this.prisma.companyCard.update({
+        where: { id: card.card_id },
+        data: { is_current: true },
+      });
+    }
+
+    // 若儲值後超出限額，則關閉當前卡片
+    if (amount + card.current_sum > card.deposit_max) {
+      await this.prisma.companyCard.update({
+        where: { id: card.card_id },
+        data: { is_current: false },
+      });
+    }
+
+    //  新增儲值
     return this.prisma.bankDepositRec.create({
       select: {
         id: true,

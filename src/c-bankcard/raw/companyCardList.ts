@@ -4,10 +4,10 @@ export const companyCardList = (rotation_id: number) => Prisma.sql`
 WITH list AS (
 SELECT
 	c.*,
-	(SELECT SUM(amount) FROM "BankDepositRec" r
+	(SELECT COALESCE(sum(amount), 0) FROM "BankDepositRec" r
 	 WHERE r.card_id = c.id AND r.created_at > c.accumulate_from
 	) current_sum,
-	(SELECT SUM(amount) FROM "BankDepositRec" r
+	(SELECT COALESCE(sum(amount), 0) FROM "BankDepositRec" r
 	 WHERE r.card_id = c.id
 	) total_sum,
 	(SELECT json_build_object(
@@ -24,7 +24,7 @@ SELECT
 	) last_record
 	FROM "CompanyCard" c
   WHERE rotation_id = ${rotation_id}
-	ORDER BY id
+	ORDER BY sort
 )
 
 SELECT

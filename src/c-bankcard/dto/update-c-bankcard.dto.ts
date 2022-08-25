@@ -52,7 +52,7 @@ export class UpdateCBankcardDto {
 
   @IsBoolean()
   @IsOptional()
-  is_rotate?: boolean;
+  is_current?: boolean;
 
   @IsDate()
   @IsOptional()
