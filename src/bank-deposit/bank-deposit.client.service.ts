@@ -82,17 +82,8 @@ export class BankDepositClientService {
     });
   }
 
-  findAll(search: SearchBankDepositsDto, user: LoginUser) {
-    const {
-      nickname,
-      username,
-      account,
-      name,
-      created_start_at,
-      created_end_at,
-      amount_from,
-      amount_to,
-    } = search;
+  findAll(search: SearchBankDepositsDto) {
+    const { created_start_at, created_end_at } = search;
     return this.prisma.bankDepositRec.findMany({
       where: {
         player_id: this.player.id,

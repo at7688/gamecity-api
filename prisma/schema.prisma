@@ -128,7 +128,7 @@ model PlayerCard {
   player       Player   @relation(fields: [player_id], references: [id])
 
   bank_deposits  BankDepositRec[]
-  bank_withdraws BankWithdrawRec[]
+  bank_withdraws WithdrawRec[]
 
   inner_note String?
   outter_note String?
@@ -146,7 +146,6 @@ model CompanyCard {
   recharge_max   Int
   rotation       RotationGroup     @relation(fields: [rotation_id], references: [id])
   bank_deposits  BankDepositRec[]
-  bank_withdraws BankWithdrawRec[]
   sort           Int               @default(autoincrement())
   is_active      Boolean           @default(false)
   is_current      Boolean           @default(false)
@@ -170,19 +169,17 @@ model BankDepositRec {
   player         Player      @relation(fields: [player_id], references: [id])
 }
 
-model BankWithdrawRec {
+model WithdrawRec {
   id             String      @id @default(cuid())
   player_id      String
   amount         Float
   created_at     DateTime    @default(now()) @db.Timestamptz()
   updated_at     DateTime    @updatedAt @db.Timestamptz()
-  card_id        String
   status         Int         @default(1) // 等待審核 同意出金 完成出金 會員取消 拒絕退回
   player_card    PlayerCard  @relation(fields: [player_card_id], references: [id])
   player_card_id String
   inner_note     String?
   outter_note    String?
-  card           CompanyCard @relation(fields: [card_id], references: [id])
   player         Player      @relation(fields: [player_id], references: [id])
   withdraw_fee   Float       @default(0)
 }
@@ -206,7 +203,7 @@ model Player {
   promo            PromoCode?          @relation(fields: [promo_code], references: [code])
   vip              Vip?                @relation(fields: [vip_id], references: [id])
   bank_deposits    BankDepositRec[]
-  bank_withdraws   BankWithdrawRec[]
+  bank_withdraws   WithdrawRec[]
   payment_deposits PaymentDepositRec[]
   chips_records    ChipsRec[]
   contact          Contact?

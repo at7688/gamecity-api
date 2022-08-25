@@ -28,8 +28,8 @@ export class BankDepositClientController {
   }
 
   @Get()
-  findAll(@Query() query: SearchBankDepositsDto, @User() user: LoginUser) {
-    return this.bankDepositService.findAll(query, user);
+  findAll(@Query() query: SearchBankDepositsDto) {
+    return this.bankDepositService.findAll(query);
   }
 
   @Get(':id')

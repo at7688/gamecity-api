@@ -34,7 +34,7 @@ import { CBankcardModule } from './c-bankcard/c-bankcard.module';
 import { RotationModule } from './rotation/rotation.module';
 import { BankService } from './bank/bank.service';
 import { BankController } from './bank/bank.controller';
-import { BankWithdrawModule } from './bank-withdraw/bank-withdraw.module';
+import { WithdrawModule } from './withdraw/withdraw.module';
 import { BankDepositModule } from './bank-deposit/bank-deposit.module';
 
 @Module({
@@ -78,7 +78,7 @@ import { BankDepositModule } from './bank-deposit/bank-deposit.module';
     PBankcardModule,
     CBankcardModule,
     RotationModule,
-    BankWithdrawModule,
+    WithdrawModule,
     BankDepositModule,
   ],
   controllers: [AppController, UploadsController, BankController],
