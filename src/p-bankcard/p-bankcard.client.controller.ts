@@ -28,7 +28,7 @@ export class PBankcardClientController {
 
   @Post('upload')
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 1024 * 200 } }),
+    FileInterceptor('file', { limits: { fileSize: 1024 * 1024 } }),
   )
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     return this.uploadsService.uploadFile(file, ImageType.PLAYER_CARD);
@@ -39,6 +39,11 @@ export class PBankcardClientController {
     return this.pBankcardService.create(data);
   }
 
+  @Patch(':id/default')
+  default(@Param('id') id: string) {
+    return this.pBankcardService.default(id);
+  }
+
   @Get()
   findAll() {
     return this.pBankcardService.findAll();
@@ -46,7 +51,7 @@ export class PBankcardClientController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.pBankcardService.findOne(+id);
+    return this.pBankcardService.findOne(id);
   }
 
   @Patch(':id')
@@ -54,7 +59,7 @@ export class PBankcardClientController {
     @Param('id') id: string,
     @Body() updatePBankcardDto: UpdatePBankcardDto,
   ) {
-    return this.pBankcardService.update(+id, updatePBankcardDto);
+    return this.pBankcardService.update(id, updatePBankcardDto);
   }
 
   @Delete(':id')

@@ -1,5 +1,20 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import { ValidatePBankcardDto } from './dto/validate-p-bankcard.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ImageType } from 'src/uploads/enums';
 import { UploadsService } from 'src/uploads/uploads.service';
+import { SearchPBankcardsDto } from './dto/search-p-bankcards.dto';
 import { UpdatePBankcardDto } from './dto/update-p-bankcard.dto';
 import { PBankcardService } from './p-bankcard.service';
 
@@ -10,9 +25,17 @@ export class PBankcardController {
     private readonly uploadsService: UploadsService,
   ) {}
 
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 1024 * 1024 } }),
+  )
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    return this.uploadsService.uploadFile(file, ImageType.PLAYER_CARD);
+  }
+
   @Get()
-  findAll() {
-    return this.pBankcardService.findAll();
+  findAll(@Query() query: SearchPBankcardsDto) {
+    return this.pBankcardService.findAll(query);
   }
 
   @Get(':id')
@@ -26,6 +49,13 @@ export class PBankcardController {
     @Body() updatePBankcardDto: UpdatePBankcardDto,
   ) {
     return this.pBankcardService.update(id, updatePBankcardDto);
+  }
+  @Patch(':id/validate')
+  validate(
+    @Param('id') id: string,
+    @Body() validatePBankcardDto: ValidatePBankcardDto,
+  ) {
+    return this.pBankcardService.validate(id, validatePBankcardDto);
   }
 
   @Delete(':id')

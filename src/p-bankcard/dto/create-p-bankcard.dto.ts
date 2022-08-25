@@ -24,10 +24,6 @@ export class CreatePBankcardDto {
   @IsNotEmpty()
   account: string;
 
-  // @IsBoolean()
-  // @IsNotEmpty()
-  // is_default: boolean;
-
   @IsInt()
   @IsNotEmpty()
   img_id: number;

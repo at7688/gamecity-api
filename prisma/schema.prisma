@@ -129,6 +129,9 @@ model PlayerCard {
 
   bank_deposits  BankDepositRec[]
   bank_withdraws BankWithdrawRec[]
+
+  inner_note String?
+  outter_note String?
 }
 
 model CompanyCard {

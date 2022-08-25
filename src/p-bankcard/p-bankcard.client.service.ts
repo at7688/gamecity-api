@@ -22,6 +22,7 @@ export class PBankcardClientService {
     return this.request.user as Player;
   }
   async create(data: CreatePBankcardDto) {
+    // 查詢是否該玩家有預設卡片
     const defaultCards = await this.prisma.playerCard.findMany({
       where: { player_id: this.player.id, is_default: true },
     });
@@ -42,12 +43,32 @@ export class PBankcardClientService {
     });
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} pBankcard`;
   }
 
-  update(id: number, updatePBankcardDto: UpdatePBankcardDto) {
-    return `This action updates a #${id} pBankcard`;
+  update(id: string, data: UpdatePBankcardDto) {
+    return this.prisma.playerCard.update({ where: { id }, data });
+  }
+
+  async default(id: string) {
+    await this.prisma.$transaction([
+      this.prisma.playerCard.updateMany({
+        where: { player_id: this.player.id },
+        data: {
+          is_default: false,
+        },
+      }),
+      this.prisma.playerCard.updateMany({
+        where: { id, player_id: this.player.id },
+        data: {
+          is_default: true,
+        },
+      }),
+    ]);
+    return {
+      success: true,
+    };
   }
 
   remove(id: number) {

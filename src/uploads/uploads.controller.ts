@@ -15,7 +15,7 @@ export class UploadsController {
 
   @Post('image')
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 1024 * 200 } }),
+    FileInterceptor('file', { limits: { fileSize: 1024 * 1024 } }),
   )
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     return this.uploadsService.uploadFile(file, ImageType.OTHER);
