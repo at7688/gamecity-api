@@ -1,8 +1,22 @@
+import { BankDepositStatus } from 'src/bank-deposit/enums';
 import { Transform } from 'class-transformer';
-import { IsDate, IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
 
 export class SearchBankDepositsDto extends PaginateDto {
+  @IsEnum(BankDepositStatus)
+  @IsOptional()
+  @Transform(({ value }) => +value)
+  status: BankDepositStatus;
+
   @IsString()
   @IsOptional()
   username?: string;
@@ -31,9 +45,11 @@ export class SearchBankDepositsDto extends PaginateDto {
 
   @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => +value)
   amount_from?: number;
 
   @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => +value)
   amount_to?: number;
 }

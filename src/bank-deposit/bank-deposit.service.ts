@@ -1,19 +1,14 @@
-import { SearchBankDepositsDto } from './dto/search-bank-deposits.dto';
 import { Injectable } from '@nestjs/common';
-import { CreateBankDepositDto } from './dto/create-bank-deposit.dto';
-import { UpdateBankDepositDto } from './dto/update-bank-deposit.dto';
-import { LoginUser } from 'src/types';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SearchBankDepositsDto } from './dto/search-bank-deposits.dto';
+import { UpdateBankDepositDto } from './dto/update-bank-deposit.dto';
 
 @Injectable()
 export class BankDepositService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(createBankDepositDto: CreateBankDepositDto) {
-    return 'This action adds a new bankDeposit';
-  }
-
-  findAll(search: SearchBankDepositsDto, user: LoginUser) {
+  async findAll(search: SearchBankDepositsDto) {
     const {
       nickname,
       username,
@@ -23,8 +18,62 @@ export class BankDepositService {
       created_end_at,
       amount_from,
       amount_to,
+      status,
     } = search;
-    return this.prisma.bankDepositRec.findMany();
+
+    const findManyArgs: Prisma.BankDepositRecFindManyArgs = {
+      where: {
+        status,
+        player: {
+          nickname: {
+            contains: nickname,
+          },
+          username: {
+            contains: username,
+          },
+        },
+        player_card: {
+          account: {
+            contains: account,
+          },
+          name: {
+            contains: name,
+          },
+        },
+        created_at: {
+          gte: created_start_at,
+          lte: created_end_at,
+        },
+        amount: {
+          gte: amount_from,
+          lte: amount_to,
+        },
+      },
+      include: {
+        player: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+        },
+        player_card: {
+          select: {
+            id: true,
+            bank_code: true,
+            branch: true,
+            name: true,
+            account: true,
+          },
+        },
+      },
+    };
+    return this.prisma.listFormat({
+      items: await this.prisma.bankDepositRec.findMany(findManyArgs),
+      count: await this.prisma.bankDepositRec.count({
+        where: findManyArgs.where,
+      }),
+    });
   }
 
   findOne(id: string) {
@@ -37,9 +86,5 @@ export class BankDepositService {
       where: { id },
       data: { inner_note, outter_note, status },
     });
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} bankDeposit`;
   }
 }
