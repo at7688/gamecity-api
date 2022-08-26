@@ -1,9 +1,14 @@
 import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
-import { Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateWithdrawDto } from './dto/create-withdraw.dto';
 import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
 import { Prisma } from '@prisma/client';
+import { WithdrawStatus } from './enums';
 
 @Injectable()
 export class WithdrawService {
@@ -59,6 +64,7 @@ export class WithdrawService {
             id: true,
             nickname: true,
             username: true,
+            withdraw_nums: true,
           },
         },
         player_card: {
@@ -81,14 +87,43 @@ export class WithdrawService {
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} bankWithdraw`;
+    return this.prisma.withdrawRec.findUnique({
+      where: { id },
+      include: {
+        player: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+        },
+        player_card: {
+          select: {
+            id: true,
+            bank_code: true,
+            branch: true,
+            name: true,
+            account: true,
+          },
+        },
+      },
+    });
   }
 
-  update(id: string, data: UpdateWithdrawDto) {
-    const { inner_note, outter_note, status } = data;
-    return this.prisma.withdrawRec.update({
+  async update(id: string, data: UpdateWithdrawDto) {
+    const { inner_note, outter_note, status, withdraw_fee } = data;
+
+    await this.prisma.withdrawRec.update({
       where: { id },
-      data: { inner_note, outter_note, status },
+      data: { inner_note, outter_note, status, withdraw_fee },
     });
+    // 若狀態為已撥款，則累計進會員提領次數
+    if (status === WithdrawStatus.FINISHED) {
+      await this.prisma.player.updateMany({
+        where: { withdraws: { some: { id } } },
+        data: { withdraw_nums: { increment: 1 } },
+      });
+    }
+    return { success: true };
   }
 }

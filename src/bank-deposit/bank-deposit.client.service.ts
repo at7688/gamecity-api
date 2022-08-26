@@ -8,6 +8,7 @@ import { Player } from '@prisma/client';
 import { CardInfo, getCurrentCard } from './raw/getCurrentCard';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
+import { ValidStatus } from 'src/p-bankcard/enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BankDepositClientService {
@@ -29,11 +30,12 @@ export class BankDepositClientService {
         where: {
           id: player_card_id,
           player_id: this.player.id,
+          valid_status: ValidStatus.VALID,
         },
       })
     )[0];
     if (!playerCard) {
-      return new BadRequestException('查無卡片');
+      throw new BadRequestException('卡片不可用');
     }
 
     // 取得當前輪替的卡片們

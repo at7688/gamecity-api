@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { WithdrawStatus } from 'src/withdraw/enums';
 
 export class UpdateWithdrawDto {
@@ -13,4 +13,8 @@ export class UpdateWithdrawDto {
   @IsString()
   @IsOptional()
   outter_note?: string;
+
+  @IsNumber()
+  @IsOptional()
+  withdraw_fee?: number;
 }

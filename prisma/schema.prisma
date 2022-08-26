@@ -128,7 +128,7 @@ model PlayerCard {
   player       Player   @relation(fields: [player_id], references: [id])
 
   bank_deposits  BankDepositRec[]
-  bank_withdraws WithdrawRec[]
+  withdraws WithdrawRec[]
 
   inner_note String?
   outter_note String?
@@ -203,7 +203,7 @@ model Player {
   promo            PromoCode?          @relation(fields: [promo_code], references: [code])
   vip              Vip?                @relation(fields: [vip_id], references: [id])
   bank_deposits    BankDepositRec[]
-  bank_withdraws   WithdrawRec[]
+  withdraws   WithdrawRec[]
   payment_deposits PaymentDepositRec[]
   chips_records    ChipsRec[]
   contact          Contact?
@@ -211,6 +211,8 @@ model Player {
   login_rec        LoginRec[]
   invites          Player[]            @relation("player")
   bankcard         PlayerCard[]
+
+  withdraw_nums Int @default(0)
 }
 
 model Member {
@@ -260,6 +262,11 @@ model Vip {
   card_rotate       RotationGroup @relation("card", fields: [card_rotate_id], references: [id])
   payment_rotate    RotationGroup @relation("payment", fields: [payment_rotate_id], references: [id])
   players           Player[]
+
+  withdraw_fee_1 Float @default(0)
+  withdraw_fee_2 Float @default(0)
+  withdraw_fee_3 Float @default(0)
+  withdraw_fee Float @default(0)
 }
 
 model LoginRec {
