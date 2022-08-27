@@ -19,12 +19,16 @@ export class PrismaService extends PrismaClient {
     count,
     search,
     extra,
+    page,
+    perpage,
   }: {
     items: T[];
     count: number;
     search?: R;
     extra?: E;
+    page?: number;
+    perpage?: number;
   }) {
-    return { items, count, search, ...extra };
+    return { items, count, search, page, perpage, ...extra };
   }
 }

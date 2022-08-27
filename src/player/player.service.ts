@@ -27,12 +27,10 @@ export class PlayerService {
     const hash = await argon2.hash(password);
 
     // 如果有初始化VIP, 則同時綁定
-    const vip = (
-      await this.prisma.vip.findMany({
-        where: { ebet_min: 0, deposite_min: 0 },
-        orderBy: { name: 'asc' },
-      })
-    )[0];
+    const vip = await this.prisma.vip.findFirst({
+      where: { ebet_min: 0, deposite_min: 0 },
+      orderBy: { name: 'asc' },
+    });
 
     if (!this.isAdmin) {
       const agents = await this.prisma.$queryRaw<SubAgent[]>(

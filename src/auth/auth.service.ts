@@ -213,7 +213,7 @@ export class AuthService {
         access_token: token,
       };
     } catch (err) {
-      const login_recs = await this.prisma.loginRec.findMany({
+      const login_rec = await this.prisma.loginRec.findFirst({
         where: {
           [{ ADMIN: 'admin_user', AGENT: 'agent', PLAYER: 'player' }[
             this.platform
@@ -223,7 +223,7 @@ export class AuthService {
         },
         orderBy: { login_at: 'desc' },
       });
-      const nums_failed = login_recs[0] ? login_recs[0]?.nums_failed + 1 : 1;
+      const nums_failed = login_rec ? login_rec?.nums_failed + 1 : 1;
       let failed_msg = `${err.message}, 累積失敗次數：${nums_failed}次`;
 
       // 超過失敗登入上限，封鎖帳戶

@@ -1,11 +1,12 @@
-import { ValidatePBankcardDto } from './dto/validate-p-bankcard.dto';
-import { SearchPBankcardsDto } from './dto/search-p-bankcards.dto';
+import { pagerList } from './../sql/pagerList';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Player } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreatePBankcardDto } from './dto/create-p-bankcard.dto';
+import { WithdrawStatus } from 'src/withdraw/enums';
+import { SearchPBankcardsDto } from './dto/search-p-bankcards.dto';
 import { UpdatePBankcardDto } from './dto/update-p-bankcard.dto';
+import { ValidatePBankcardDto } from './dto/validate-p-bankcard.dto';
+import { playerCardList } from './raw/playerCardList';
 
 @Injectable()
 export class PBankcardService {
@@ -15,9 +16,10 @@ export class PBankcardService {
   ) {}
   platform = this.configService.get('PLATFORM');
 
-  findAll(search: SearchPBankcardsDto) {
-    const { username, nickname, account, name, valid_status } = search;
-    return this.prisma.playerCard.findMany({
+  async findAll(search: SearchPBankcardsDto) {
+    const { username, nickname, account, name, valid_status, page, perpage } =
+      search;
+    const filterCards = await this.prisma.playerCard.findMany({
       where: {
         player: {
           username: {
@@ -37,16 +39,11 @@ export class PBankcardService {
           in: valid_status,
         },
       },
-      include: {
-        player: {
-          select: {
-            id: true,
-            nickname: true,
-            username: true,
-          },
-        },
-      },
     });
+    const records = await this.prisma.$queryRaw<any[]>(
+      pagerList(playerCardList(filterCards.map((t) => t.id)), page, perpage),
+    );
+    return this.prisma.listFormat({ ...records[0], page, perpage });
   }
 
   findOne(id: string) {

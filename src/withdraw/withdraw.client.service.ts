@@ -25,15 +25,13 @@ export class WithdrawClientService {
     const { amount, player_card_id } = data;
 
     // 驗證客戶的卡片
-    const playerCard = (
-      await this.prisma.playerCard.findMany({
-        where: {
-          id: player_card_id,
-          player_id: this.player.id,
-          valid_status: ValidStatus.VALID,
-        },
-      })
-    )[0];
+    const playerCard = await this.prisma.playerCard.findFirst({
+      where: {
+        id: player_card_id,
+        player_id: this.player.id,
+        valid_status: ValidStatus.VALID,
+      },
+    });
     if (!playerCard) {
       throw new BadRequestException('卡片不可用');
     }
@@ -52,13 +50,11 @@ export class WithdrawClientService {
     }
 
     // 查詢VIP等級的提領限制
-    const vip = (
-      await this.prisma.vip.findMany({
-        where: {
-          id: this.player.vip_id,
-        },
-      })
-    )[0];
+    const vip = await this.prisma.vip.findFirst({
+      where: {
+        id: this.player.vip_id,
+      },
+    });
 
     if (amount > vip.withdraw_max) {
       throw new BadRequestException(`最高提領限額為${vip.withdraw_max}元`);

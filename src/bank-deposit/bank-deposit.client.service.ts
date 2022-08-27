@@ -25,15 +25,13 @@ export class BankDepositClientService {
     const { amount, player_card_id } = data;
 
     // 驗證客戶的卡片
-    const playerCard = (
-      await this.prisma.playerCard.findMany({
-        where: {
-          id: player_card_id,
-          player_id: this.player.id,
-          valid_status: ValidStatus.VALID,
-        },
-      })
-    )[0];
+    const playerCard = await this.prisma.playerCard.findFirst({
+      where: {
+        id: player_card_id,
+        player_id: this.player.id,
+        valid_status: ValidStatus.VALID,
+      },
+    });
     if (!playerCard) {
       throw new BadRequestException('卡片不可用');
     }
