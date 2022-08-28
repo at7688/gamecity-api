@@ -36,6 +36,7 @@ import { BankService } from './bank/bank.service';
 import { BankController } from './bank/bank.controller';
 import { WithdrawModule } from './withdraw/withdraw.module';
 import { BankDepositModule } from './bank-deposit/bank-deposit.module';
+import { PaymentMerchantModule } from './payment-merchant/payment-merchant.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { BankDepositModule } from './bank-deposit/bank-deposit.module';
     RotationModule,
     WithdrawModule,
     BankDepositModule,
+    PaymentMerchantModule,
   ],
   controllers: [AppController, UploadsController, BankController],
   providers: [

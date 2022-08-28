@@ -385,7 +385,7 @@ model PaymentMerchant {
   id           String          @id @default(cuid())
   name         String
   code         String          @unique
-  is_active    Boolean
+  is_active    Boolean @default(true)
   pay_types    PayType[]
   fields       MerchantField[]
   paymentTools PaymentTool[]
@@ -409,6 +409,8 @@ model PaymentTool {
 
   sort      Int     @default(autoincrement())
   is_current Boolean @default(true)
+
+  merchant_config Json?
 }
 
 // 支付工具儲值紀錄(站內)
