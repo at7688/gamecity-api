@@ -49,7 +49,6 @@ export class PBankcardService {
         },
       },
     });
-    console.log(search);
     const records = await this.prisma.$queryRaw<any[]>(
       pagerList(
         playerCardList(
