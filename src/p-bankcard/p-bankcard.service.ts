@@ -17,8 +17,17 @@ export class PBankcardService {
   platform = this.configService.get('PLATFORM');
 
   async findAll(search: SearchPBankcardsDto) {
-    const { username, nickname, account, name, valid_status, page, perpage } =
-      search;
+    const {
+      username,
+      nickname,
+      account,
+      name,
+      valid_status,
+      page,
+      perpage,
+      withdraw_start_at,
+      withdraw_end_at,
+    } = search;
     const filterCards = await this.prisma.playerCard.findMany({
       where: {
         player: {
@@ -40,10 +49,18 @@ export class PBankcardService {
         },
       },
     });
+    console.log(search);
     const records = await this.prisma.$queryRaw<any[]>(
-      pagerList(playerCardList(filterCards.map((t) => t.id)), page, perpage),
+      pagerList(
+        playerCardList(
+          filterCards.map((t) => t.id),
+          search,
+        ),
+        page,
+        perpage,
+      ),
     );
-    return this.prisma.listFormat({ ...records[0], page, perpage });
+    return this.prisma.listFormat({ ...records[0], search });
   }
 
   findOne(id: string) {

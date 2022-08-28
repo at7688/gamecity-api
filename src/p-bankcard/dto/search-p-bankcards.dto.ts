@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
 import { ValidStatus } from '../enums';
 
@@ -26,4 +26,14 @@ export class SearchPBankcardsDto extends PaginateDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => new Date(value))
+  @IsDate()
+  withdraw_start_at?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => new Date(value))
+  @IsDate()
+  withdraw_end_at?: string;
 }
