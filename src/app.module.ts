@@ -37,6 +37,7 @@ import { BankController } from './bank/bank.controller';
 import { WithdrawModule } from './withdraw/withdraw.module';
 import { BankDepositModule } from './bank-deposit/bank-deposit.module';
 import { PaymentMerchantModule } from './payment-merchant/payment-merchant.module';
+import { PaymentToolModule } from './payment-tool/payment-tool.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { PaymentMerchantModule } from './payment-merchant/payment-merchant.modul
     WithdrawModule,
     BankDepositModule,
     PaymentMerchantModule,
+    PaymentToolModule,
   ],
   controllers: [AppController, UploadsController, BankController],
   providers: [

@@ -353,12 +353,12 @@ model Payway {
   id                 String      @id @default(cuid())
   type               PayType
   code               String
-  player_fee_amount  Float
-  player_fee_percent Float
+  player_fee_amount  Float?
+  player_fee_percent Float?
   player_fee_min     Float
   player_fee_max     Float
-  fee_amount         Float
-  fee_percent        Float
+  fee_amount         Float?
+  fee_percent        Float?
   fee_min            Float
   fee_max            Float
   tool_id            String
@@ -399,7 +399,7 @@ model PaymentTool {
   id           String          @id @default(cuid())
   tool_name    String
   rotation_id  Int
-  is_active    Boolean
+  is_active    Boolean @default(true)
   recharge_max Int
   note         String?
   rotation     RotationGroup   @relation(fields: [rotation_id], references: [id])
@@ -408,7 +408,7 @@ model PaymentTool {
   payways      Payway[]
 
   sort      Int     @default(autoincrement())
-  is_current Boolean @default(true)
+  is_current Boolean @default(false)
 
   merchant_config Json?
 }
