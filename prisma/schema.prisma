@@ -368,6 +368,9 @@ model Payway {
   is_active          Boolean     @default(false)
 
   records PaymentDepositRec[]
+
+
+  @@unique([tool_id, type])
 }
 
 // 金流商Hash欄位
@@ -411,6 +414,7 @@ model PaymentTool {
   is_current Boolean @default(false)
 
   merchant_config Json?
+
 }
 
 // 支付工具儲值紀錄(站內)

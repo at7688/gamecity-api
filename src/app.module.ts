@@ -38,6 +38,8 @@ import { WithdrawModule } from './withdraw/withdraw.module';
 import { BankDepositModule } from './bank-deposit/bank-deposit.module';
 import { PaymentMerchantModule } from './payment-merchant/payment-merchant.module';
 import { PaymentToolModule } from './payment-tool/payment-tool.module';
+import { PaymentDepositModule } from './payment-deposit/payment-deposit.module';
+import { PaywayModule } from './payway/payway.module';
 
 @Module({
   imports: [
@@ -84,6 +86,8 @@ import { PaymentToolModule } from './payment-tool/payment-tool.module';
     BankDepositModule,
     PaymentMerchantModule,
     PaymentToolModule,
+    PaymentDepositModule,
+    PaywayModule,
   ],
   controllers: [AppController, UploadsController, BankController],
   providers: [

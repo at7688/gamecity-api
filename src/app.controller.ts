@@ -17,6 +17,7 @@ export class AppController {
   foo() {
     return this.appService.getConfigVar();
   }
+
   @Get('notify')
   @Public()
   paymentNotify(@Query() query) {
