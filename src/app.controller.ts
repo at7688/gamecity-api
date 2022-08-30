@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Public } from './metas/public.meta';
 
@@ -16,5 +16,10 @@ export class AppController {
   @Public()
   foo() {
     return this.appService.getConfigVar();
+  }
+  @Get('notify')
+  @Public()
+  paymentNotify(@Query() query) {
+    return query;
   }
 }
