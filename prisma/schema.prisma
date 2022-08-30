@@ -127,28 +127,28 @@ model PlayerCard {
   img2_id      Int?     @unique
   player       Player   @relation(fields: [player_id], references: [id])
 
-  bank_deposits  BankDepositRec[]
-  withdraws WithdrawRec[]
+  bank_deposits BankDepositRec[]
+  withdraws     WithdrawRec[]
 
-  inner_note String?
+  inner_note  String?
   outter_note String?
 }
 
 model CompanyCard {
-  id             String            @id @default(cuid())
-  bank_code      String
-  branch         String
-  name           String
-  account        String
-  rotation_id    Int
-  deposit_max    Int
-  deposit_min    Int
-  recharge_max   Int
-  rotation       RotationGroup     @relation(fields: [rotation_id], references: [id])
-  bank_deposits  BankDepositRec[]
-  sort           Int               @default(autoincrement())
-  is_active      Boolean           @default(false)
-  is_current      Boolean           @default(false)
+  id            String           @id @default(cuid())
+  bank_code     String
+  branch        String
+  name          String
+  account       String
+  rotation_id   Int
+  deposit_max   Int
+  deposit_min   Int
+  recharge_max  Int
+  rotation      RotationGroup    @relation(fields: [rotation_id], references: [id])
+  bank_deposits BankDepositRec[]
+  sort          Int              @default(autoincrement())
+  is_active     Boolean          @default(false)
+  is_current    Boolean          @default(false)
 
   accumulate_from DateTime @default(now()) @db.Timestamptz()
 }
@@ -170,18 +170,18 @@ model BankDepositRec {
 }
 
 model WithdrawRec {
-  id             String      @id @default(cuid())
+  id             String     @id @default(cuid())
   player_id      String
   amount         Float
-  created_at     DateTime    @default(now()) @db.Timestamptz()
-  updated_at     DateTime    @updatedAt @db.Timestamptz()
-  status         Int         @default(1) // 等待審核 同意出金 完成出金 會員取消 拒絕退回
-  player_card    PlayerCard  @relation(fields: [player_card_id], references: [id])
+  created_at     DateTime   @default(now()) @db.Timestamptz()
+  updated_at     DateTime   @updatedAt @db.Timestamptz()
+  status         Int        @default(1) // 等待審核 同意出金 完成出金 會員取消 拒絕退回
+  player_card    PlayerCard @relation(fields: [player_card_id], references: [id])
   player_card_id String
   inner_note     String?
   outter_note    String?
-  player         Player      @relation(fields: [player_id], references: [id])
-  withdraw_fee   Float       @default(0)
+  player         Player     @relation(fields: [player_id], references: [id])
+  withdraw_fee   Float      @default(0)
 }
 
 model Player {
@@ -203,7 +203,7 @@ model Player {
   promo            PromoCode?          @relation(fields: [promo_code], references: [code])
   vip              Vip?                @relation(fields: [vip_id], references: [id])
   bank_deposits    BankDepositRec[]
-  withdraws   WithdrawRec[]
+  withdraws        WithdrawRec[]
   payment_deposits PaymentDepositRec[]
   chips_records    ChipsRec[]
   contact          Contact?
@@ -266,7 +266,7 @@ model Vip {
   withdraw_fee_1 Float @default(0)
   withdraw_fee_2 Float @default(0)
   withdraw_fee_3 Float @default(0)
-  withdraw_fee Float @default(0)
+  withdraw_fee   Float @default(0)
 }
 
 model LoginRec {
@@ -283,7 +283,6 @@ model LoginRec {
   agent         Member?      @relation(fields: [agent_id], references: [id])
   player        Player?      @relation(fields: [player_id], references: [id])
 }
-
 
 model Banner {
   id        String    @id @default(cuid())
@@ -329,7 +328,7 @@ model Inbox {
   from_user_id   String?
   from_member_id String?
   to_member_id   String?
-  opened_at      DateTime? @db.Timestamptz()
+  opened_at      DateTime?  @db.Timestamptz()
   inbox_rec_id   String
   to_player_id   String?
   from_member    Member?    @relation("from", fields: [from_member_id], references: [id])
@@ -352,15 +351,17 @@ model InboxRec {
 model Payway {
   id                 String      @id @default(cuid())
   type               PayType
-  code               String
-  player_fee_amount  Float?
-  player_fee_percent Float?
-  player_fee_min     Float
-  player_fee_max     Float
-  fee_amount         Float?
-  fee_percent        Float?
-  fee_min            Float
-  fee_max            Float
+  code               String // 金流廠商渠道代號
+  name               String?
+  fee_type Int @default(0) // amount / percent
+  player_fee_amount  Float @default(0)
+  player_fee_percent Float @default(0)
+  player_fee_min     Float @default(10)
+  player_fee_max     Float @default(200)
+  fee_amount         Float @default(0)
+  fee_percent        Float @default(0)
+  fee_min            Float @default(10)
+  fee_max            Float @default(200)
   tool_id            String
   deposit_max        Int
   deposit_min        Int
@@ -370,31 +371,23 @@ model Payway {
   records PaymentDepositRec[]
 
 
-  @@unique([tool_id, type])
-}
-
-// 金流商Hash欄位
-model MerchantField {
-  code        String
-  name        String
-  merchant_id String
-  merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
-
-  @@unique([merchant_id, code])
+  @@unique([tool_id, code])
 }
 
 // 金流廠商
 model PaymentMerchant {
-  id           String          @id @default(cuid())
-  name         String
-  code         String          @unique
-  is_active    Boolean @default(true)
-  pay_types    PayType[]
-  fields       MerchantField[]
+  id        String  @id @default(cuid())
+  name      String
+  code      String  @unique
+  is_active Boolean @default(true)
+
+  config Json?
+
   paymentTools PaymentTool[]
 
   records PaymentDepositRec[]
   bills   MerchantBill[]
+
 }
 
 // 支付工具
@@ -402,7 +395,7 @@ model PaymentTool {
   id           String          @id @default(cuid())
   tool_name    String
   rotation_id  Int
-  is_active    Boolean @default(true)
+  is_active    Boolean         @default(true)
   recharge_max Int
   note         String?
   rotation     RotationGroup   @relation(fields: [rotation_id], references: [id])
@@ -410,7 +403,7 @@ model PaymentTool {
   merchant_id  String
   payways      Payway[]
 
-  sort      Int     @default(autoincrement())
+  sort       Int     @default(autoincrement())
   is_current Boolean @default(false)
 
   merchant_config Json?
@@ -422,10 +415,10 @@ model PaymentDepositRec {
   id             String          @id @default(cuid())
   amount         Float
   created_at     DateTime        @default(now()) @db.Timestamptz()
-  paid_at        DateTime? @db.Timestamptz()
-  finished_at    DateTime? @db.Timestamptz()
-  canceled_at    DateTime? @db.Timestamptz()
-  expired_at     DateTime? @db.Timestamptz()
+  paid_at        DateTime?       @db.Timestamptz()
+  finished_at    DateTime?       @db.Timestamptz()
+  canceled_at    DateTime?       @db.Timestamptz()
+  expired_at     DateTime?       @db.Timestamptz()
   payway         Payway          @relation(fields: [payway_id], references: [id])
   payway_id      String
   player         Player          @relation(fields: [player_id], references: [id])
@@ -445,8 +438,8 @@ model MerchantBill {
   trade_no   String             @id
   record     PaymentDepositRec?
   created_at DateTime           @default(now()) @db.Timestamptz()
-  expired_at DateTime? @db.Timestamptz()
-  paid_at    DateTime? @db.Timestamptz()
+  expired_at DateTime?          @db.Timestamptz()
+  paid_at    DateTime?          @db.Timestamptz()
   price      Float
   status     Int // 等待付款 已繳費 已過期 拒絕退回
 

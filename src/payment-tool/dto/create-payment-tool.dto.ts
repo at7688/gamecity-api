@@ -12,6 +12,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { PaymentFeeType } from '../enums';
 
 export class Payment {
   @IsString()
@@ -24,7 +25,15 @@ export class Payment {
 
   @IsString()
   @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
   code: string;
+
+  @IsEnum(PaymentFeeType)
+  @IsNotEmpty()
+  fee_type: PaymentFeeType;
 
   @IsNumber()
   @IsOptional()
@@ -35,11 +44,11 @@ export class Payment {
   player_fee_percent: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   player_fee_min: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   player_fee_max: number;
 
   @IsNumber()
@@ -51,11 +60,11 @@ export class Payment {
   fee_percent: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   fee_min: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   fee_max: number;
 
   @IsNumber()

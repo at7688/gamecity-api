@@ -7,16 +7,15 @@ import { UpdatePaymentMerchantDto } from './dto/update-payment-merchant.dto';
 export class PaymentMerchantService {
   constructor(private readonly prisma: PrismaService) {}
   async create(data: CreatePaymentMerchantDto) {
-    const { name, code, is_active, fields } = data;
+    const { name, code, is_active, fields, pay_types } = data;
     await this.prisma.paymentMerchant.create({
       data: {
         name,
         code,
         is_active,
-        fields: {
-          createMany: {
-            data: fields,
-          },
+        config: {
+          fields,
+          pay_types,
         },
       },
     });
@@ -30,7 +29,7 @@ export class PaymentMerchantService {
         id: true,
         name: true,
         code: true,
-        fields: { select: { name: true, code: true } },
+        config: true,
       },
     });
   }
@@ -40,17 +39,16 @@ export class PaymentMerchantService {
   }
 
   async update(id: string, data: UpdatePaymentMerchantDto) {
-    const { name, code, is_active, fields } = data;
+    const { name, code, is_active, fields, pay_types } = data;
     await this.prisma.paymentMerchant.update({
       where: { id },
       data: {
         name,
         code,
         is_active,
-        fields: {
-          createMany: {
-            data: fields,
-          },
+        config: {
+          fields,
+          pay_types,
         },
       },
     });

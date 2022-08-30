@@ -41,8 +41,11 @@ export class PaymentToolService {
     });
   }
 
-  findAll() {
-    return this.prisma.paymentTool.findMany({ include: { payways: true } });
+  findAll(rotation_id: number) {
+    return this.prisma.paymentTool.findMany({
+      where: { rotation_id },
+      include: { payways: true },
+    });
   }
 
   findOne(id: string) {
@@ -87,6 +90,20 @@ export class PaymentToolService {
         payways: true,
       },
     });
+  }
+
+  async current(id: string) {
+    await this.prisma.$transaction([
+      this.prisma.paymentTool.updateMany({
+        where: { id: { not: id } },
+        data: { is_current: false },
+      }),
+      this.prisma.paymentTool.update({
+        where: { id },
+        data: { is_current: true },
+      }),
+    ]);
+    return { success: true };
   }
 
   remove(id: string) {

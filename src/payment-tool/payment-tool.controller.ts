@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PaymentToolService } from './payment-tool.service';
 import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
@@ -21,8 +23,8 @@ export class PaymentToolController {
   }
 
   @Get()
-  findAll() {
-    return this.paymentToolService.findAll();
+  findAll(@Query('rotation_id', ParseIntPipe) rotation_id: number) {
+    return this.paymentToolService.findAll(rotation_id);
   }
 
   @Get(':id')
@@ -36,6 +38,11 @@ export class PaymentToolController {
     @Body() updatePaymentToolDto: UpdatePaymentToolDto,
   ) {
     return this.paymentToolService.update(id, updatePaymentToolDto);
+  }
+
+  @Patch(':id/current')
+  current(@Param('id') id: string) {
+    return this.paymentToolService.current(id);
   }
 
   @Delete(':id')

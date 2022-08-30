@@ -1,16 +1,13 @@
 import { PayType, Prisma } from '@prisma/client';
 import {
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
 
-interface MerchantField {
-  name: string;
-  code: string;
-}
 export class CreatePaymentMerchantDto {
   @IsString()
   @IsNotEmpty()
@@ -26,5 +23,9 @@ export class CreatePaymentMerchantDto {
 
   @IsObject({ each: true })
   @IsNotEmpty()
-  fields: MerchantField[];
+  fields: { name: string; code: string }[];
+
+  @IsEnum(PayType, { each: true })
+  @IsNotEmpty()
+  pay_types: PayType[];
 }

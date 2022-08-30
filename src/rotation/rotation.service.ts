@@ -29,7 +29,7 @@ export class RotationService {
             company_card: true,
           },
         },
-        card_vip: {
+        [{ 1: 'card_vip', 2: 'payment_vip' }[type]]: {
           select: {
             id: true,
             name: true,
