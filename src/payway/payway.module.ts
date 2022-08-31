@@ -1,11 +1,9 @@
-import { PaywayClientController } from './payway.client.controller';
 import { Module } from '@nestjs/common';
-import { PaywayService } from './payway.service';
 import { PaywayController } from './payway.controller';
-import { PaywayClientService } from './payway.client.service';
+import { PaywayService } from './payway.service';
 
 @Module({
-  controllers: [PaywayController, PaywayClientController],
-  providers: [PaywayService, PaywayClientService],
+  controllers: [PaywayController],
+  providers: [PaywayService],
 })
 export class PaywayModule {}

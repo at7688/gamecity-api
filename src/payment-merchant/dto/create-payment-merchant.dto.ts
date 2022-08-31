@@ -1,4 +1,4 @@
-import { PayType, Prisma } from '@prisma/client';
+import { MerchantCode, PayType, Prisma } from '@prisma/client';
 import {
   IsBoolean,
   IsEnum,
@@ -15,7 +15,7 @@ export class CreatePaymentMerchantDto {
 
   @IsString()
   @IsNotEmpty()
-  code: string;
+  code: MerchantCode;
 
   @IsBoolean()
   @IsOptional()

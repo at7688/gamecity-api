@@ -42,6 +42,8 @@ import { PaymentDepositModule } from './payment-deposit/payment-deposit.module';
 import { PaywayModule } from './payway/payway.module';
 import { MerchantOrderService } from './merchant-order/merchant-order.service';
 import { MerchantOrderController } from './merchant-order/merchant-order.controller';
+import { ClientPayModule } from './client-pay/client-pay.module';
+import { MerchantOrderModule } from './merchant-order/merchant-order.module';
 
 @Module({
   imports: [
@@ -90,8 +92,11 @@ import { MerchantOrderController } from './merchant-order/merchant-order.control
     PaymentToolModule,
     PaymentDepositModule,
     PaywayModule,
+    ClientPayModule,
+    MerchantOrderModule,
   ],
-  controllers: [AppController, UploadsController, BankController, MerchantOrderController],
+  controllers: [AppController, UploadsController, BankController],
+
   providers: [
     AppService,
     {
@@ -99,7 +104,6 @@ import { MerchantOrderController } from './merchant-order/merchant-order.control
       useClass: HttpExceptionFilter,
     },
     BankService,
-    MerchantOrderService,
   ],
   // exports: [AppService],
 })

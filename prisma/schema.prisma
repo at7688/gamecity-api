@@ -391,7 +391,7 @@ model PaymentMerchant {
   paymentTools PaymentTool[]
 
   records PaymentDepositRec[]
-  bills   MerchantOrder[]
+  orders   MerchantOrder[]
 
 }
 
@@ -433,15 +433,15 @@ model PaymentDepositRec {
   merchant       PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id    String
 
-  trade_no String?        @unique //繳費單編號
-  bill     MerchantOrder? @relation(fields: [trade_no], references: [trade_no])
+  order     MerchantOrder?
   status   Int? // 尚未付款 已付款 等待入點 已過期 拒絕退回
 }
 
 // 金流商回傳資料紀錄
 model MerchantOrder {
   trade_no   String             @id
-  record     PaymentDepositRec?
+  record     PaymentDepositRec @relation(fields: [record_id], references: [id])
+  record_id String @unique
   created_at DateTime           @default(now()) @db.Timestamptz()
   expired_at DateTime?          @db.Timestamptz()
   paid_at    DateTime?          @db.Timestamptz()
@@ -451,10 +451,11 @@ model MerchantOrder {
   merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id String
 
-  pay_type     PayType
   pay_code     String? // 超商付款代碼
   bank_code    String? // 銀行代碼
   bank_account String? // ATM付款帳號
+
+  extra Json?
 }
 
 model Image {

@@ -3,9 +3,9 @@ import { Prisma } from '@prisma/client';
 export const getMerchantByPayway = (payment_id: string) => Prisma.sql`
 SELECT
       p.type pay_type,
-      p.code pay_code,
+      p.code payway_code,
       m.id merchant_id,
-      m.code mercant_code,
+      m.code merchant_code,
       t.merchant_config config
 FROM "Payway" p
 JOIN "PaymentTool" t ON t.id = p.tool_id
