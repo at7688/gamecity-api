@@ -456,6 +456,16 @@ model MerchantOrder {
   bank_account String? // ATM付款帳號
 
   extra Json?
+
+  notify Json?
+}
+
+
+model MerchantLog {
+  id Int @id @default(autoincrement())
+  created_at DateTime           @default(now()) @db.Timestamptz()
+  merchant_code MerchantCode
+  data Json?
 }
 
 model Image {

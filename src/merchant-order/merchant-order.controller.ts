@@ -1,12 +1,26 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { PaymentDepositService } from 'src/payment-deposit/payment-deposit.service';
+import {
+  BadGatewayException,
+  Body,
+  Controller,
+  Param,
+  Post,
+} from '@nestjs/common';
+import { MerchantCode } from '@prisma/client';
+import { Public } from 'src/metas/public.meta';
+import { MerchantOrderService } from './merchant-order.service';
 
 @Controller('order')
 export class MerchantOrderController {
-  constructor(private readonly paymentDepositService: PaymentDepositService) {}
+  constructor(private readonly orderService: MerchantOrderService) {}
 
-  @Post('qiyu/:order_id')
-  notify_QIYU(@Body() body) {
-    return;
+  @Post('notify/:code')
+  @Public()
+  notify_QIYU(@Param('code') code, @Body() body) {
+    switch (code) {
+      case MerchantCode.QIYU:
+        return this.orderService.notify_QIYU(body);
+    }
+
+    throw new BadGatewayException('Notify Error');
   }
 }

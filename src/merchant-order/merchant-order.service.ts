@@ -1,3 +1,4 @@
+import { getMerchantConfigByRecord } from './raw/getMerchantConfigByRecord';
 import { MD5 } from 'crypto-js';
 import { orderBy } from 'lodash';
 import {
@@ -8,12 +9,19 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getUnixTime } from 'date-fns';
 import axios from 'axios';
-import { PaymentDepositRec, Prisma } from '@prisma/client';
+import {
+  PaymentDepositRec,
+  Prisma,
+  MerchantCode,
+  Player,
+} from '@prisma/client';
 
 interface OrderInfo {
   config: any;
   amount: number;
   payway_code: string;
+  player: Player;
+  record: PaymentDepositRec;
 }
 @Injectable()
 export class MerchantOrderService {
@@ -32,10 +40,13 @@ export class MerchantOrderService {
     return MD5(`${query}key=${hash_key}`).toString().toUpperCase();
   }
 
-  async createOrder_QIYU(
-    record: PaymentDepositRec,
-    { config, amount, payway_code }: OrderInfo,
-  ) {
+  async createOrder_QIYU({
+    config,
+    amount,
+    payway_code,
+    player,
+    record,
+  }: OrderInfo) {
     const { merchant_no, hash_key } = config;
     interface QIYU_CreateOrder {
       pay_customer_id: string;
@@ -44,6 +55,7 @@ export class MerchantOrderService {
       pay_channel_id: number;
       pay_notify_url: string;
       pay_amount: number;
+      user_name: string;
       pay_md5_sign?: string;
     }
     const request: QIYU_CreateOrder = {
@@ -51,8 +63,10 @@ export class MerchantOrderService {
       pay_apply_date: getUnixTime(new Date()),
       pay_order_id: record.id,
       pay_channel_id: +payway_code,
-      pay_notify_url: 'https://gamecityapi.kidult.one?a=3',
+      pay_notify_url:
+        'https://2940-61-222-155-67.jp.ngrok.io/order/notify/QIYU',
       pay_amount: amount,
+      user_name: player.username,
     };
 
     request.pay_md5_sign = this.getSign_QIYU(request, hash_key);
@@ -81,6 +95,7 @@ export class MerchantOrderService {
       request,
     );
     if (res.data.code !== 0) {
+      console.log(res.data);
       throw new BadGatewayException('金流交易錯誤');
     }
     const d = res.data.data;
@@ -89,11 +104,10 @@ export class MerchantOrderService {
       throw new BadRequestException('訂單金額不符合');
     }
     const order = await this.prisma.merchantOrder.create({
-      select: {},
       data: {
         trade_no: d.transaction_id,
         expired_at: new Date(d.expired),
-        price: d.real_price,
+        price: +d.real_price,
         merchant_id: record.merchant_id,
         status: 1,
         record_id: record.id,
@@ -109,4 +123,39 @@ export class MerchantOrderService {
 
     return order;
   }
+
+  async notify_QIYU(data: Notify_QIYU) {
+    try {
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: MerchantCode.QIYU,
+          data: data as unknown as Prisma.InputJsonValue,
+        },
+      });
+
+      const config = (
+        await this.prisma.$queryRaw(getMerchantConfigByRecord(data.order_id))
+      )[0].merchant_config;
+
+      const valid_sign = data.sign;
+      delete data.extra;
+      delete data.sign;
+      const sign = this.getSign_QIYU(data, config.hash_key);
+      return valid_sign === sign ? 'OK' : 'ERROR';
+    } catch (err) {
+      throw new BadRequestException('Error');
+    }
+  }
+}
+
+interface Notify_QIYU {
+  customer_id: number;
+  order_id: string;
+  transaction_id: string;
+  order_amount: number;
+  real_amount: number;
+  sign: string;
+  status: string;
+  message: string;
+  extra?: any;
 }
