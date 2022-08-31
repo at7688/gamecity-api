@@ -15,6 +15,8 @@ import {
   MerchantCode,
   Player,
 } from '@prisma/client';
+import { MerchantOrderStatus } from './enums';
+import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 
 interface OrderInfo {
   config: any;
@@ -103,13 +105,22 @@ export class MerchantOrderService {
     if (d.real_price !== d.bill_price) {
       throw new BadRequestException('訂單金額不符合');
     }
+
+    // 儲值紀錄更新「截止時間」 by 金流商
+    // await this.prisma.paymentDepositRec.update({
+    //   where: { id: record.id },
+    //   data: {
+    //     expired_at: new Date(d.expired),
+    //   },
+    // });
+
     const order = await this.prisma.merchantOrder.create({
       data: {
         trade_no: d.transaction_id,
         expired_at: new Date(d.expired),
         price: +d.real_price,
         merchant_id: record.merchant_id,
-        status: 1,
+        status: MerchantOrderStatus.CREATED,
         record_id: record.id,
         pay_code: d.bank_owner === 'CVS' ? d.bank_no : null,
         bank_code: d.bank_owner === 'ATM' ? d.bank_from : null,
@@ -141,7 +152,27 @@ export class MerchantOrderService {
       delete data.extra;
       delete data.sign;
       const sign = this.getSign_QIYU(data, config.hash_key);
-      return valid_sign === sign ? 'OK' : 'ERROR';
+
+      if (data.status !== '30000' || valid_sign !== sign) {
+        return 'ERROR';
+      }
+
+      await this.prisma.$transaction([
+        this.prisma.merchantOrder.update({
+          where: { trade_no: data.transaction_id },
+          data: {
+            paid_at: new Date(),
+            status: MerchantOrderStatus.PAID,
+            record: {
+              update: {
+                paid_at: new Date(),
+                status: PaymentDepositStatus.PAID,
+              },
+            },
+          },
+        }),
+      ]);
+      return 'OK';
     } catch (err) {
       throw new BadRequestException('Error');
     }

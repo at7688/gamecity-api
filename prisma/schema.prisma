@@ -21,6 +21,7 @@ model AdminUser {
   inboxs        Inbox[]
   login_rec     LoginRec[]
   operations    OperationRec[]
+  wallet_rec WalletRec[]
 }
 
 model Permission {
@@ -184,6 +185,21 @@ model WithdrawRec {
   withdraw_fee   Float      @default(0)
 }
 
+model WalletRec {
+  id String @id @default(cuid())
+  type Int // 儲值加點,轉入,轉出,提領扣點,注金加扣,活動贈點,人工加點,人工扣點,金流手續費,退水,佔成
+  player Player @relation(fields: [player_id], references: [id])
+  player_id String
+  origin_amount Float
+  amount Float
+  fee Float @default(0)
+  operator AdminUser? @relation(fields: [operator_id], references: [id])
+  operator_id String?
+  created_at     DateTime   @default(now()) @db.Timestamptz()
+  source String
+  note String?
+}
+
 model Player {
   id               String              @id @default(cuid())
   username         String              @unique
@@ -211,6 +227,7 @@ model Player {
   login_rec        LoginRec[]
   invites          Player[]            @relation("player")
   bankcard         PlayerCard[]
+  wallet_rec WalletRec[]
 
   withdraw_nums Int @default(0)
 }
@@ -421,7 +438,7 @@ model PaymentDepositRec {
   amount         Float
   created_at     DateTime        @default(now()) @db.Timestamptz()
   paid_at        DateTime?       @db.Timestamptz()
-  finished_at    DateTime?       @db.Timestamptz()
+  finished_at    DateTime?       @db.Timestamptz() // 補點完成時間
   canceled_at    DateTime?       @db.Timestamptz()
   expired_at     DateTime?       @db.Timestamptz()
   payway         Payway          @relation(fields: [payway_id], references: [id])
@@ -429,12 +446,12 @@ model PaymentDepositRec {
   player         Player          @relation(fields: [player_id], references: [id])
   player_id      String
   fee_on_player  Float @default(0) // 會員負擔手續費
-  fee_on_company Float @default(0) // 公司負擔手續費
+  fee Float @default(0) // 金流商收取的手續費
   merchant       PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id    String
 
   order     MerchantOrder?
-  status   Int? // 尚未付款 已付款 等待入點 已過期 拒絕退回
+  status   Int @default(1) // 尚未付款 已付款 等待入點 已過期 拒絕退回
 }
 
 // 金流商回傳資料紀錄
@@ -446,7 +463,7 @@ model MerchantOrder {
   expired_at DateTime?          @db.Timestamptz()
   paid_at    DateTime?          @db.Timestamptz()
   price      Float
-  status     Int // 等待付款 已繳費 已過期 拒絕退回
+  status     Int @default(1) // 等待付款 已繳費 已過期 拒絕退回
 
   merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id String

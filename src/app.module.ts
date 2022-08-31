@@ -44,6 +44,7 @@ import { MerchantOrderService } from './merchant-order/merchant-order.service';
 import { MerchantOrderController } from './merchant-order/merchant-order.controller';
 import { ClientPayModule } from './client-pay/client-pay.module';
 import { MerchantOrderModule } from './merchant-order/merchant-order.module';
+import { WalletRecModule } from './wallet-rec/wallet-rec.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { MerchantOrderModule } from './merchant-order/merchant-order.module';
     PaywayModule,
     ClientPayModule,
     MerchantOrderModule,
+    WalletRecModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
