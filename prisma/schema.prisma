@@ -374,11 +374,16 @@ model Payway {
   @@unique([tool_id, code])
 }
 
+enum MerchantCode {
+  QIYU
+  ECPAY
+}
+
 // 金流廠商
 model PaymentMerchant {
   id        String  @id @default(cuid())
   name      String
-  code      String  @unique
+  code      MerchantCode  @unique
   is_active Boolean @default(true)
 
   config Json?
@@ -386,7 +391,7 @@ model PaymentMerchant {
   paymentTools PaymentTool[]
 
   records PaymentDepositRec[]
-  bills   MerchantBill[]
+  bills   MerchantOrder[]
 
 }
 
@@ -423,18 +428,18 @@ model PaymentDepositRec {
   payway_id      String
   player         Player          @relation(fields: [player_id], references: [id])
   player_id      String
-  fee_on_player  Float // 會員負擔手續費
-  fee_on_company Float // 公司負擔手續費
+  fee_on_player  Float @default(0) // 會員負擔手續費
+  fee_on_company Float @default(0) // 公司負擔手續費
   merchant       PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id    String
 
-  trade_no String        @unique //繳費單編號
-  bill     MerchantBill? @relation(fields: [trade_no], references: [trade_no])
+  trade_no String?        @unique //繳費單編號
+  bill     MerchantOrder? @relation(fields: [trade_no], references: [trade_no])
   status   Int? // 尚未付款 已付款 等待入點 已過期 拒絕退回
 }
 
 // 金流商回傳資料紀錄
-model MerchantBill {
+model MerchantOrder {
   trade_no   String             @id
   record     PaymentDepositRec?
   created_at DateTime           @default(now()) @db.Timestamptz()
