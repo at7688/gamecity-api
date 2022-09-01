@@ -230,6 +230,7 @@ model Player {
   wallet_rec WalletRec[]
 
   withdraw_nums Int @default(0)
+  balance Float @default(0)
 }
 
 model Member {
@@ -265,6 +266,7 @@ model Contact {
   agent     Member? @relation(fields: [agent_id], references: [id])
   player    Player? @relation(fields: [player_id], references: [id])
 }
+
 
 model Vip {
   id                String        @id @default(cuid())
@@ -370,7 +372,6 @@ model Payway {
   type               PayType
   code               String // 金流廠商渠道代號
   name               String?
-  fee_type Int @default(0) // amount / percent
   player_fee_amount  Float @default(0)
   player_fee_percent Float @default(0)
   player_fee_min     Float @default(10)
@@ -467,6 +468,8 @@ model MerchantOrder {
 
   merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id String
+
+  channel String
 
   pay_code     String? // 超商付款代碼
   bank_code    String? // 銀行代碼

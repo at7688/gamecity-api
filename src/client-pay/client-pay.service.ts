@@ -100,6 +100,10 @@ export class ClientPayService {
   }
 
   payways() {
+    console.log(this.request.protocol);
+    console.log(this.request.hostname);
+    console.log(this.request.path);
+    console.log(this.request.url);
     return this.prisma.$queryRaw(getCurrentPayways(this.player.vip_id));
   }
 }

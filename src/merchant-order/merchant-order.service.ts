@@ -4,7 +4,9 @@ import { orderBy } from 'lodash';
 import {
   BadGatewayException,
   BadRequestException,
+  Inject,
   Injectable,
+  Scope,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getUnixTime } from 'date-fns';
@@ -17,6 +19,10 @@ import {
 } from '@prisma/client';
 import { MerchantOrderStatus } from './enums';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
+import * as numeral from 'numeral';
+import { ConfigService } from '@nestjs/config';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
 
 interface OrderInfo {
   config: any;
@@ -25,13 +31,13 @@ interface OrderInfo {
   player: Player;
   record: PaymentDepositRec;
 }
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class MerchantOrderService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async merchantHub() {
-    return;
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+    @Inject(REQUEST) private request: Request,
+  ) {}
 
   getSign_QIYU(request: object, hash_key: string) {
     let query = '';
@@ -65,8 +71,10 @@ export class MerchantOrderService {
       pay_apply_date: getUnixTime(new Date()),
       pay_order_id: record.id,
       pay_channel_id: +payway_code,
-      pay_notify_url:
-        'https://2940-61-222-155-67.jp.ngrok.io/order/notify/QIYU',
+      pay_notify_url: `${
+        this.configService.get('RETURN_BASE_URL') ||
+        `${this.request.protocol}://${this.request.headers.host}`
+      }/order/notify/QIYU`,
       pay_amount: amount,
       user_name: player.username,
     };
@@ -120,7 +128,7 @@ export class MerchantOrderService {
         expired_at: new Date(d.expired),
         price: +d.real_price,
         merchant_id: record.merchant_id,
-        status: MerchantOrderStatus.CREATED,
+        channel: payway_code,
         record_id: record.id,
         pay_code: d.bank_owner === 'CVS' ? d.bank_no : null,
         bank_code: d.bank_owner === 'ATM' ? d.bank_from : null,
@@ -157,6 +165,10 @@ export class MerchantOrderService {
         return 'ERROR';
       }
 
+      const record = await this.prisma.paymentDepositRec.findUnique({
+        where: { id: data.order_id },
+      });
+
       await this.prisma.$transaction([
         this.prisma.merchantOrder.update({
           where: { trade_no: data.transaction_id },
@@ -167,6 +179,15 @@ export class MerchantOrderService {
               update: {
                 paid_at: new Date(),
                 status: PaymentDepositStatus.PAID,
+                player: {
+                  update: {
+                    balance: {
+                      increment: numeral(data.order_amount)
+                        .subtract(record.fee_on_player)
+                        .value(),
+                    },
+                  },
+                },
               },
             },
           },
@@ -174,6 +195,7 @@ export class MerchantOrderService {
       ]);
       return 'OK';
     } catch (err) {
+      console.log(err);
       throw new BadRequestException('Error');
     }
   }
