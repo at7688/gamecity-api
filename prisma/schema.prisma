@@ -419,7 +419,10 @@ model PaymentTool {
   tool_name    String
   rotation_id  Int
   is_active    Boolean         @default(true)
-  recharge_max Int
+  recharge_max Int @default(0)
+
+  accumulate_from DateTime @default(now()) @db.Timestamptz()
+
   note         String?
   rotation     RotationGroup   @relation(fields: [rotation_id], references: [id])
   merchant     PaymentMerchant @relation(fields: [merchant_id], references: [id])

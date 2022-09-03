@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { pagerList } from 'src/sql/pagerList';
 import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
+import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
 import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
+import { getToolList } from './raw/getToolList';
 
 @Injectable()
 export class PaymentToolService {
@@ -41,11 +44,31 @@ export class PaymentToolService {
     });
   }
 
-  findAll(rotation_id: number) {
-    return this.prisma.paymentTool.findMany({
-      where: { rotation_id },
-      include: { payways: true },
-    });
+  async findAll(search: SearchPaymentToolsDto) {
+    const {
+      rotation_id,
+      tool_name,
+      merchant_id,
+      merchant_no,
+      is_active,
+      page,
+      perpage,
+    } = search;
+
+    const records = this.prisma.$queryRaw(
+      pagerList(getToolList(search), page, perpage),
+    );
+
+    return this.prisma.listFormat({ ...records[0], search });
+
+    // return this.prisma.paymentTool.findMany({
+    //   where: {
+    //     rotation_id,
+    //     tool_name,
+    //     merchant_id,
+    //     is_active: { 0: undefined, 1: true, 2: false }[is_active]
+    //   },
+    // });
   }
 
   findOne(id: string) {

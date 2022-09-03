@@ -7,5 +7,5 @@ WHERE tool_id IN (
 	JOIN "PaymentTool" t ON t.rotation_id = g.id
 	JOIN "Vip" v ON v.payment_rotate_id = g.id
 	WHERE v.id = ${vip_id} AND is_current
-)
+) AND is_active
 `;

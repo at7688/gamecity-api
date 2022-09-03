@@ -31,10 +31,6 @@ export class Payment {
   @IsNotEmpty()
   code: string;
 
-  @IsEnum(PaymentFeeType)
-  @IsNotEmpty()
-  fee_type: PaymentFeeType;
-
   @IsNumber()
   @IsOptional()
   player_fee_amount: number;

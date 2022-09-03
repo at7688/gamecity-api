@@ -12,6 +12,7 @@ import {
 import { PaymentToolService } from './payment-tool.service';
 import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
 import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
+import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
 
 @Controller('payment-tools')
 export class PaymentToolController {
@@ -23,8 +24,8 @@ export class PaymentToolController {
   }
 
   @Get()
-  findAll(@Query('rotation_id', ParseIntPipe) rotation_id: number) {
-    return this.paymentToolService.findAll(rotation_id);
+  findAll(@Query() query: SearchPaymentToolsDto) {
+    return this.paymentToolService.findAll(query);
   }
 
   @Get(':id')
