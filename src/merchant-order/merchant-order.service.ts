@@ -189,11 +189,12 @@ export class MerchantOrderService {
           },
         }),
         ...(await this.walletRecService.create({
-          type: WalletRecType.DEPOSIT,
+          type: WalletRecType.PAYMENT_DEPOSIT,
           player_id: record.player_id,
           amount: record.amount,
           fee: record.fee_on_player,
           source: `${record.merchant.name}(${record.merchant.code})/${record.payway.name}(${record.payway.code})`,
+          relative_id: record.id,
         })),
       ]);
       return 'OK';

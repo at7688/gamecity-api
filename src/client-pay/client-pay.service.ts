@@ -1,19 +1,17 @@
-import {
-  currentAmountByTool,
-  ToolCurrentAmount,
-} from './../payment-tool/raw/currentAmountByTool';
-import { getToolList } from './../payment-tool/raw/getToolList';
 import { BadRequestException, Inject, Injectable, Scope } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
-import { MerchantCode, Player, prisma } from '@prisma/client';
+import { MerchantCode, Player } from '@prisma/client';
 import { add } from 'date-fns';
 import { Request } from 'express';
+import { CardInfo, getCurrentCard } from './raw/getCurrentCard';
+import { ValidStatus } from 'src/p-bankcard/enums';
+import { ValidTool, validTools } from 'src/payment-tool/raw/validTools';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MerchantOrderService } from './../merchant-order/merchant-order.service';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { CreatePaymentOrderDto } from './dto/create-payment-order.dto';
 import { getCurrentPayways } from './raw/getCurrentPayways';
-import { ValidTool, validTools } from 'src/payment-tool/raw/validTools';
+import { CreateBankOrderDto } from './dto/create-bank-order.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ClientPayService {
@@ -29,7 +27,76 @@ export class ClientPayService {
     return this.request.user as Player;
   }
 
-  async create(data: CreateOrderDto) {
+  bankcards() {
+    return this.prisma.playerCard.findMany({
+      where: {
+        player_id: this.player.id,
+      },
+    });
+  }
+
+  async createBankOrder(data: CreateBankOrderDto) {
+    const { amount, player_card_id } = data;
+
+    // 驗證客戶的卡片
+    const playerCard = await this.prisma.playerCard.findFirst({
+      where: {
+        id: player_card_id,
+        player_id: this.player.id,
+        valid_status: ValidStatus.VALID,
+      },
+    });
+    if (!playerCard) {
+      throw new BadRequestException('卡片不可用');
+    }
+
+    // 取得當前輪替的卡片們
+    const cards = await this.prisma.$queryRaw<CardInfo[]>(
+      getCurrentCard(this.player.id),
+    );
+
+    // 若無限額內可用卡片則提示錯誤
+    if (cards.length === 0) {
+      throw new BadRequestException('暫無提供儲值，請聯繫客服');
+    }
+
+    // 取得當前運作的卡片
+    let card = cards.find((t) => t.is_current);
+
+    // 若無當前運作中卡片則開啟限額內的備用卡片
+    if (!card) {
+      card = cards[0];
+      await this.prisma.companyCard.update({
+        where: { id: card.card_id },
+        data: { is_current: true },
+      });
+    }
+
+    // 若儲值後超出限額，則關閉當前卡片
+    if (amount + card.current_sum > card.deposit_max) {
+      await this.prisma.companyCard.update({
+        where: { id: card.card_id },
+        data: { is_current: false },
+      });
+    }
+
+    //  新增儲值
+    return this.prisma.bankDepositRec.create({
+      select: {
+        id: true,
+        amount: true,
+        created_at: true,
+      },
+      data: {
+        amount,
+        card_id: card.card_id,
+        player_id: this.player.id,
+        player_card_id,
+      },
+    });
+  }
+
+  async createPaymentOrder(data: CreatePaymentOrderDto) {
     const { amount, payway_id } = data;
 
     const vip = await this.prisma.vip.findUnique({

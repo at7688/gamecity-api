@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { SearchBankDepositsDto } from './dto/search-bank-deposits.dto';
 import { UpdateBankDepositDto } from './dto/update-bank-deposit.dto';
 
 @Injectable()
 export class BankDepositService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly walletRecService: WalletRecService,
+  ) {}
 
   async findAll(search: SearchBankDepositsDto) {
     const {
@@ -67,6 +72,7 @@ export class BankDepositService {
           },
         },
       },
+      orderBy: { created_at: 'desc' },
     };
     return this.prisma.listFormat({
       items: await this.prisma.bankDepositRec.findMany(findManyArgs),
@@ -80,11 +86,27 @@ export class BankDepositService {
     return `This action returns a #${id} bankDeposit`;
   }
 
-  update(id: string, data: UpdateBankDepositDto) {
+  async update(id: string, data: UpdateBankDepositDto) {
     const { inner_note, outter_note, status } = data;
-    return this.prisma.bankDepositRec.update({
+    const record = await this.prisma.bankDepositRec.update({
       where: { id },
       data: { inner_note, outter_note, status },
+      include: { card: true, player_card: true },
     });
+    await this.prisma.$transaction([
+      this.prisma.bankDepositRec.update({
+        where: { id },
+        data: { inner_note, outter_note, status },
+      }),
+      ...(await this.walletRecService.create({
+        type: WalletRecType.BANK_DEPOSIT,
+        player_id: record.player_id,
+        amount: record.amount,
+        fee: 0,
+        source: `(${record.card.bank_code})${record.card.account}`,
+        relative_id: record.id,
+      })),
+    ]);
+    return { success: true };
   }
 }
