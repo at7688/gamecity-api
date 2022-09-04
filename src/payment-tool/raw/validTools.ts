@@ -1,7 +1,11 @@
 import { PaymentTool, Prisma } from '@prisma/client';
 import { toolRecordSql } from './toolRecordSql';
 
-export type ValidTool = PaymentTool & { current_amount: number };
+export type ValidTool = PaymentTool & {
+  current_amount: number;
+  merchant_name: string;
+  merchant_code: string;
+};
 
 export const validTools = ({
   rotation_id,
@@ -13,7 +17,12 @@ export const validTools = ({
 ${toolRecordSql()}
 SELECT * FROM
 (
-	SELECT t.*, COALESCE(r.sum, 0) current_amount  FROM "PaymentTool" t
+	SELECT
+		t.*,
+		m.name merchant_name,
+		m.code merchant_code,
+		COALESCE(r.sum, 0) current_amount
+	FROM "PaymentTool" t
 	JOIN (
 		SELECT
 			tool_id,
@@ -22,6 +31,7 @@ SELECT * FROM
 		WHERE r.created_at > accumulate_from
 		GROUP BY tool_id
 	) r ON r.tool_id = t.id
+	JOIN "PaymentMerchant" m ON m.id = t.merchant_id
 ) list
 WHERE is_active
   AND recharge_max > current_amount

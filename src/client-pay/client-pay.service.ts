@@ -36,10 +36,6 @@ export class ClientPayService {
       where: { id: this.player.vip_id },
     });
 
-    // const { merchant_id, merchant_code, config, code } = (
-    //   await this.prisma.$queryRaw(getMerchantByPayway(payway_id))
-    // )[0];
-
     // 列出該玩家VIP等級輪替群組內可使用的支付工具
     const tools = await this.prisma.$queryRaw<ValidTool[]>(
       validTools({ rotation_id: vip.payment_rotate_id }),
@@ -123,20 +119,20 @@ export class ClientPayService {
       });
     }
 
-    // try {
-    //   switch (currentTool.merchant.code) {
-    //     case MerchantCode.QIYU:
-    //       return await this.orderService.createOrder_QIYU({
-    //         config: currentTool.merchant_config,
-    //         amount,
-    //         payway_code: payway.code,
-    //         player: this.player,
-    //         record,
-    //       });
-    //   }
-    // } catch (err) {
-    //   throw new BadRequestException('金流支付失敗');
-    // }
+    try {
+      switch (currentTool.merchant_code) {
+        case MerchantCode.QIYU:
+          return await this.orderService.createOrder_QIYU({
+            config: currentTool.merchant_config,
+            amount,
+            payway_code: payway.code,
+            player: this.player,
+            record,
+          });
+      }
+    } catch (err) {
+      throw new BadRequestException('金流支付失敗');
+    }
   }
 
   payways() {

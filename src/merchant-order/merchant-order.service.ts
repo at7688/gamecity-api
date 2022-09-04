@@ -1,3 +1,4 @@
+import { WalletRecService } from './../wallet-rec/wallet-rec.service';
 import { getMerchantConfigByRecord } from './raw/getMerchantConfigByRecord';
 import { MD5 } from 'crypto-js';
 import { orderBy } from 'lodash';
@@ -23,6 +24,7 @@ import * as numeral from 'numeral';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
+import { WalletRecType } from 'src/wallet-rec/enums';
 
 interface OrderInfo {
   config: any;
@@ -36,6 +38,7 @@ export class MerchantOrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly walletRecService: WalletRecService,
     @Inject(REQUEST) private request: Request,
   ) {}
 
@@ -161,12 +164,14 @@ export class MerchantOrderService {
       delete data.sign;
       const sign = this.getSign_QIYU(data, config.hash_key);
 
-      if (data.status !== '30000' || valid_sign !== sign) {
-        return 'ERROR';
-      }
+      // 驗證簽名正確性
+      // if (data.status !== '30000' || valid_sign !== sign) {
+      //   return 'ERROR';
+      // }
 
       const record = await this.prisma.paymentDepositRec.findUnique({
         where: { id: data.order_id },
+        include: { merchant: true, payway: true, player: true },
       });
 
       await this.prisma.$transaction([
@@ -179,19 +184,17 @@ export class MerchantOrderService {
               update: {
                 paid_at: new Date(),
                 status: PaymentDepositStatus.PAID,
-                player: {
-                  update: {
-                    balance: {
-                      increment: numeral(data.order_amount)
-                        .subtract(record.fee_on_player)
-                        .value(),
-                    },
-                  },
-                },
               },
             },
           },
         }),
+        ...(await this.walletRecService.create({
+          type: WalletRecType.DEPOSIT,
+          player_id: record.player_id,
+          amount: record.amount,
+          fee: record.fee_on_player,
+          source: `${record.merchant.name}(${record.merchant.code})/${record.payway.name}(${record.payway.code})`,
+        })),
       ]);
       return 'OK';
     } catch (err) {
