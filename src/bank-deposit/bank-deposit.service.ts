@@ -98,7 +98,7 @@ export class BankDepositService {
         where: { id },
         data: { inner_note, outter_note, status },
       }),
-      ...(await this.walletRecService.create({
+      ...(await this.walletRecService.playerCreate({
         type: WalletRecType.BANK_DEPOSIT,
         player_id: record.player_id,
         amount: record.amount,

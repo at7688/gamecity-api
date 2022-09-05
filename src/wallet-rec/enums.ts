@@ -2,8 +2,9 @@ export enum WalletRecType {
   PAYMENT_DEPOSIT = 1,
   BANK_DEPOSIT = 2,
   WITHDRAW = 3,
-  TRANSFER = 4,
-  BETTING = 5,
-  GAME_REFOUND = 6,
-  WIN_LOSE = 7,
+  TRANSFER_OUT = 4,
+  TRANSFER_IN = 5,
+  BETTING = 6,
+  GAME_REFOUND = 7,
+  WIN_LOSE = 8,
 }

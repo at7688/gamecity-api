@@ -188,7 +188,7 @@ export class MerchantOrderService {
             },
           },
         }),
-        ...(await this.walletRecService.create({
+        ...(await this.walletRecService.playerCreate({
           type: WalletRecType.PAYMENT_DEPOSIT,
           player_id: record.player_id,
           amount: record.amount,

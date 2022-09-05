@@ -144,7 +144,7 @@ export class WithdrawService {
           data: { withdraw_nums: { increment: 1 } },
         }),
         // 錢包操作
-        ...(await this.walletRecService.create({
+        ...(await this.walletRecService.playerCreate({
           type: WalletRecType.WITHDRAW,
           player_id: record.player_id,
           amount: -record.amount,

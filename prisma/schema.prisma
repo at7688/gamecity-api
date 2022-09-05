@@ -190,8 +190,10 @@ model WithdrawRec {
 model WalletRec {
   id String @id @default(cuid())
   type Int // 儲值加點,轉入,轉出,提領扣點,注金加扣,活動贈點,人工加點,人工扣點,金流手續費,退水,佔成
-  player Player @relation(fields: [player_id], references: [id])
-  player_id String
+  player Player? @relation(fields: [player_id], references: [id])
+  player_id String?
+  agent Member? @relation(fields: [agent_id], references: [id])
+  agent_id String?
   origin_amount Float
   amount Float
   fee Float @default(0)
@@ -201,6 +203,7 @@ model WalletRec {
   source String
   note String?
   relative_id String?
+  rolling_demand Int @default(1)
 }
 
 model TransferRec {
@@ -215,7 +218,7 @@ model TransferRec {
   operator AdminUser? @relation(fields: [operator_id], references: [id])
   operator_id String?
   amount Float
-  rolling_demand Int // 洗碼量
+  rolling_demand Int // 洗碼倍數
   inner_note String?
   outter_note String?
   created_at       DateTime            @default(now()) @db.Timestamptz()
@@ -267,6 +270,7 @@ model Member {
   is_active       Boolean    @default(true)
   layer           Int        @default(1)
   is_blocked      Boolean    @default(false)
+  balance Float @default(0)
   parent          Member?    @relation("agent", fields: [parent_id], references: [id])
   promo           PromoCode? @relation(fields: [promo_code], references: [code])
   contact         Contact?
@@ -277,6 +281,7 @@ model Member {
   players         Player[]
   transfer_sends TransferRec[] @relation("source")
   transfer_recieves TransferRec[] @relation("target_agent")
+  wallet_rec WalletRec[]
 }
 
 model Contact {
