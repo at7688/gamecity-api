@@ -22,6 +22,7 @@ model AdminUser {
   login_rec     LoginRec[]
   operations    OperationRec[]
   wallet_rec WalletRec[]
+  transfer_rec TransferRec[]
 }
 
 model Permission {
@@ -201,6 +202,24 @@ model WalletRec {
   relative_id String?
 }
 
+model TransferRec {
+  id String @id @default(cuid())
+  type Int // 給會員, 給代理,
+  source Member? @relation("source", fields: [source_id], references: [id])
+  source_id String?
+  target_player Player? @relation(fields: [target_player_id], references: [id])
+  target_player_id String?
+  target_agent Member? @relation("target_agent", fields: [target_agent_id], references: [id])
+  target_agent_id String?
+  operator AdminUser? @relation(fields: [operator_id], references: [id])
+  operator_id String?
+  amount Float
+  rolling_demand Int // 洗碼量
+  note String?
+  outter_note String?
+  created_at       DateTime            @default(now()) @db.Timestamptz()
+}
+
 model Player {
   id               String              @id @default(cuid())
   username         String              @unique
@@ -229,6 +248,7 @@ model Player {
   invites          Player[]            @relation("player")
   bankcard         PlayerCard[]
   wallet_rec WalletRec[]
+  transfer_rec TransferRec[]
 
   withdraw_nums Int @default(0)
   balance Float @default(0)
@@ -254,6 +274,8 @@ model Member {
   login_rec       LoginRec[]
   subs            Member[]   @relation("agent")
   players         Player[]
+  transfer_sends TransferRec[] @relation("source")
+  transfer_recieves TransferRec[] @relation("target_agent")
 }
 
 model Contact {
