@@ -206,6 +206,14 @@ model WalletRec {
   rolling_demand Int @default(1)
 }
 
+// model BalanceOperation {
+//   id String @id @default(cuid())
+//   type Int  @default(1) // 代理, 會員
+//   note String?
+//   amount Float
+//   created_at     DateTime   @default(now()) @db.Timestamptz()
+// }
+
 model TransferRec {
   id String @id @default(cuid())
   type Int // 給會員, 給代理,

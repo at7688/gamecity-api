@@ -3,7 +3,7 @@ import { Member } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import { CreateTransferDto } from './dto/createTransferDto';
+import { CreateTransferDto } from './dto/create-transfer.dto';
 import { TransferType } from './enums';
 
 @Injectable()

@@ -1,7 +1,11 @@
+import { ManualType, WalletRecType } from 'src/wallet-rec/enums';
+import { ManualOperationDto } from './dto/manual-operation.dto';
 import { Injectable } from '@nestjs/common';
 import * as numeral from 'numeral';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateWalletRecDto } from './dto/create-wallet-rec.dto';
+import { WalletTargetType } from './enums';
+import { AdminUser } from '@prisma/client';
 
 @Injectable()
 export class WalletRecService {
@@ -9,6 +13,55 @@ export class WalletRecService {
 
   findAll() {
     return this.prisma.walletRec.findMany();
+  }
+
+  async manualOperation(data: ManualOperationDto, user: AdminUser) {
+    const {
+      type,
+      target_type,
+      amount,
+      note,
+      player_id,
+      agent_id,
+      rolling_demand,
+    } = data;
+    switch (target_type) {
+      case WalletTargetType.AGENT:
+        await this.prisma.$transaction(
+          await this.agentCreate({
+            type:
+              type === ManualType.ADD
+                ? WalletRecType.MANUAL_ADD
+                : WalletRecType.MANUAL_SUB,
+            agent_id,
+            amount: type === ManualType.ADD ? amount : -amount,
+            source: '',
+            operator_id: user.id,
+            rolling_demand,
+            note,
+          }),
+        );
+        break;
+      case WalletTargetType.PLAYER:
+        await this.prisma.$transaction(
+          await this.playerCreate({
+            type:
+              type === ManualType.ADD
+                ? WalletRecType.MANUAL_ADD
+                : WalletRecType.MANUAL_SUB,
+            player_id,
+            amount: type === ManualType.ADD ? amount : -amount,
+            source: '',
+            operator_id: user.id,
+            rolling_demand,
+            note,
+          }),
+        );
+        break;
+      default:
+        break;
+    }
+    return { success: true };
   }
 
   async playerCreate(data: CreateWalletRecDto) {
