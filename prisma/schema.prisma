@@ -177,7 +177,8 @@ model WithdrawRec {
   amount         Float
   created_at     DateTime   @default(now()) @db.Timestamptz()
   updated_at     DateTime   @updatedAt @db.Timestamptz()
-  status         Int        @default(1) // 等待審核 同意出金 完成出金 會員取消 拒絕退回
+  finished_at     DateTime? @db.Timestamptz()
+  status         Int        @default(1) // 等待審核 處理中 完成出金 會員取消 拒絕退回
   player_card    PlayerCard @relation(fields: [player_card_id], references: [id])
   player_card_id String
   inner_note     String?
@@ -215,7 +216,7 @@ model TransferRec {
   operator_id String?
   amount Float
   rolling_demand Int // 洗碼量
-  note String?
+  inner_note String?
   outter_note String?
   created_at       DateTime            @default(now()) @db.Timestamptz()
 }

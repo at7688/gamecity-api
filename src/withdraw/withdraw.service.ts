@@ -9,10 +9,15 @@ import { CreateWithdrawDto } from './dto/create-withdraw.dto';
 import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
 import { Prisma } from '@prisma/client';
 import { WithdrawStatus } from './enums';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 
 @Injectable()
 export class WithdrawService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly walletRecService: WalletRecService,
+  ) {}
   create(createWithdrawDto: CreateWithdrawDto) {
     return 'This action adds a new bankWithdraw';
   }
@@ -77,6 +82,9 @@ export class WithdrawService {
           },
         },
       },
+      orderBy: {
+        created_at: 'desc',
+      },
     };
     return this.prisma.listFormat({
       items: await this.prisma.withdrawRec.findMany(findManyArgs),
@@ -113,16 +121,38 @@ export class WithdrawService {
   async update(id: string, data: UpdateWithdrawDto) {
     const { inner_note, outter_note, status, withdraw_fee } = data;
 
-    await this.prisma.withdrawRec.update({
+    const record = await this.prisma.withdrawRec.update({
       where: { id },
       data: { inner_note, outter_note, status, withdraw_fee },
+      include: { player_card: true },
     });
+
     // 若狀態為已撥款，則累計進會員提領次數
-    if (status === WithdrawStatus.FINISHED) {
-      await this.prisma.player.updateMany({
-        where: { withdraws: { some: { id } } },
-        data: { withdraw_nums: { increment: 1 } },
-      });
+    if (record.finished_at === null && status === WithdrawStatus.FINISHED) {
+      this.prisma.$transaction([
+        // 紀錄完成日期
+        this.prisma.withdrawRec.update({
+          where: { id: record.id },
+          data: {
+            finished_at: new Date(),
+          },
+          include: { player_card: true },
+        }),
+        // 會員的出金次數加1
+        this.prisma.player.updateMany({
+          where: { withdraws: { some: { id } } },
+          data: { withdraw_nums: { increment: 1 } },
+        }),
+        // 錢包操作
+        ...(await this.walletRecService.create({
+          type: WalletRecType.WITHDRAW,
+          player_id: record.player_id,
+          amount: -record.amount,
+          fee: record.withdraw_fee,
+          source: `(${record.player_card.bank_code})${record.player_card.account}`,
+          relative_id: record.id,
+        })),
+      ]);
     }
     return { success: true };
   }
