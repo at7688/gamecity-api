@@ -123,10 +123,7 @@ model PlayerCard {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
   valid_status Int      @default(1) // 尚未審核 審核中 審核通過 退回
-  img          Image    @relation("p-card-1", fields: [img_id], references: [id])
-  img_id       Int      @unique
-  img2         Image?   @relation("p-card-2", fields: [img2_id], references: [id])
-  img2_id      Int?     @unique
+  imgs          Image[]
   player       Player   @relation(fields: [player_id], references: [id])
 
   bank_deposits BankDepositRec[]
@@ -264,6 +261,9 @@ model Player {
 
   withdraw_nums Int @default(0)
   balance Float @default(0)
+
+  identity IdentityVerify? @relation(fields: [identity_id], references: [id])
+  identity_id String? @unique
 }
 
 model Member {
@@ -290,6 +290,14 @@ model Member {
   transfer_sends TransferRec[] @relation("source")
   transfer_recieves TransferRec[] @relation("target_agent")
   wallet_rec WalletRec[]
+}
+
+model IdentityVerify {
+  id String @id @default(cuid())
+  player Player?
+  status Int @default(1) // 待處理, 審核中, 已通過, 已駁回
+  id_card_num String
+  imgs Image[]
 }
 
 model Contact {
@@ -535,11 +543,15 @@ model Image {
   type       Int // 會員銀行存摺, ...
   created_at DateTime @default(now()) @db.Timestamptz()
 
-  p_card_img  PlayerCard? @relation("p-card-1")
-  p_card_img2 PlayerCard? @relation("p-card-2")
+  p_card  PlayerCard? @relation( fields: [p_card_id], references: [id])
+  p_card_id String?
 
   banner_mb Banner? @relation("banner-mb")
   banner_pc Banner? @relation("banner-pc")
+
+  identity IdentityVerify?  @relation( fields: [identity_id], references: [id])
+  identity_id String?
+
 }
 
 model Bank {
