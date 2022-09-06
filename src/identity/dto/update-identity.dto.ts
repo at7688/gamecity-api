@@ -1,4 +1,17 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateIdentityDto } from './create-identity.dto';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IdentityVarifyStatus } from '../enums';
 
-export class UpdateIdentityDto extends PartialType(CreateIdentityDto) {}
+export class UpdateIdentityDto {
+  @IsEnum(IdentityVarifyStatus)
+  @IsNotEmpty()
+  status: IdentityVarifyStatus;
+
+  @IsString()
+  @IsOptional()
+  inner_note?: string;
+
+  @IsString()
+  @IsOptional()
+  outter_note?: string;
+}

@@ -23,23 +23,23 @@ export class SearchLoginRecsDto extends PaginateDto {
 
   @IsIn([1, 2], { each: true })
   @IsOptional()
-  @Transform(({ value }) => {
-    return value.map(Number);
-  })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value?.split(',').map(Number) : value,
+  )
   status?: number[];
 
   @IsIn([1, 2, 3], { each: true })
   @IsOptional()
-  @Transform(({ value }) => {
-    return value.map(Number);
-  })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value?.split(',').map(Number) : value,
+  )
   block?: number[];
 
   @IsInt({ each: true })
   @IsOptional()
-  @Transform(({ value }) => {
-    return value.map(Number);
-  })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value?.split(',').map(Number) : value,
+  )
   layer?: number[];
 
   @IsDateString()

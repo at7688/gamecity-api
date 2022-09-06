@@ -8,7 +8,7 @@ export class AnnouncementClientService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(search: ClientSearchAnnouncementsDto) {
-    const { page = 1, perpage = 10, type } = search;
+    const { page, perpage, type } = search;
     const findManyArgs: Prisma.AnnouncementFindManyArgs = {
       where: {
         is_active: true,

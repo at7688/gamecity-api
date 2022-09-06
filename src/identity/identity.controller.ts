@@ -1,23 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseInterceptors,
-  UploadedFile,
+  Get,
+  Param,
+  Patch,
+  Query,
 } from '@nestjs/common';
-import { IdentityService } from './identity.service';
-import { CreateIdentityDto } from './dto/create-identity.dto';
-import { UpdateIdentityDto } from './dto/update-identity.dto';
-import { Platforms } from 'src/metas/platforms.meta';
-import { PlatformType, Player } from '@prisma/client';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { ImageType } from 'src/uploads/enums';
-import { UploadsService } from 'src/uploads/uploads.service';
+import { AdminUser } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
+import { UploadsService } from 'src/uploads/uploads.service';
+import { SearchIdentitiesDto } from './dto/search-identities.dto';
+import { UpdateIdentityDto } from './dto/update-identity.dto';
+import { IdentityService } from './identity.service';
 
 @Controller('identities')
 export class IdentityController {
@@ -26,23 +21,9 @@ export class IdentityController {
     private readonly uploadsService: UploadsService,
   ) {}
 
-  @Post('upload')
-  @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 1024 * 1024 } }),
-  )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.uploadsService.uploadFile(file, ImageType.IDENTITY);
-  }
-
-  @Post()
-  @Platforms([PlatformType.PLAYER])
-  create(@Body() data: CreateIdentityDto, @User() player: Player) {
-    return this.identityService.create(data, player);
-  }
-
   @Get()
-  findAll() {
-    return this.identityService.findAll();
+  findAll(@Query() query: SearchIdentitiesDto) {
+    return this.identityService.findAll(query);
   }
 
   @Get(':id')
@@ -51,13 +32,12 @@ export class IdentityController {
   }
 
   @Patch(':id')
-  @Platforms([PlatformType.PLAYER])
   update(
     @Param('id') id: string,
     @Body() updateIdentityDto: UpdateIdentityDto,
-    @User() player: Player,
+    @User() user: AdminUser,
   ) {
-    return this.identityService.update(id, updateIdentityDto, player);
+    return this.identityService.update(id, updateIdentityDto, user);
   }
 
   @Delete(':id')

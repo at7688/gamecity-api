@@ -8,21 +8,22 @@ datasource db {
 }
 
 model AdminUser {
-  id            String         @id @default(cuid())
-  username      String         @unique
+  id            String           @id @default(cuid())
+  username      String           @unique
   password      String
   nickname      String
   admin_role_id String
-  is_active     Boolean        @default(true)
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-  is_blocked    Boolean        @default(false)
-  admin_role    AdminRole      @relation(fields: [admin_role_id], references: [id])
+  is_active     Boolean          @default(true)
+  created_at    DateTime         @default(now()) @db.Timestamptz()
+  updated_at    DateTime         @updatedAt @db.Timestamptz()
+  is_blocked    Boolean          @default(false)
+  admin_role    AdminRole        @relation(fields: [admin_role_id], references: [id])
   inboxs        Inbox[]
   login_rec     LoginRec[]
   operations    OperationRec[]
-  wallet_rec WalletRec[]
-  transfer_rec TransferRec[]
+  wallet_rec    WalletRec[]
+  transfer_rec  TransferRec[]
+  identities    IdentityVerify[]
 }
 
 model Permission {
@@ -60,10 +61,10 @@ model Announcement {
   id         String           @id @default(cuid())
   title      String
   content    String?
-  start_at   DateTime?        @db.Timestamp(6)
-  end_at     DateTime?        @db.Timestamp(6)
-  created_at DateTime         @default(now())
-  updated_at DateTime         @updatedAt
+  start_at   DateTime?        @db.Timestamptz(6)
+  end_at     DateTime?        @db.Timestamptz(6)
+  created_at DateTime         @default(now()) @db.Timestamptz()
+  updated_at DateTime         @updatedAt @db.Timestamptz()
   type       AnnouncementType
   is_active  Boolean          @default(true)
   link       String?
@@ -95,7 +96,7 @@ model ChipsRec {
   id         String   @id @default(cuid())
   player_id  String
   qty        Float
-  created_at DateTime @default(now())
+  created_at DateTime @default(now()) @db.Timestamptz()
   type       Int
   player     Player   @relation(fields: [player_id], references: [id])
 }
@@ -120,10 +121,10 @@ model PlayerCard {
   account      String
   player_id    String
   is_default   Boolean  @default(false)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  created_at   DateTime @default(now()) @db.Timestamptz()
+  updated_at   DateTime @updatedAt @db.Timestamptz()
   valid_status Int      @default(1) // 尚未審核 審核中 審核通過 退回
-  imgs          Image[]
+  imgs         Image[]
   player       Player   @relation(fields: [player_id], references: [id])
 
   bank_deposits BankDepositRec[]
@@ -174,7 +175,7 @@ model WithdrawRec {
   amount         Float
   created_at     DateTime   @default(now()) @db.Timestamptz()
   updated_at     DateTime   @updatedAt @db.Timestamptz()
-  finished_at     DateTime? @db.Timestamptz()
+  finished_at    DateTime?  @db.Timestamptz()
   status         Int        @default(1) // 等待審核 處理中 完成出金 會員取消 拒絕退回
   player_card    PlayerCard @relation(fields: [player_card_id], references: [id])
   player_card_id String
@@ -185,22 +186,22 @@ model WithdrawRec {
 }
 
 model WalletRec {
-  id String @id @default(cuid())
-  type Int // 儲值加點,轉入,轉出,提領扣點,注金加扣,活動贈點,人工加點,人工扣點,金流手續費,退水,佔成
-  player Player? @relation(fields: [player_id], references: [id])
-  player_id String?
-  agent Member? @relation(fields: [agent_id], references: [id])
-  agent_id String?
-  origin_amount Float
-  amount Float
-  fee Float @default(0)
-  operator AdminUser? @relation(fields: [operator_id], references: [id])
-  operator_id String?
+  id             String     @id @default(cuid())
+  type           Int // 儲值加點,轉入,轉出,提領扣點,注金加扣,活動贈點,人工加點,人工扣點,金流手續費,退水,佔成
+  player         Player?    @relation(fields: [player_id], references: [id])
+  player_id      String?
+  agent          Member?    @relation(fields: [agent_id], references: [id])
+  agent_id       String?
+  origin_amount  Float
+  amount         Float
+  fee            Float      @default(0)
+  operator       AdminUser? @relation(fields: [operator_id], references: [id])
+  operator_id    String?
   created_at     DateTime   @default(now()) @db.Timestamptz()
-  source String
-  note String?
-  relative_id String?
-  rolling_demand Int @default(1)
+  source         String
+  note           String?
+  relative_id    String?
+  rolling_demand Int        @default(1)
 }
 
 // model BalanceOperation {
@@ -212,21 +213,21 @@ model WalletRec {
 // }
 
 model TransferRec {
-  id String @id @default(cuid())
-  type Int // 給會員, 給代理,
-  source Member? @relation("source", fields: [source_id], references: [id])
-  source_id String?
-  target_player Player? @relation(fields: [target_player_id], references: [id])
+  id               String     @id @default(cuid())
+  type             Int // 給會員, 給代理,
+  source           Member?    @relation("source", fields: [source_id], references: [id])
+  source_id        String?
+  target_player    Player?    @relation(fields: [target_player_id], references: [id])
   target_player_id String?
-  target_agent Member? @relation("target_agent", fields: [target_agent_id], references: [id])
-  target_agent_id String?
-  operator AdminUser? @relation(fields: [operator_id], references: [id])
-  operator_id String?
-  amount Float
-  rolling_demand Int // 洗碼倍數
-  inner_note String?
-  outter_note String?
-  created_at       DateTime            @default(now()) @db.Timestamptz()
+  target_agent     Member?    @relation("target_agent", fields: [target_agent_id], references: [id])
+  target_agent_id  String?
+  operator         AdminUser? @relation(fields: [operator_id], references: [id])
+  operator_id      String?
+  amount           Float
+  rolling_demand   Int // 洗碼倍數
+  inner_note       String?
+  outter_note      String?
+  created_at       DateTime   @default(now()) @db.Timestamptz()
 }
 
 model Player {
@@ -256,50 +257,54 @@ model Player {
   login_rec        LoginRec[]
   invites          Player[]            @relation("player")
   bankcard         PlayerCard[]
-  wallet_rec WalletRec[]
-  transfer_rec TransferRec[]
+  wallet_rec       WalletRec[]
+  transfer_rec     TransferRec[]
 
-  withdraw_nums Int @default(0)
-  balance Float @default(0)
+  withdraw_nums Int   @default(0)
+  balance       Float @default(0)
 
   identity IdentityVerify?
 }
 
 model Member {
-  id              String     @id @default(cuid())
-  username        String     @unique
-  password        String
-  nickname        String
-  created_at      DateTime   @default(now()) @db.Timestamptz()
-  updated_at      DateTime   @updatedAt @db.Timestamptz()
-  parent_id       String?
-  promo_code      String?    @unique
-  is_active       Boolean    @default(true)
-  layer           Int        @default(1)
-  is_blocked      Boolean    @default(false)
-  balance Float @default(0)
-  parent          Member?    @relation("agent", fields: [parent_id], references: [id])
-  promo           PromoCode? @relation(fields: [promo_code], references: [code])
-  contact         Contact?
-  sended_inboxs   Inbox[]    @relation("from")
-  received_inboxs Inbox[]    @relation("to")
-  login_rec       LoginRec[]
-  subs            Member[]   @relation("agent")
-  players         Player[]
-  transfer_sends TransferRec[] @relation("source")
+  id                String        @id @default(cuid())
+  username          String        @unique
+  password          String
+  nickname          String
+  created_at        DateTime      @default(now()) @db.Timestamptz()
+  updated_at        DateTime      @updatedAt @db.Timestamptz()
+  parent_id         String?
+  promo_code        String?       @unique
+  is_active         Boolean       @default(true)
+  layer             Int           @default(1)
+  is_blocked        Boolean       @default(false)
+  balance           Float         @default(0)
+  parent            Member?       @relation("agent", fields: [parent_id], references: [id])
+  promo             PromoCode?    @relation(fields: [promo_code], references: [code])
+  contact           Contact?
+  sended_inboxs     Inbox[]       @relation("from")
+  received_inboxs   Inbox[]       @relation("to")
+  login_rec         LoginRec[]
+  subs              Member[]      @relation("agent")
+  players           Player[]
+  transfer_sends    TransferRec[] @relation("source")
   transfer_recieves TransferRec[] @relation("target_agent")
-  wallet_rec WalletRec[]
+  wallet_rec        WalletRec[]
 }
 
 model IdentityVerify {
-  id String @id @default(cuid())
-  player Player @relation(fields: [player_id], references: [id])
-  player_id String @unique
-  status Int @default(1) // 待處理, 審核中, 已通過, 已駁回
+  id          String     @id @default(cuid())
+  player      Player     @relation(fields: [player_id], references: [id])
+  player_id   String     @unique
+  status      Int        @default(1) // 待處理, 審核中, 已通過, 已駁回
   id_card_num String
-  imgs Image[]
-  inner_note String?
+  imgs        Image[]
+  inner_note  String?
   outter_note String?
+  operator    AdminUser? @relation(fields: [operator_id], references: [id])
+  operator_id String?
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?   @updatedAt @db.Timestamptz(6)
 }
 
 model Contact {
@@ -313,7 +318,6 @@ model Contact {
   agent     Member? @relation(fields: [agent_id], references: [id])
   player    Player? @relation(fields: [player_id], references: [id])
 }
-
 
 model Vip {
   id                String        @id @default(cuid())
@@ -419,14 +423,14 @@ model Payway {
   type               PayType
   code               String // 金流廠商渠道代號
   name               String?
-  player_fee_amount  Float @default(0)
-  player_fee_percent Float @default(0)
-  player_fee_min     Float @default(10)
-  player_fee_max     Float @default(200)
-  fee_amount         Float @default(0)
-  fee_percent        Float @default(0)
-  fee_min            Float @default(10)
-  fee_max            Float @default(200)
+  player_fee_amount  Float       @default(0)
+  player_fee_percent Float       @default(0)
+  player_fee_min     Float       @default(10)
+  player_fee_max     Float       @default(200)
+  fee_amount         Float       @default(0)
+  fee_percent        Float       @default(0)
+  fee_min            Float       @default(10)
+  fee_max            Float       @default(200)
   tool_id            String
   deposit_max        Int
   deposit_min        Int
@@ -446,35 +450,35 @@ enum MerchantCode {
 
 // 金流廠商
 model PaymentMerchant {
-  id        String  @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
-  code      MerchantCode  @unique
-  is_active Boolean @default(true)
+  code      MerchantCode @unique
+  is_active Boolean      @default(true)
 
   config Json?
 
   paymentTools PaymentTool[]
 
   records PaymentDepositRec[]
-  orders   MerchantOrder[]
+  orders  MerchantOrder[]
 
 }
 
 // 支付工具
 model PaymentTool {
-  id           String          @id @default(cuid())
+  id           String  @id @default(cuid())
   tool_name    String
   rotation_id  Int
-  is_active    Boolean         @default(true)
-  recharge_max Int @default(0)
+  is_active    Boolean @default(true)
+  recharge_max Int     @default(0)
 
   accumulate_from DateTime @default(now()) @db.Timestamptz()
 
-  note         String?
-  rotation     RotationGroup   @relation(fields: [rotation_id], references: [id])
-  merchant     PaymentMerchant @relation(fields: [merchant_id], references: [id])
-  merchant_id  String
-  payways      Payway[]
+  note        String?
+  rotation    RotationGroup   @relation(fields: [rotation_id], references: [id])
+  merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant_id String
+  payways     Payway[]
 
   sort       Int     @default(autoincrement())
   is_current Boolean @default(false)
@@ -485,36 +489,36 @@ model PaymentTool {
 
 // 支付工具儲值紀錄(站內)
 model PaymentDepositRec {
-  id             String          @id @default(cuid())
-  amount         Float
-  created_at     DateTime        @default(now()) @db.Timestamptz()
-  paid_at        DateTime?       @db.Timestamptz()
-  finished_at    DateTime?       @db.Timestamptz() // 補點完成時間
-  canceled_at    DateTime?       @db.Timestamptz()
-  expired_at     DateTime?       @db.Timestamptz()
-  payway         Payway          @relation(fields: [payway_id], references: [id])
-  payway_id      String
-  player         Player          @relation(fields: [player_id], references: [id])
-  player_id      String
-  fee_on_player  Float @default(0) // 會員負擔手續費
-  fee Float @default(0) // 金流商收取的手續費
-  merchant       PaymentMerchant @relation(fields: [merchant_id], references: [id])
-  merchant_id    String
+  id            String          @id @default(cuid())
+  amount        Float
+  created_at    DateTime        @default(now()) @db.Timestamptz()
+  paid_at       DateTime?       @db.Timestamptz()
+  finished_at   DateTime?       @db.Timestamptz() // 補點完成時間
+  canceled_at   DateTime?       @db.Timestamptz()
+  expired_at    DateTime?       @db.Timestamptz()
+  payway        Payway          @relation(fields: [payway_id], references: [id])
+  payway_id     String
+  player        Player          @relation(fields: [player_id], references: [id])
+  player_id     String
+  fee_on_player Float           @default(0) // 會員負擔手續費
+  fee           Float           @default(0) // 金流商收取的手續費
+  merchant      PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant_id   String
 
-  order     MerchantOrder?
-  status   Int @default(1) // 尚未付款 已付款 等待入點 已過期 拒絕退回
+  order  MerchantOrder?
+  status Int            @default(1) // 尚未付款 已付款 等待入點 已過期 拒絕退回
 }
 
 // 金流商回傳資料紀錄
 model MerchantOrder {
-  trade_no   String             @id
+  trade_no   String            @id
   record     PaymentDepositRec @relation(fields: [record_id], references: [id])
-  record_id String @unique
-  created_at DateTime           @default(now()) @db.Timestamptz()
-  expired_at DateTime?          @db.Timestamptz()
-  paid_at    DateTime?          @db.Timestamptz()
+  record_id  String            @unique
+  created_at DateTime          @default(now()) @db.Timestamptz()
+  expired_at DateTime?         @db.Timestamptz()
+  paid_at    DateTime?         @db.Timestamptz()
   price      Float
-  status     Int @default(1) // 等待付款 已繳費 已過期 拒絕退回
+  status     Int               @default(1) // 等待付款 已繳費 已過期 拒絕退回
 
   merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id String
@@ -530,12 +534,11 @@ model MerchantOrder {
   notify Json?
 }
 
-
 model MerchantLog {
-  id Int @id @default(autoincrement())
-  created_at DateTime           @default(now()) @db.Timestamptz()
+  id            Int          @id @default(autoincrement())
+  created_at    DateTime     @default(now()) @db.Timestamptz()
   merchant_code MerchantCode
-  data Json?
+  data          Json?
 }
 
 model Image {
@@ -545,13 +548,13 @@ model Image {
   type       Int // 會員銀行存摺, ...
   created_at DateTime @default(now()) @db.Timestamptz()
 
-  p_card  PlayerCard? @relation( fields: [p_card_id], references: [id])
+  p_card    PlayerCard? @relation(fields: [p_card_id], references: [id])
   p_card_id String?
 
   banner_mb Banner? @relation("banner-mb")
   banner_pc Banner? @relation("banner-pc")
 
-  identity IdentityVerify?  @relation( fields: [identity_id], references: [id])
+  identity    IdentityVerify? @relation(fields: [identity_id], references: [id])
   identity_id String?
 
 }
