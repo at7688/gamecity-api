@@ -5,48 +5,46 @@ import {
   NestModule,
 } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import * as redisStore from 'cache-manager-redis-store';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
-import { UserModule } from './user/user.module';
-import { OperationRecModule } from './operation-rec/operation-rec.module';
-import { PermissionModule } from './permission/permission.module';
-import { RoleModule } from './role/role.module';
-import { APP_FILTER } from '@nestjs/core';
-import { HttpExceptionFilter } from './filters/http-exception.filter';
-import { MemberModule } from './member/member.module';
 import { AuthModule } from './auth/auth.module';
-import { MenuModule } from './menu/menu.module';
+import { BankDepositModule } from './bank-deposit/bank-deposit.module';
+import { BankController } from './bank/bank.controller';
+import { BankService } from './bank/bank.service';
 import { BannerModule } from './banner/banner.module';
+import { CBankcardModule } from './c-bankcard/c-bankcard.module';
+import { ClientPayModule } from './client-pay/client-pay.module';
+import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { GamePlatformModule } from './game-platform/game-platform.module';
 import { GameModule } from './game/game.module';
-import * as redisStore from 'cache-manager-redis-store';
-import { ScheduleModule } from '@nestjs/schedule';
-import { UploadsService } from './uploads/uploads.service';
-import { UploadsController } from './uploads/uploads.controller';
-import { UploadsModule } from './uploads/uploads.module';
+import { IdentityModule } from './identity/identity.module';
 import { InboxModule } from './inbox/inbox.module';
 import { LoginRecModule } from './login-rec/login-rec.module';
-import { VipModule } from './vip/vip.module';
-import { PlayerModule } from './player/player.module';
+import { MemberModule } from './member/member.module';
+import { MenuModule } from './menu/menu.module';
+import { MerchantOrderModule } from './merchant-order/merchant-order.module';
+import { OperationRecModule } from './operation-rec/operation-rec.module';
 import { PBankcardModule } from './p-bankcard/p-bankcard.module';
-import { CBankcardModule } from './c-bankcard/c-bankcard.module';
-import { RotationModule } from './rotation/rotation.module';
-import { BankService } from './bank/bank.service';
-import { BankController } from './bank/bank.controller';
-import { WithdrawModule } from './withdraw/withdraw.module';
-import { BankDepositModule } from './bank-deposit/bank-deposit.module';
+import { PaymentDepositModule } from './payment-deposit/payment-deposit.module';
 import { PaymentMerchantModule } from './payment-merchant/payment-merchant.module';
 import { PaymentToolModule } from './payment-tool/payment-tool.module';
-import { PaymentDepositModule } from './payment-deposit/payment-deposit.module';
 import { PaywayModule } from './payway/payway.module';
-import { MerchantOrderService } from './merchant-order/merchant-order.service';
-import { MerchantOrderController } from './merchant-order/merchant-order.controller';
-import { ClientPayModule } from './client-pay/client-pay.module';
-import { MerchantOrderModule } from './merchant-order/merchant-order.module';
-import { WalletRecModule } from './wallet-rec/wallet-rec.module';
+import { PermissionModule } from './permission/permission.module';
+import { PlayerModule } from './player/player.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { RoleModule } from './role/role.module';
+import { RotationModule } from './rotation/rotation.module';
 import { TransferModule } from './transfer/transfer.module';
-import { IdentityModule } from './identity/identity.module';
+import { UploadsController } from './uploads/uploads.controller';
+import { UploadsModule } from './uploads/uploads.module';
+import { UserModule } from './user/user.module';
+import { VipModule } from './vip/vip.module';
+import { WalletRecModule } from './wallet-rec/wallet-rec.module';
+import { WithdrawModule } from './withdraw/withdraw.module';
 
 @Module({
   imports: [
@@ -100,6 +98,7 @@ import { IdentityModule } from './identity/identity.module';
     WalletRecModule,
     TransferModule,
     IdentityModule,
+    GamePlatformModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

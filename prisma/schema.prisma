@@ -367,30 +367,31 @@ model Banner {
   end_at    DateTime? @db.Timestamptz()
 }
 
+
+
 model GameCategory {
-  id        Int            @id @default(autoincrement())
-  name      String
-  platforms GamePlatform[]
+  code          String        @id
+  name        String
+  sort        Int @default(0)
+  platforms       GamePlatform[]
 }
 
 model GamePlatform {
-  id          String             @id @default(cuid())
+  code          String        @id
   name        String
-  code        String             @unique
-  status      GamePlatformStatus
-  sort        Int
-  category_id Int
-  category    GameCategory       @relation(fields: [category_id], references: [id])
+  status      Int @default(1) // 啟用 停用 維護中
+  sort        Int @default(0)
   games       Game[]
+  category GameCategory @relation(fields: [category_code], references: [code])
+  category_code String
 }
 
 model Game {
   id          String       @id @default(cuid())
   name        String
-  is_active   Boolean
-  sort        Int
-  platform_id String
-  platform    GamePlatform @relation(fields: [platform_id], references: [id])
+  sort        Int @default(0)
+  platform    GamePlatform @relation(fields: [platform_code], references: [code])
+  platform_code String
 }
 
 model Inbox {
@@ -559,6 +560,7 @@ model Image {
 
 }
 
+
 model Bank {
   code      String  @id
   name      String
@@ -585,8 +587,3 @@ enum AnnouncementType {
   SERVICE
 }
 
-enum GamePlatformStatus {
-  ONLINE
-  OFFLINE
-  MAINTENANCE
-}
