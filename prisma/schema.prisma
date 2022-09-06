@@ -262,8 +262,7 @@ model Player {
   withdraw_nums Int @default(0)
   balance Float @default(0)
 
-  identity IdentityVerify? @relation(fields: [identity_id], references: [id])
-  identity_id String? @unique
+  identity IdentityVerify?
 }
 
 model Member {
@@ -294,10 +293,13 @@ model Member {
 
 model IdentityVerify {
   id String @id @default(cuid())
-  player Player?
+  player Player @relation(fields: [player_id], references: [id])
+  player_id String @unique
   status Int @default(1) // 待處理, 審核中, 已通過, 已駁回
   id_card_num String
   imgs Image[]
+  inner_note String?
+  outter_note String?
 }
 
 model Contact {

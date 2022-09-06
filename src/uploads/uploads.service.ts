@@ -29,7 +29,16 @@ export class UploadsService {
       originalname,
       file.mimetype,
     );
-    return this.prisma.image.create({ data: { path, filename, type } });
+    return this.prisma.image.create({
+      data: { path, filename, type },
+      select: {
+        id: true,
+        path: true,
+        filename: true,
+        type: true,
+        created_at: true,
+      },
+    });
   }
 
   async s3_upload(file: Body, bucket: string, name: string, mimetype: string) {

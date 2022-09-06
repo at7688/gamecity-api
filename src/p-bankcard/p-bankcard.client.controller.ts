@@ -49,21 +49,11 @@ export class PBankcardClientController {
     return this.pBankcardService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pBankcardService.findOne(id);
-  }
-
   @Patch(':id')
   update(
     @Param('id') id: string,
     @Body() updatePBankcardDto: UpdatePBankcardDto,
   ) {
     return this.pBankcardService.update(id, updatePBankcardDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.pBankcardService.remove(+id);
   }
 }

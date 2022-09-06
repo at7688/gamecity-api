@@ -24,11 +24,7 @@ export class CreatePBankcardDto {
   @IsNotEmpty()
   account: string;
 
-  @IsInt()
+  @IsInt({ each: true })
   @IsNotEmpty()
-  img_id: number;
-
-  @IsInt()
-  @IsOptional()
-  img2_id?: number;
+  img_ids: number[];
 }

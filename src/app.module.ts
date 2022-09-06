@@ -46,6 +46,7 @@ import { ClientPayModule } from './client-pay/client-pay.module';
 import { MerchantOrderModule } from './merchant-order/merchant-order.module';
 import { WalletRecModule } from './wallet-rec/wallet-rec.module';
 import { TransferModule } from './transfer/transfer.module';
+import { IdentityModule } from './identity/identity.module';
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import { TransferModule } from './transfer/transfer.module';
     MerchantOrderModule,
     WalletRecModule,
     TransferModule,
+    IdentityModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
