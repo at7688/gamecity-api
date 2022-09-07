@@ -60,15 +60,6 @@ export class PaymentToolService {
     );
 
     return this.prisma.listFormat({ ...records[0], search });
-
-    // return this.prisma.paymentTool.findMany({
-    //   where: {
-    //     rotation_id,
-    //     tool_name,
-    //     merchant_id,
-    //     is_active: { 0: undefined, 1: true, 2: false }[is_active]
-    //   },
-    // });
   }
 
   findOne(id: string) {

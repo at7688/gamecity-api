@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AnnouncementType, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { numToBooleanSearch } from 'src/utils';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { SearchAnnouncementsDto } from './dto/search-announcements.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
@@ -69,7 +70,7 @@ export class AnnouncementService {
     const { page, perpage, keyword, type, is_active } = search;
     const findManyArgs: Prisma.AnnouncementFindManyArgs = {
       where: {
-        is_active: { 0: undefined, 1: true, 2: false }[is_active],
+        is_active: numToBooleanSearch(is_active),
         AND: [
           {
             type: type || undefined,

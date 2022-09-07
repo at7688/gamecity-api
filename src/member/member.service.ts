@@ -4,6 +4,7 @@ import { Member, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
+import { numToBooleanSearch } from 'src/utils';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { SearchAgentsDto } from './dto/search-agents.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -86,7 +87,7 @@ export class MemberService {
         layer: {
           in: layers,
         },
-        is_blocked: { 0: undefined, 1: true, 2: false }[is_blocked],
+        is_blocked: numToBooleanSearch(is_blocked),
         parent_id: {
           in:
             all && parent_id
@@ -104,7 +105,7 @@ export class MemberService {
 
     const _items = await this.prisma.member.findMany(findManyArgs);
     return this.prisma.listFormat({
-      items: await this.prisma.$queryRaw(
+      items: await this.prisma.$queryRaw<unknown[]>(
         agentWithSubNums(_items.map((t) => t.id)),
       ),
       count: await this.prisma.member.count({

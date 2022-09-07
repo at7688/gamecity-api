@@ -2,6 +2,8 @@ import { Prisma } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsBoolean,
+  IsDate,
+  IsEnum,
   IsIn,
   IsInt,
   IsISO8601,
@@ -9,31 +11,45 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { LangType, WebPlatform } from 'src/enums';
 export class CreateBannerDto {
+  @IsEnum(WebPlatform)
+  @IsNotEmpty()
+  platform: WebPlatform;
+
+  @IsInt()
+  @IsNotEmpty()
+  img_id: number;
+
   @IsString()
   @IsNotEmpty()
-  name: string;
+  title: string;
 
-  @IsInt()
+  @IsEnum(LangType)
   @IsNotEmpty()
-  pc_img_id: number;
+  lang: LangType;
 
-  @IsInt()
-  @IsNotEmpty()
-  mb_img_id: number;
+  @IsString()
+  @IsOptional()
+  link?: string;
 
-  @Transform(({ value }) => value === 'true')
+  @IsBoolean()
+  @IsOptional()
+  is_new_win?: boolean;
+
   @IsBoolean()
   is_active: boolean;
 
   @IsInt()
   sort: number;
 
-  @IsISO8601()
   @IsOptional()
-  start_at?: string | Date;
+  @Transform(({ value }) => new Date(value))
+  @IsDate()
+  start_at?: string;
 
-  @IsISO8601()
   @IsOptional()
-  end_at?: string | Date;
+  @Transform(({ value }) => new Date(value))
+  @IsDate()
+  end_at?: string;
 }

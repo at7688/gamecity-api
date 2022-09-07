@@ -356,11 +356,12 @@ model LoginRec {
 
 model Banner {
   id        String    @id @default(cuid())
-  pc_img    Image     @relation("banner-pc", fields: [pc_img_id], references: [id])
-  pc_img_id Int       @unique
-  mb_img    Image     @relation("banner-mb", fields: [mb_img_id], references: [id])
-  mb_img_id Int       @unique
-  name      String
+  platform Int // PC Mobile
+  img    Image?
+  title      String
+  lang String // en, tw, cn
+  link String?
+  is_new_win Boolean @default(false)
   is_active Boolean
   sort      Int
   start_at  DateTime? @db.Timestamptz()
@@ -552,8 +553,8 @@ model Image {
   p_card    PlayerCard? @relation(fields: [p_card_id], references: [id])
   p_card_id String?
 
-  banner_mb Banner? @relation("banner-mb")
-  banner_pc Banner? @relation("banner-pc")
+  banner Banner? @relation(fields: [banner_id], references: [id])
+  banner_id String? @unique
 
   identity    IdentityVerify? @relation(fields: [identity_id], references: [id])
   identity_id String?
@@ -561,11 +562,13 @@ model Image {
 }
 
 
+
 model Bank {
   code      String  @id
   name      String
   is_active Boolean @default(true)
 }
+
 
 enum PlatformType {
   ADMIN

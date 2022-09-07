@@ -12,6 +12,7 @@ import { MemberService } from 'src/member/member.service';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { SubAgent, subAgents } from './raw/subAgents';
 import { playerList } from './raw/playerList';
+import { numToBooleanSearch } from 'src/utils';
 
 @Injectable()
 export class PlayerService {
@@ -102,8 +103,8 @@ export class PlayerService {
         nickname: {
           contains: nickname,
         },
-        is_blocked: { 0: undefined, 1: true, 2: false }[is_blocked],
-        is_lock_bet: { 0: undefined, 1: true, 2: false }[is_lock_bet],
+        is_blocked: numToBooleanSearch(is_blocked),
+        is_lock_bet: numToBooleanSearch(is_lock_bet),
       },
       orderBy: [
         {
@@ -117,7 +118,9 @@ export class PlayerService {
     const _items = await this.prisma.player.findMany(findManyArgs);
 
     return this.prisma.listFormat({
-      items: await this.prisma.$queryRaw(playerList(_items.map((t) => t.id))),
+      items: await this.prisma.$queryRaw<unknown[]>(
+        playerList(_items.map((t) => t.id)),
+      ),
       count: await this.prisma.player.count({
         where: findManyArgs.where,
       }),

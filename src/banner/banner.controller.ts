@@ -8,12 +8,16 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  Headers,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { LangType } from 'src/enums';
 import { ImageType } from 'src/uploads/enums';
 import { UploadsService } from 'src/uploads/uploads.service';
 import { BannerService } from './banner.service';
 import { CreateBannerDto } from './dto/create-banner.dto';
+import { SearchBannersDto } from './dto/search-banners.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
 
 @Controller('banners')
@@ -37,8 +41,8 @@ export class BannerController {
   }
 
   @Get()
-  findAll() {
-    return this.bannerService.findAll();
+  findAll(@Query() query: SearchBannersDto) {
+    return this.bannerService.findAll(query);
   }
 
   @Get(':id')

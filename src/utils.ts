@@ -7,3 +7,7 @@ export const numArrToBooleanSearch = (nums: number[]) => {
     ? false
     : undefined;
 };
+
+export const numToBooleanSearch = (num: number) => {
+  return { 0: undefined, 1: true, 2: false }[num];
+};
