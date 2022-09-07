@@ -304,7 +304,7 @@ model IdentityVerify {
   operator    AdminUser? @relation(fields: [operator_id], references: [id])
   operator_id String?
   created_at  DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime?   @updatedAt @db.Timestamptz(6)
+  updated_at  DateTime?  @updatedAt @db.Timestamptz(6)
 }
 
 model Contact {
@@ -355,43 +355,52 @@ model LoginRec {
 }
 
 model Banner {
-  id        String    @id @default(cuid())
-  platform Int // PC Mobile
-  img    Image?
+  id         String    @id @default(cuid())
+  platform   Int // PC Mobile
+  img        Image?
   title      String
-  lang String // en, tw, cn
-  link String?
-  is_new_win Boolean @default(false)
-  is_active Boolean
-  sort      Int
-  start_at  DateTime? @db.Timestamptz()
-  end_at    DateTime? @db.Timestamptz()
+  lang       String // en, tw, cn
+  link       String?
+  is_new_win Boolean   @default(false)
+  is_active  Boolean
+  sort       Int
+  start_at   DateTime? @db.Timestamptz()
+  end_at     DateTime? @db.Timestamptz()
 }
 
+model PageContent {
+  id         Int      @id @default(autoincrement())
+  code       String // ABOUT, QA
+  title      String // 關於我們, 隱私權政策
+  content    String
+  lang       String // en, tw, cn
+  updated_at DateTime @updatedAt @db.Timestamptz()
 
+  @@unique([code, lang])
+}
 
 model GameCategory {
-  code          String        @id
-  name        String
-  sort        Int @default(0)
-  platforms       GamePlatform[]
+  code      String         @id
+  name      String
+  sort      Int            @default(0)
+  platforms GamePlatform[]
 }
 
 model GamePlatform {
-  code          String        @id
-  name        String
-  status      Int @default(1) // 啟用 停用 維護中
-  sort        Int @default(0)
-  games       Game[]
-  category GameCategory @relation(fields: [category_code], references: [code])
+  code          String       @id
+  name          String
+  status        Int          @default(1) // 啟用 停用 維護中
+  sort          Int          @default(0)
+  games         Game[]
+  category      GameCategory @relation(fields: [category_code], references: [code])
   category_code String
 }
 
 model Game {
-  id          String       @id @default(cuid())
-  name        String
-  sort        Int @default(0)
-  platform    GamePlatform @relation(fields: [platform_code], references: [code])
+  id            String       @id @default(cuid())
+  name          String
+  sort          Int          @default(0)
+  platform      GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
 }
 
@@ -553,7 +562,7 @@ model Image {
   p_card    PlayerCard? @relation(fields: [p_card_id], references: [id])
   p_card_id String?
 
-  banner Banner? @relation(fields: [banner_id], references: [id])
+  banner    Banner? @relation(fields: [banner_id], references: [id])
   banner_id String? @unique
 
   identity    IdentityVerify? @relation(fields: [identity_id], references: [id])
@@ -561,14 +570,11 @@ model Image {
 
 }
 
-
-
 model Bank {
   code      String  @id
   name      String
   is_active Boolean @default(true)
 }
-
 
 enum PlatformType {
   ADMIN
@@ -589,4 +595,3 @@ enum AnnouncementType {
   EVENT
   SERVICE
 }
-

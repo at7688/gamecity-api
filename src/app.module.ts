@@ -45,6 +45,7 @@ import { UserModule } from './user/user.module';
 import { VipModule } from './vip/vip.module';
 import { WalletRecModule } from './wallet-rec/wallet-rec.module';
 import { WithdrawModule } from './withdraw/withdraw.module';
+import { PageContentModule } from './page-content/page-content.module';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { WithdrawModule } from './withdraw/withdraw.module';
     TransferModule,
     IdentityModule,
     GamePlatformModule,
+    PageContentModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
