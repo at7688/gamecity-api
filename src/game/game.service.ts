@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateGameDto } from './dto/create-game.dto';
+import { CreateGamesDto } from './dto/create-games.dto';
 
 @Injectable()
 export class GameService {
@@ -11,9 +12,10 @@ export class GameService {
       data,
     });
   }
-  createMany(data: CreateGameDto[]) {
+  createMany(batchData: CreateGamesDto) {
+    const { platform_code, games } = batchData;
     return this.prisma.game.createMany({
-      data,
+      data: games.map((g) => ({ ...g, platform_code })),
       skipDuplicates: true,
     });
   }

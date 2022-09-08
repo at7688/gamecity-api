@@ -7,5 +7,9 @@ export class CreateGameDto {
 
   @IsString()
   @IsNotEmpty()
+  code: string;
+
+  @IsString()
+  @IsNotEmpty()
   platform_code: string;
 }

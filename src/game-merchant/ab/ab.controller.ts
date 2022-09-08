@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { PlatformType, Player } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
 import { Platforms } from 'src/metas/platforms.meta';
@@ -8,6 +8,7 @@ import { AbService } from './ab.service';
 @Platforms([PlatformType.PLAYER])
 export class AbController {
   constructor(private readonly abService: AbService) {}
+
   @Post('handicaps')
   getAgentHandicaps() {
     return this.abService.getAgentHandicaps();

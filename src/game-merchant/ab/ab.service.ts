@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 interface ReqConfig {
   method: string;
@@ -19,14 +20,19 @@ interface ResBase {
 
 @Injectable()
 export class AbService {
+  constructor(private readonly prisma: PrismaService) {}
   config = {
     operatorId: '3531761',
     apiUrl: 'https://sw2.apidemo.net:8443',
-    key: 'Vc3TE5weapnq5uH6V+TmPsDfLZuL5K6omE7CZTVo8KoiXKOFwLgyp7yxaKCa4jhCC0VuaqfXnHfY8GG/TeJg9w==',
+    allBetKey:
+      'Vc3TE5weapnq5uH6V+TmPsDfLZuL5K6omE7CZTVo8KoiXKOFwLgyp7yxaKCa4jhCC0VuaqfXnHfY8GG/TeJg9w==',
+    partnerKey:
+      'FZe/OUOURWKfYTtJFsoUGsXIvsk1uh8BBe9VjjmK3+9SAAGjHN3ECbMqKnV4KV0oRAVDFfU8DW0h+zYd0iT3lg==',
     contentType: 'application/json; charset=UTF-8',
     agentAcc: '1vfh4a',
     suffix: 'gxx',
   };
+  balanceVersion = 0;
 
   getMD5Hash(data: any) {
     return CryptoJS.MD5(JSON.stringify(data)).toString(CryptoJS.enc.Base64);
@@ -35,14 +41,7 @@ export class AbService {
     return new Date().toUTCString().replace('GMT', 'UTC');
   }
 
-  getAuthorizationHeader(reqConfig: ReqConfig) {
-    const { method, path, md5, date } = reqConfig;
-    const { contentType, key, operatorId } = this.config;
-    //httpMethod, contentMD5, contentType, requestTime, path, key, operatorId
-    // Construct string to sign
-    const stringToSign =
-      method + '\n' + md5 + '\n' + contentType + '\n' + date + '\n' + path;
-
+  getAuthBySignString(stringToSign: string, key: string) {
     // Get decoded key
     const decodedKey = CryptoJS.enc.Base64.parse(key);
 
@@ -52,11 +51,19 @@ export class AbService {
     // Encode (Base64) HMAC SHA1 to generate signature
     const sign = CryptoJS.enc.Base64.stringify(encrypted);
 
-    // Construct authorization header
-    const ah = 'AB' + ' ' + operatorId + ':' + sign;
+    const ah = `AB ${this.config.operatorId}:${sign}`;
 
-    // Construct and return authorization header
     return ah;
+  }
+
+  getAuthorizationHeader(reqConfig: ReqConfig) {
+    const { method, path, md5, date } = reqConfig;
+    const { contentType, allBetKey } = this.config;
+
+    const stringToSign =
+      method + '\n' + md5 + '\n' + contentType + '\n' + date + '\n' + path;
+
+    return this.getAuthBySignString(stringToSign, allBetKey);
   }
 
   async request(reqConfig: ReqConfig) {
@@ -127,6 +134,7 @@ export class AbService {
       path: '/Login',
       data: {
         player: player.username + this.config.suffix,
+        language: 'zh_TW',
         returnUrl: 'https://gamecityad.kidult.one/login',
       },
     };
@@ -200,4 +208,114 @@ export class AbService {
 
     return { success: true };
   }
+
+  getValidAuth(reqConfig: ReqConfig, headers) {
+    console.log(reqConfig.data);
+    const md5 = reqConfig.data ? this.getMD5Hash(reqConfig.data) : '';
+    const contentType = headers['content-type'] || '';
+    console.log({ md5, contentType });
+    const stringToSign =
+      reqConfig.method +
+      '\n' +
+      md5 +
+      '\n' +
+      contentType +
+      '\n' +
+      headers.date +
+      '\n' +
+      reqConfig.path;
+
+    return this.getAuthBySignString(stringToSign, this.config.partnerKey);
+  }
+
+  async getBalance(username: string, headers) {
+    const reqConfig: ReqConfig = {
+      method: 'GET',
+      path: `/GetBalance/${username}`,
+      data: '',
+    };
+    const validAuth = this.getValidAuth(reqConfig, headers);
+
+    console.log(headers.authorization);
+    console.log(validAuth);
+
+    const player = await this.prisma.player.findUnique({
+      where: {
+        username: username.replace(this.config.suffix, ''),
+      },
+    });
+
+    if (!player) {
+      return {
+        resultCode: 10003,
+        message: '玩家帳號不存在',
+      };
+    }
+
+    return {
+      resultCode: 0,
+      message: null,
+      balance: player.balance,
+      version: new Date().getTime(),
+    };
+  }
+
+  async transfer(data: TransferResData, headers) {
+    const reqConfig: ReqConfig = {
+      method: 'POST',
+      path: `/Transfer`,
+      data,
+    };
+    const validAuth = this.getValidAuth(reqConfig, headers);
+
+    console.log(headers.authorization);
+    console.log(validAuth);
+
+    const player = await this.prisma.player.findUnique({
+      where: {
+        username: data.player.replace(this.config.suffix, ''),
+      },
+    });
+
+    if (!player) {
+      return {
+        resultCode: 10003,
+        message: '玩家帳號不存在',
+      };
+    }
+
+    return {
+      resultCode: 0,
+      message: null,
+      balance: player.balance,
+      version: new Date().getTime(),
+    };
+  }
+}
+
+export interface Detail {
+  betNum: number;
+  gameRoundId: number;
+  status: number;
+  betAmount: number;
+  deposit: number;
+  gameType: number;
+  betType: number;
+  commission: number;
+  exchangeRate: number;
+  betTime: Date;
+  tableName: string;
+  betMethod: number;
+  appType: number;
+  gameRoundStartTime: Date;
+  ip: string;
+}
+export interface TransferResData {
+  tranId: number;
+  player: string;
+  amount: number;
+  currency: string;
+  type: number;
+  isRetry: boolean;
+  details: Detail[];
 }

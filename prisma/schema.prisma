@@ -332,7 +332,7 @@ model Vip {
   card_rotate       RotationGroup @relation("card", fields: [card_rotate_id], references: [id])
   payment_rotate    RotationGroup @relation("payment", fields: [payment_rotate_id], references: [id])
   players           Player[]
-  promotions Promotion[]
+  // promotions Promotion[]
 
   withdraw_fee_1 Float @default(0)
   withdraw_fee_2 Float @default(0)
@@ -400,11 +400,14 @@ model GamePlatform {
 model Game {
   id            String       @id @default(cuid())
   name          String
+  code String
   sort          Int          @default(0)
   platform      GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
 
-  water_rules GameWaterRule[]
+  // water_rules GameWaterRule[]
+
+  @@unique([code, platform_code])
 }
 
 model Inbox {
@@ -579,36 +582,36 @@ model Bank {
   is_active Boolean @default(true)
 }
 
-model GameWaterRule {
-  id Int @id @default(autoincrement())
-  game Game @relation(fields: [game_id], references: [id])
-  game_id String
-  promotion Promotion @relation(fields: [promotion_id], references: [id])
-  promotion_id String
-  value Float // 0.01 (1%)
+// model GameWaterRule {
+//   id Int @id @default(autoincrement())
+//   game Game @relation(fields: [game_id], references: [id])
+//   game_id String
+//   promotion Promotion @relation(fields: [promotion_id], references: [id])
+//   promotion_id String
+//   value Float // 0.01 (1%)
 
-  @@unique([game_id, promotion_id])
-}
+//   @@unique([game_id, promotion_id])
+// }
 
-model Promotion {
-  id String @id @default(cuid())
-  type Int // 充值獎勵 遊戲返水
-  condition Int // 首次儲值 遊戲有效投注
-  title String
-  start_at   DateTime? @db.Timestamptz()
-  end_at     DateTime? @db.Timestamptz()
-  is_active Boolean @default(false)
-  apply_approval_rule Int @default(1) // 人工審核 自動審核
-  auto_apply_schedule Int? // 立即 每天固定時間 每週固定時間
-  pay_approval_rule Int @default(1) // 人工派發 自動派發
-  auto_pay_schedule Int? // 立即 每天固定時間 每週固定時間
-  vips Vip[]
-  game_water_rules GameWaterRule[] // 返水活動(遊戲退水%)
-  rolling_demand Int // 洗碼倍數
-  reward_max Int // 獎勵金上限
-  applicants_max Int // 申請人數上限
-  each_apply_times Int // 每人可申請次數
-}
+// model Promotion {
+//   id String @id @default(cuid())
+//   type Int // 充值獎勵 遊戲返水
+//   condition Int // 首次儲值 遊戲有效投注
+//   title String
+//   start_at   DateTime? @db.Timestamptz()
+//   end_at     DateTime? @db.Timestamptz()
+//   is_active Boolean @default(false)
+//   apply_approval_rule Int @default(1) // 人工審核 自動審核
+//   auto_apply_schedule Int? // 立即 每天固定時間 每週固定時間
+//   pay_approval_rule Int @default(1) // 人工派發 自動派發
+//   auto_pay_schedule Int? // 立即 每天固定時間 每週固定時間
+//   vips Vip[]
+//   game_water_rules GameWaterRule[] // 返水活動(遊戲退水%)
+//   rolling_demand Int // 洗碼倍數
+//   reward_max Int // 獎勵金上限
+//   applicants_max Int // 申請人數上限
+//   each_apply_times Int // 每人可申請次數
+// }
 
 
 
