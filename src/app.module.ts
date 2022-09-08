@@ -46,6 +46,8 @@ import { VipModule } from './vip/vip.module';
 import { WalletRecModule } from './wallet-rec/wallet-rec.module';
 import { WithdrawModule } from './withdraw/withdraw.module';
 import { PageContentModule } from './page-content/page-content.module';
+import { AbService } from './game-merchant/ab/ab.service';
+import { GameMerchantModule } from './game-merchant/game-merchant.module';
 
 @Module({
   imports: [
@@ -101,6 +103,7 @@ import { PageContentModule } from './page-content/page-content.module';
     IdentityModule,
     GamePlatformModule,
     PageContentModule,
+    GameMerchantModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
@@ -111,6 +114,7 @@ import { PageContentModule } from './page-content/page-content.module';
       useClass: HttpExceptionFilter,
     },
     BankService,
+    AbService,
   ],
   // exports: [AppService],
 })

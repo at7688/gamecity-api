@@ -16,6 +16,7 @@ export class GameController {
   create(@Body() body: CreateGameDto) {
     return this.gameService.create(body);
   }
+
   @Get()
   fetchAll() {
     return this.gameService.fetchAll();
