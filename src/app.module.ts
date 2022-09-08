@@ -48,6 +48,7 @@ import { WithdrawModule } from './withdraw/withdraw.module';
 import { PageContentModule } from './page-content/page-content.module';
 import { AbService } from './game-merchant/ab/ab.service';
 import { GameMerchantModule } from './game-merchant/game-merchant.module';
+import { BetRecordModule } from './bet-record/bet-record.module';
 
 @Module({
   imports: [
@@ -104,6 +105,7 @@ import { GameMerchantModule } from './game-merchant/game-merchant.module';
     GamePlatformModule,
     PageContentModule,
     GameMerchantModule,
+    BetRecordModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

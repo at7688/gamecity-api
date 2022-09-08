@@ -1,8 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Player } from '@prisma/client';
+import { MerchantCode, Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
+import * as numeral from 'numeral';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { AbTransferType } from './enums';
 
 interface ReqConfig {
   method: string;
@@ -20,7 +24,11 @@ interface ResBase {
 
 @Injectable()
 export class AbService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly walletRecService: WalletRecService,
+  ) {}
+  platformCode = 'ab';
   config = {
     operatorId: '3531761',
     apiUrl: 'https://sw2.apidemo.net:8443',
@@ -82,10 +90,10 @@ export class AbService {
       },
       data,
     };
-    console.log(axiosConfig);
+    // console.log(axiosConfig);
     try {
       const res = await axios.request<ResBase>(axiosConfig);
-      console.log(res.data);
+      // console.log(res.data);
       if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
         throw new BadRequestException(res.data.message);
       }
@@ -170,7 +178,6 @@ export class AbService {
       ...res,
     };
   }
-
   async getTables() {
     const reqConfig: ReqConfig = {
       method: 'POST',
@@ -209,11 +216,9 @@ export class AbService {
     return { success: true };
   }
 
-  getValidAuth(reqConfig: ReqConfig, headers) {
-    console.log(reqConfig.data);
-    const md5 = reqConfig.data ? this.getMD5Hash(reqConfig.data) : '';
+  signValidation(reqConfig: ReqConfig, headers) {
+    const md5 = headers['content-md5'] || '';
     const contentType = headers['content-type'] || '';
-    console.log({ md5, contentType });
     const stringToSign =
       reqConfig.method +
       '\n' +
@@ -225,7 +230,15 @@ export class AbService {
       '\n' +
       reqConfig.path;
 
-    return this.getAuthBySignString(stringToSign, this.config.partnerKey);
+    const validAuth = this.getAuthBySignString(
+      stringToSign,
+      this.config.partnerKey,
+    );
+    if (validAuth !== headers.authorization) {
+      console.log(validAuth);
+      console.log(headers.authorization);
+      throw new BadRequestException('驗證不合法');
+    }
   }
 
   async getBalance(username: string, headers) {
@@ -234,10 +247,7 @@ export class AbService {
       path: `/GetBalance/${username}`,
       data: '',
     };
-    const validAuth = this.getValidAuth(reqConfig, headers);
-
-    console.log(headers.authorization);
-    console.log(validAuth);
+    await this.signValidation(reqConfig, headers);
 
     const player = await this.prisma.player.findUnique({
       where: {
@@ -260,16 +270,21 @@ export class AbService {
     };
   }
 
-  async transfer(data: TransferResData, headers) {
+  async cancelTransfer(data: CancelTransferResData, headers) {
     const reqConfig: ReqConfig = {
       method: 'POST',
-      path: `/Transfer`,
+      path: `/CancelTransfer`,
       data,
     };
-    const validAuth = this.getValidAuth(reqConfig, headers);
+    await this.signValidation(reqConfig, headers);
 
-    console.log(headers.authorization);
-    console.log(validAuth);
+    await this.prisma.merchantLog.create({
+      data: {
+        merchant_code: MerchantCode.AB,
+        action: 'CancelTransfer',
+        data: { data, headers } as unknown as Prisma.InputJsonObject,
+      },
+    });
 
     const player = await this.prisma.player.findUnique({
       where: {
@@ -284,6 +299,24 @@ export class AbService {
       };
     }
 
+    const record = await this.prisma.walletRec.findFirst({
+      where: {
+        relative_id: data.originalTranId.toString(),
+      },
+    });
+
+    if (record) {
+      await this.prisma.$transaction([
+        ...(await this.walletRecService.playerCreate({
+          type: WalletRecType.BET_REFOUND,
+          player_id: player.id,
+          amount: -record.amount,
+          source: `ab/${data.originalDetails[0].betNum}`,
+          relative_id: data.tranId.toString(),
+        })),
+      ]);
+    }
+
     return {
       resultCode: 0,
       message: null,
@@ -291,9 +324,176 @@ export class AbService {
       version: new Date().getTime(),
     };
   }
+  async transfer(data: TransferResData, headers) {
+    const reqConfig: ReqConfig = {
+      method: 'POST',
+      path: `/Transfer`,
+      data,
+    };
+    await this.signValidation(reqConfig, headers);
+
+    // 暫時紀錄Log
+    await this.prisma.merchantLog.create({
+      data: {
+        merchant_code: MerchantCode.AB,
+        action: 'Transfer',
+        data: { data, headers } as unknown as Prisma.InputJsonObject,
+      },
+    });
+
+    const player = await this.prisma.player.findUnique({
+      where: {
+        username: data.player.replace(this.config.suffix, ''),
+      },
+    });
+
+    if (!player) {
+      return {
+        resultCode: 10003,
+        message: '玩家帳號不存在',
+      };
+    }
+
+    const detail = data.details[0];
+
+    let type: WalletRecType;
+
+    switch (data.type) {
+      case AbTransferType.BETTING:
+        type = WalletRecType.BETTING;
+        await this.betting(data.tranId.toString(), detail, player.id);
+        await this.prisma.$transaction([
+          ...(await this.walletRecService.playerCreate({
+            type,
+            player_id: player.id,
+            amount: data.amount,
+            source: `ab/${data.type}/${detail.betNum}`,
+            relative_id: data.tranId.toString(),
+          })),
+        ]);
+        break;
+      case AbTransferType.BET_RESULT:
+        type = WalletRecType.BET_RESULT;
+        await this.betResult(data.tranId.toString(), detail, player.id);
+        await this.prisma.$transaction([
+          ...(await this.walletRecService.playerCreate({
+            type,
+            player_id: player.id,
+            amount: data.amount,
+            source: `ab/${data.type}/${detail.betNum}`,
+            relative_id: data.tranId.toString(),
+          })),
+        ]);
+        break;
+      case AbTransferType.PROMOTION:
+        type = WalletRecType.GAME_GIFT;
+        // await this.promotion(
+        //   data.tranId.toString(),
+        //   detail as unknown as EventDetail,
+        //   player.id,
+        // );
+        await this.prisma.$transaction([
+          ...(await this.walletRecService.playerCreate({
+            type,
+            player_id: player.id,
+            amount: data.amount,
+            source: `ab/${data.type}/${
+              (detail as unknown as EventDetail).eventRecordNum
+            }`,
+            relative_id: data.tranId.toString(),
+          })),
+        ]);
+        break;
+
+      default:
+        break;
+    }
+
+    return {
+      resultCode: 0,
+      message: null,
+      balance: numeral(player.balance).add(data.amount).value(),
+      version: new Date().getTime(),
+    };
+  }
+
+  async promotion(trade_no: string, event: EventDetail, player_id: string) {
+    //
+  }
+
+  async betResult(trade_no: string, bet: BetDetail, player_id: string) {
+    await this.prisma.betRecord.update({
+      where: {
+        bet_no_platform_code: {
+          bet_no: bet.betNum.toString(),
+          platform_code: this.platformCode,
+        },
+      },
+      data: {
+        trade_no: {
+          push: trade_no,
+        },
+        round_id: bet.gameRoundId.toString(),
+        table_code: bet.tableName,
+        amount: bet.betAmount,
+        deposit: bet.deposit,
+        bet_target: bet.betType.toString(),
+        commission_type: bet.commission,
+        bet_at: new Date(bet.betTime),
+        ip: bet.ip,
+        player_id,
+        platform_code: this.platformCode,
+        game_code: bet.gameType.toString(),
+      },
+    });
+  }
+
+  async betting(trade_no: string, bet: BetDetail, player_id: string) {
+    await this.prisma.betRecord.upsert({
+      where: {
+        bet_no_platform_code: {
+          bet_no: bet.betNum.toString(),
+          platform_code: this.platformCode,
+        },
+      },
+
+      create: {
+        trade_no,
+        bet_no: bet.betNum.toString(),
+        round_id: bet.gameRoundId.toString(),
+        table_code: bet.tableName,
+        amount: bet.betAmount,
+        deposit: bet.deposit,
+        bet_target: bet.betType.toString(),
+        commission_type: bet.commission,
+        bet_at: new Date(bet.betTime),
+        ip: bet.ip,
+        player_id,
+        platform_code: this.platformCode,
+        game_code: bet.gameType.toString(),
+      },
+      update: {
+        trade_no: {
+          push: trade_no,
+        },
+        bet_no: bet.betNum.toString(),
+        round_id: bet.gameRoundId.toString(),
+        table_code: bet.tableName,
+        amount: bet.betAmount,
+        deposit: bet.deposit,
+        bet_target: bet.betType.toString(),
+        commission_type: bet.commission,
+        bet_at: new Date(bet.betTime),
+        ip: bet.ip,
+        player_id,
+        platform_code: this.platformCode,
+        game_code: bet.gameType.toString(),
+      },
+    });
+  }
 }
 
-export interface Detail {
+export interface BetDetail {
   betNum: number;
   gameRoundId: number;
   status: number;
@@ -316,6 +516,25 @@ export interface TransferResData {
   amount: number;
   currency: string;
   type: number;
+  reason: string;
   isRetry: boolean;
-  details: Detail[];
+  details: BetDetail[];
+}
+
+export interface CancelTransferResData {
+  player: string;
+  reason: string;
+  tranId: number;
+  isRetry: boolean;
+  originalTranId: number;
+  originalDetails: BetDetail[];
+}
+
+export interface EventDetail {
+  amount: number;
+  eventCode: string;
+  eventType: number;
+  settleTime: Date;
+  exchangeRate: number;
+  eventRecordNum: number;
 }

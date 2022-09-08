@@ -259,6 +259,7 @@ model Player {
   bankcard         PlayerCard[]
   wallet_rec       WalletRec[]
   transfer_rec     TransferRec[]
+  bet_records     BetRecord[]
 
   withdraw_nums Int   @default(0)
   balance       Float @default(0)
@@ -395,6 +396,8 @@ model GamePlatform {
   games         Game[]
   category      GameCategory @relation(fields: [category_code], references: [code])
   category_code String
+  exchange_rate Float @default(1) // 兌換台幣匯率
+  bet_records BetRecord[]
 }
 
 model Game {
@@ -404,6 +407,7 @@ model Game {
   sort          Int          @default(0)
   platform      GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
+  bet_records BetRecord[]
 
   // water_rules GameWaterRule[]
 
@@ -463,6 +467,7 @@ model Payway {
 enum MerchantCode {
   QIYU
   ECPAY
+  AB
 }
 
 // 金流廠商
@@ -554,6 +559,7 @@ model MerchantOrder {
 model MerchantLog {
   id            Int          @id @default(autoincrement())
   created_at    DateTime     @default(now()) @db.Timestamptz()
+  action  String?
   merchant_code MerchantCode
   data          Json?
 }
@@ -612,6 +618,46 @@ model Bank {
 //   applicants_max Int // 申請人數上限
 //   each_apply_times Int // 每人可申請次數
 // }
+
+// "betNum": 5123456780000001,
+// "gameRoundId": 512345678,
+// "status": 100,
+// "betAmount": 10.50,
+// "deposit": 0.00,
+// "gameType": 101,
+// "betType": 1002,
+// "commission": 100,
+// "exchangeRate": 1.0000,
+// "betTime": "2020-04-30 16:08:00",
+// "tableName": "B001",
+// "betMethod": 0,
+// "appType": 6,
+// "gameRoundStartTime": "2020-04-30 16:07:30",
+// "ip": "192.168.1.1"
+
+
+model BetRecord {
+  id String @id @default(cuid())
+  bet_no String
+  trade_no String[]
+  player Player @relation(fields: [player_id], references: [id])
+  player_id String
+  round_id String
+  status Int @default(1) // 投注中 投注失敗 未派彩 已派彩 退款
+  amount Float
+  deposit Float @default(0) // 預扣金
+  bet_target String // 下注目標 (莊,閒,和,..)
+  commission_type Int @default(1) // 佣金類型 (一般/免佣)
+  bet_at DateTime @db.Timestamptz()
+  table_code String?
+  ip String?
+  platform GamePlatform @relation(fields: [platform_code], references: [code])
+  platform_code String
+  game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
+  game_code String // 遊戲類型 (普通百家乐,..)
+
+  @@unique([bet_no, platform_code])
+}
 
 
 

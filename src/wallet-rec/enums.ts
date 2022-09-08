@@ -5,11 +5,12 @@ export enum WalletRecType {
   TRANSFER_OUT = 4,
   TRANSFER_IN = 5,
   BETTING = 6,
-  GAME_REFOUND = 7,
-  WIN_LOSE = 8,
+  BET_REFOUND = 7,
+  BET_RESULT = 8,
 
   MANUAL_ADD = 9, // 人工加點
   MANUAL_SUB = 10, // 人工扣點
+  GAME_GIFT = 11, // 紅包
 }
 
 export enum WalletTargetType {
