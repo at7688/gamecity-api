@@ -260,6 +260,7 @@ model Player {
   wallet_rec       WalletRec[]
   transfer_rec     TransferRec[]
   bet_records     BetRecord[]
+  game_accounts     GameAccount[]
 
   withdraw_nums Int   @default(0)
   balance       Float @default(0)
@@ -398,6 +399,7 @@ model GamePlatform {
   category_code String
   exchange_rate Float @default(1) // 兌換台幣匯率
   bet_records BetRecord[]
+  accounts GameAccount[]
 }
 
 model Game {
@@ -467,7 +469,6 @@ model Payway {
 enum MerchantCode {
   QIYU
   ECPAY
-  AB
 }
 
 // 金流廠商
@@ -560,7 +561,7 @@ model MerchantLog {
   id            Int          @id @default(autoincrement())
   created_at    DateTime     @default(now()) @db.Timestamptz()
   action  String?
-  merchant_code MerchantCode
+  merchant_code String
   data          Json?
 }
 
@@ -642,21 +643,35 @@ model BetRecord {
   trade_no String[]
   player Player @relation(fields: [player_id], references: [id])
   player_id String
-  round_id String
-  status Int @default(1) // 投注中 投注失敗 未派彩 已派彩 退款
+  round_id String?
+  status Int @default(1) // 投注中 已派彩 已退款
   amount Float
-  deposit Float @default(0) // 預扣金
-  bet_target String // 下注目標 (莊,閒,和,..)
-  commission_type Int @default(1) // 佣金類型 (一般/免佣)
+  deposit Float? @default(0) // 預扣金
+  bet_target String? // 下注目標 (莊,閒,和,..)
+  commission_type Int? @default(1) // 佣金類型 (一般/免佣)
   bet_at DateTime @db.Timestamptz()
   table_code String?
   ip String?
   platform GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
-  game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
-  game_code String // 遊戲類型 (普通百家乐,..)
+  game Game? @relation(fields: [game_code, platform_code], references: [code, platform_code])
+  game_code String? // 遊戲類型 (普通百家乐,..)
 
   @@unique([bet_no, platform_code])
+}
+
+model GameAccount {
+  id Int @id @default(autoincrement())
+  platform GamePlatform @relation(fields: [platform_code], references: [code])
+  platform_code String
+  account String
+  password String?
+  player Player @relation(fields: [player_id], references: [id])
+  player_id String
+  created_at DateTime @default(now()) @db.Timestamptz()
+
+  @@unique([platform_code, account])
+  @@unique([platform_code, player_id])
 }
 
 

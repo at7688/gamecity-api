@@ -3,6 +3,7 @@ import { MerchantCode, Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
 import * as numeral from 'numeral';
+import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
@@ -29,17 +30,15 @@ export class AbService {
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'ab';
-  config = {
-    operatorId: '3531761',
-    apiUrl: 'https://sw2.apidemo.net:8443',
-    allBetKey:
-      'Vc3TE5weapnq5uH6V+TmPsDfLZuL5K6omE7CZTVo8KoiXKOFwLgyp7yxaKCa4jhCC0VuaqfXnHfY8GG/TeJg9w==',
-    partnerKey:
-      'FZe/OUOURWKfYTtJFsoUGsXIvsk1uh8BBe9VjjmK3+9SAAGjHN3ECbMqKnV4KV0oRAVDFfU8DW0h+zYd0iT3lg==',
-    contentType: 'application/json; charset=UTF-8',
-    agentAcc: '1vfh4a',
-    suffix: 'gxx',
-  };
+  operatorId = '3531761';
+  apiUrl = 'https://sw2.apidemo.net:8443';
+  allBetKey =
+    'Vc3TE5weapnq5uH6V+TmPsDfLZuL5K6omE7CZTVo8KoiXKOFwLgyp7yxaKCa4jhCC0VuaqfXnHfY8GG/TeJg9w==';
+  partnerKey =
+    'FZe/OUOURWKfYTtJFsoUGsXIvsk1uh8BBe9VjjmK3+9SAAGjHN3ECbMqKnV4KV0oRAVDFfU8DW0h+zYd0iT3lg==';
+  contentType = 'application/json; charset=UTF-8';
+  agentAcc = '1vfh4a';
+  suffix = 'gxx';
   balanceVersion = 0;
 
   getMD5Hash(data: any) {
@@ -59,19 +58,18 @@ export class AbService {
     // Encode (Base64) HMAC SHA1 to generate signature
     const sign = CryptoJS.enc.Base64.stringify(encrypted);
 
-    const ah = `AB ${this.config.operatorId}:${sign}`;
+    const ah = `AB ${this.operatorId}:${sign}`;
 
     return ah;
   }
 
   getAuthorizationHeader(reqConfig: ReqConfig) {
     const { method, path, md5, date } = reqConfig;
-    const { contentType, allBetKey } = this.config;
 
     const stringToSign =
-      method + '\n' + md5 + '\n' + contentType + '\n' + date + '\n' + path;
+      method + '\n' + md5 + '\n' + this.contentType + '\n' + date + '\n' + path;
 
-    return this.getAuthBySignString(stringToSign, allBetKey);
+    return this.getAuthBySignString(stringToSign, this.allBetKey);
   }
 
   async request(reqConfig: ReqConfig) {
@@ -81,10 +79,10 @@ export class AbService {
 
     const axiosConfig: AxiosRequestConfig<any> = {
       method,
-      url: this.config.apiUrl + path,
+      url: this.apiUrl + path,
       headers: {
         Authorization: this.getAuthorizationHeader({ ...reqConfig, md5, date }),
-        'content-type': this.config.contentType,
+        'content-type': this.contentType,
         'content-MD5': md5,
         date,
       },
@@ -109,7 +107,7 @@ export class AbService {
       method: 'POST',
       path: '/GetAgentHandicaps',
       data: {
-        agent: this.config.agentAcc,
+        agent: this.agentAcc,
       },
     };
     const res = await this.request(reqConfig);
@@ -121,12 +119,21 @@ export class AbService {
       method: 'POST',
       path: '/CheckOrCreate',
       data: {
-        agent: this.config.agentAcc,
-        player: player.username + this.config.suffix,
+        agent: this.agentAcc,
+        player: player.username + this.suffix,
       },
     };
 
     await this.request(reqConfig);
+
+    // 新增廠商對應遊戲帳號
+    await this.prisma.gameAccount.create({
+      data: {
+        platform_code: this.platformCode,
+        player_id: player.id,
+        account: player.username + this.suffix,
+      },
+    });
 
     return {
       success: true,
@@ -134,14 +141,23 @@ export class AbService {
   }
 
   async login(player: Player) {
-    // // 新檢查或新增玩家帳號至歐博
-    // await this.createPlayer(player);
+    const gameAcc = await this.prisma.gameAccount.findUnique({
+      where: {
+        platform_code_player_id: {
+          platform_code: this.platformCode,
+          player_id: player.id,
+        },
+      },
+    });
 
+    if (!gameAcc) {
+      await this.createPlayer(player);
+    }
     const reqConfig: ReqConfig = {
       method: 'POST',
       path: '/Login',
       data: {
-        player: player.username + this.config.suffix,
+        player: player.username + this.suffix,
         language: 'zh_TW',
         returnUrl: 'https://gamecityad.kidult.one/login',
       },
@@ -157,7 +173,7 @@ export class AbService {
       method: 'POST',
       path: '/Logout',
       data: {
-        player: player.username + this.config.suffix,
+        player: player.username + this.suffix,
       },
     };
     const res = await this.request(reqConfig);
@@ -170,7 +186,7 @@ export class AbService {
       method: 'POST',
       path: '/GetPlayerSetting',
       data: {
-        player: player.username + this.config.suffix,
+        player: player.username + this.suffix,
       },
     };
     const res = await this.request(reqConfig);
@@ -183,7 +199,7 @@ export class AbService {
       method: 'POST',
       path: '/GetGameTables',
       data: {
-        agent: this.config.agentAcc,
+        agent: this.agentAcc,
       },
     };
     const res = await this.request(reqConfig);
@@ -230,10 +246,7 @@ export class AbService {
       '\n' +
       reqConfig.path;
 
-    const validAuth = this.getAuthBySignString(
-      stringToSign,
-      this.config.partnerKey,
-    );
+    const validAuth = this.getAuthBySignString(stringToSign, this.partnerKey);
     if (validAuth !== headers.authorization) {
       console.log(validAuth);
       console.log(headers.authorization);
@@ -251,7 +264,7 @@ export class AbService {
 
     const player = await this.prisma.player.findUnique({
       where: {
-        username: username.replace(this.config.suffix, ''),
+        username: username.replace(this.suffix, ''),
       },
     });
 
@@ -280,7 +293,7 @@ export class AbService {
 
     await this.prisma.merchantLog.create({
       data: {
-        merchant_code: MerchantCode.AB,
+        merchant_code: this.platformCode,
         action: 'CancelTransfer',
         data: { data, headers } as unknown as Prisma.InputJsonObject,
       },
@@ -288,7 +301,7 @@ export class AbService {
 
     const player = await this.prisma.player.findUnique({
       where: {
-        username: data.player.replace(this.config.suffix, ''),
+        username: data.player.replace(this.suffix, ''),
       },
     });
 
@@ -335,7 +348,7 @@ export class AbService {
     // 暫時紀錄Log
     await this.prisma.merchantLog.create({
       data: {
-        merchant_code: MerchantCode.AB,
+        merchant_code: this.platformCode,
         action: 'Transfer',
         data: { data, headers } as unknown as Prisma.InputJsonObject,
       },
@@ -343,7 +356,7 @@ export class AbService {
 
     const player = await this.prisma.player.findUnique({
       where: {
-        username: data.player.replace(this.config.suffix, ''),
+        username: data.player.replace(this.suffix, ''),
       },
     });
 
@@ -433,6 +446,7 @@ export class AbService {
         trade_no: {
           push: trade_no,
         },
+        status: BetRecordStatus.DONE,
         round_id: bet.gameRoundId.toString(),
         table_code: bet.tableName,
         amount: bet.betAmount,

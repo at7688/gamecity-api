@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "BetRecord" ALTER COLUMN "round_id" DROP NOT NULL,
+ALTER COLUMN "deposit" DROP NOT NULL,
+ALTER COLUMN "commission_type" DROP NOT NULL,
+ALTER COLUMN "game_code" DROP NOT NULL;

@@ -49,6 +49,7 @@ import { PageContentModule } from './page-content/page-content.module';
 import { AbService } from './game-merchant/ab/ab.service';
 import { GameMerchantModule } from './game-merchant/game-merchant.module';
 import { BetRecordModule } from './bet-record/bet-record.module';
+import { GameAccountModule } from './game-account/game-account.module';
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { BetRecordModule } from './bet-record/bet-record.module';
     PageContentModule,
     GameMerchantModule,
     BetRecordModule,
+    GameAccountModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
