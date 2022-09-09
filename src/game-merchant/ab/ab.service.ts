@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { MerchantCode, Player, Prisma } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
 import * as numeral from 'numeral';
@@ -7,21 +7,16 @@ import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import { AbTransferType } from './enums';
-
-interface ReqConfig {
-  method: string;
-  path: string;
-  data: any;
-  md5?: string;
-  date?: string;
-}
-
-interface ResBase {
-  resultCode: string;
-  message?: string;
-  data?: any;
-}
+import {
+  AbBetDetail,
+  AbBetResultDetail,
+  AbCancelTransferResData,
+  AbEventDetail,
+  AbReqConfig,
+  AbResBase,
+  AbTransferResData,
+  AbTransferType,
+} from './types';
 
 @Injectable()
 export class AbService {
@@ -63,7 +58,7 @@ export class AbService {
     return ah;
   }
 
-  getAuthorizationHeader(reqConfig: ReqConfig) {
+  getAuthorizationHeader(reqConfig: AbReqConfig) {
     const { method, path, md5, date } = reqConfig;
 
     const stringToSign =
@@ -72,7 +67,7 @@ export class AbService {
     return this.getAuthBySignString(stringToSign, this.allBetKey);
   }
 
-  async request(reqConfig: ReqConfig) {
+  async request(reqConfig: AbReqConfig) {
     const { method, path, data } = reqConfig;
     const md5 = this.getMD5Hash(data);
     const date = this.getDateTime();
@@ -90,7 +85,7 @@ export class AbService {
     };
     // console.log(axiosConfig);
     try {
-      const res = await axios.request<ResBase>(axiosConfig);
+      const res = await axios.request<AbResBase>(axiosConfig);
       // console.log(res.data);
       if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
         throw new BadRequestException(res.data.message);
@@ -103,7 +98,7 @@ export class AbService {
   }
 
   async getAgentHandicaps() {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/GetAgentHandicaps',
       data: {
@@ -115,7 +110,7 @@ export class AbService {
   }
 
   async createPlayer(player: Player) {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/CheckOrCreate',
       data: {
@@ -153,7 +148,7 @@ export class AbService {
     if (!gameAcc) {
       await this.createPlayer(player);
     }
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/Login',
       data: {
@@ -169,7 +164,7 @@ export class AbService {
     };
   }
   async logout(player: Player) {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/Logout',
       data: {
@@ -182,7 +177,7 @@ export class AbService {
     };
   }
   async getPlayer(player: Player) {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/GetPlayerSetting',
       data: {
@@ -195,7 +190,7 @@ export class AbService {
     };
   }
   async getTables() {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/GetGameTables',
       data: {
@@ -209,7 +204,7 @@ export class AbService {
     };
   }
   async getMaintenance() {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/GetMaintenanceState',
       data: {},
@@ -220,7 +215,7 @@ export class AbService {
   }
   async setMaintenance(state: 1 | 0) {
     // 維護中(1), 正常(0)
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/SetMaintenanceState',
       data: {
@@ -232,7 +227,7 @@ export class AbService {
     return { success: true };
   }
 
-  signValidation(reqConfig: ReqConfig, headers) {
+  signValidation(reqConfig: AbReqConfig, headers) {
     const md5 = headers['content-md5'] || '';
     const contentType = headers['content-type'] || '';
     const stringToSign =
@@ -255,7 +250,7 @@ export class AbService {
   }
 
   async getBalance(username: string, headers) {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'GET',
       path: `/GetBalance/${username}`,
       data: '',
@@ -283,8 +278,8 @@ export class AbService {
     };
   }
 
-  async cancelTransfer(data: CancelTransferResData, headers) {
-    const reqConfig: ReqConfig = {
+  async cancelTransfer(data: AbCancelTransferResData, headers) {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: `/CancelTransfer`,
       data,
@@ -337,8 +332,8 @@ export class AbService {
       version: new Date().getTime(),
     };
   }
-  async transfer(data: TransferResData, headers) {
-    const reqConfig: ReqConfig = {
+  async transfer(data: AbTransferResData, headers) {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: `/Transfer`,
       data,
@@ -374,7 +369,7 @@ export class AbService {
     switch (data.type) {
       case AbTransferType.BETTING:
         type = WalletRecType.BETTING;
-        await this.betting(data.tranId.toString(), detail, player.id);
+        await this.betting(detail, player.id);
         await this.prisma.$transaction([
           ...(await this.walletRecService.playerCreate({
             type,
@@ -387,7 +382,7 @@ export class AbService {
         break;
       case AbTransferType.BET_RESULT:
         type = WalletRecType.BET_RESULT;
-        await this.betResult(data.tranId.toString(), detail, player.id);
+        await this.betResult(detail as AbBetResultDetail);
         await this.prisma.$transaction([
           ...(await this.walletRecService.playerCreate({
             type,
@@ -400,18 +395,14 @@ export class AbService {
         break;
       case AbTransferType.PROMOTION:
         type = WalletRecType.GAME_GIFT;
-        // await this.promotion(
-        //   data.tranId.toString(),
-        //   detail as unknown as EventDetail,
-        //   player.id,
-        // );
+
         await this.prisma.$transaction([
           ...(await this.walletRecService.playerCreate({
             type,
             player_id: player.id,
             amount: data.amount,
             source: `ab/${data.type}/${
-              (detail as unknown as EventDetail).eventRecordNum
+              (detail as unknown as AbEventDetail).eventRecordNum
             }`,
             relative_id: data.tranId.toString(),
           })),
@@ -430,11 +421,11 @@ export class AbService {
     };
   }
 
-  async promotion(trade_no: string, event: EventDetail, player_id: string) {
+  async promotion(event: AbEventDetail, player_id: string) {
     //
   }
 
-  async betResult(trade_no: string, bet: BetDetail, player_id: string) {
+  async betResult(bet: AbBetResultDetail) {
     await this.prisma.betRecord.update({
       where: {
         bet_no_platform_code: {
@@ -443,26 +434,13 @@ export class AbService {
         },
       },
       data: {
-        trade_no: {
-          push: trade_no,
-        },
         status: BetRecordStatus.DONE,
-        round_id: bet.gameRoundId.toString(),
-        table_code: bet.tableName,
-        amount: bet.betAmount,
-        deposit: bet.deposit,
-        bet_target: bet.betType.toString(),
-        commission_type: bet.commission,
-        bet_at: new Date(bet.betTime),
-        ip: bet.ip,
-        player_id,
-        platform_code: this.platformCode,
-        game_code: bet.gameType.toString(),
+        win_lose_amount: bet.winOrLossAmount,
       },
     });
   }
 
-  async betting(trade_no: string, bet: BetDetail, player_id: string) {
+  async betting(bet: AbBetDetail, player_id: string) {
     await this.prisma.betRecord.upsert({
       where: {
         bet_no_platform_code: {
@@ -472,83 +450,23 @@ export class AbService {
       },
 
       create: {
-        trade_no,
         bet_no: bet.betNum.toString(),
-        round_id: bet.gameRoundId.toString(),
-        table_code: bet.tableName,
         amount: bet.betAmount,
-        deposit: bet.deposit,
         bet_target: bet.betType.toString(),
-        commission_type: bet.commission,
         bet_at: new Date(bet.betTime),
-        ip: bet.ip,
         player_id,
         platform_code: this.platformCode,
         game_code: bet.gameType.toString(),
       },
       update: {
-        trade_no: {
-          push: trade_no,
-        },
         bet_no: bet.betNum.toString(),
-        round_id: bet.gameRoundId.toString(),
-        table_code: bet.tableName,
         amount: bet.betAmount,
-        deposit: bet.deposit,
         bet_target: bet.betType.toString(),
-        commission_type: bet.commission,
         bet_at: new Date(bet.betTime),
-        ip: bet.ip,
         player_id,
         platform_code: this.platformCode,
         game_code: bet.gameType.toString(),
       },
     });
   }
-}
-
-export interface BetDetail {
-  betNum: number;
-  gameRoundId: number;
-  status: number;
-  betAmount: number;
-  deposit: number;
-  gameType: number;
-  betType: number;
-  commission: number;
-  exchangeRate: number;
-  betTime: Date;
-  tableName: string;
-  betMethod: number;
-  appType: number;
-  gameRoundStartTime: Date;
-  ip: string;
-}
-export interface TransferResData {
-  tranId: number;
-  player: string;
-  amount: number;
-  currency: string;
-  type: number;
-  reason: string;
-  isRetry: boolean;
-  details: BetDetail[];
-}
-
-export interface CancelTransferResData {
-  player: string;
-  reason: string;
-  tranId: number;
-  isRetry: boolean;
-  originalTranId: number;
-  originalDetails: BetDetail[];
-}
-
-export interface EventDetail {
-  amount: number;
-  eventCode: string;
-  eventType: number;
-  settleTime: Date;
-  exchangeRate: number;
-  eventRecordNum: number;
 }

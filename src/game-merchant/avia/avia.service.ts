@@ -279,6 +279,7 @@ export class AviaService {
       },
       data: {
         status: BetRecordStatus.DONE,
+        win_lose_amount: +data.Money,
       },
     });
   }
@@ -286,7 +287,6 @@ export class AviaService {
   async betting(data: AviaTransferCbReq, player_id: string) {
     await this.prisma.betRecord.create({
       data: {
-        trade_no: data.ID,
         bet_no: data.ID,
         amount: -data.Money,
         bet_at: new Date(+data.Timestamp),

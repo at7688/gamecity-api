@@ -640,18 +640,13 @@ model Bank {
 model BetRecord {
   id String @id @default(cuid())
   bet_no String
-  trade_no String[]
   player Player @relation(fields: [player_id], references: [id])
   player_id String
-  round_id String?
   status Int @default(1) // 投注中 已派彩 已退款
   amount Float
-  deposit Float? @default(0) // 預扣金
+  win_lose_amount Float?
   bet_target String? // 下注目標 (莊,閒,和,..)
-  commission_type Int? @default(1) // 佣金類型 (一般/免佣)
   bet_at DateTime @db.Timestamptz()
-  table_code String?
-  ip String?
   platform GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
   game Game? @relation(fields: [game_code, platform_code], references: [code, platform_code])

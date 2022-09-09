@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
 import { Public } from 'src/metas/public.meta';
 import { AbService } from './ab.service';
-import { AbTransferType } from './enums';
 
 @Controller('ab/cb')
 @Public()
@@ -10,7 +9,6 @@ export class AbCbController {
 
   @Get('GetBalance/:username')
   getBalance(@Param('username') username: string, @Headers() headers) {
-    console.log(headers);
     return this.abService.getBalance(username, headers);
   }
 
@@ -20,7 +18,6 @@ export class AbCbController {
   }
   @Post('CancelTransfer')
   cancelTransfer(@Body() body, @Headers() headers) {
-    console.log(headers);
     return this.abService.cancelTransfer(body, headers);
   }
 }
