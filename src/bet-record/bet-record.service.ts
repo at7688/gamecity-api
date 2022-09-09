@@ -1,9 +1,7 @@
-import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { BetCreateInput } from './type';
-import { WalletRecType } from 'src/wallet-rec/enums';
-import { Player } from '@prisma/client';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 
 @Injectable()
 export class BetRecordService {
@@ -11,6 +9,11 @@ export class BetRecordService {
     private readonly prisma: PrismaService,
     private readonly walletRecService: WalletRecService,
   ) {}
+
+  // @Cron(CronExpression.EVERY_10_SECONDS)
+  // fetchAbBetRecord() {
+  //   console.log('hi');
+  // }
 
   // async create(diffAmount: number, data: BetCreateInput) {
   //   const record = await this.prisma.betRecord.create({

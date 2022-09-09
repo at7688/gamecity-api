@@ -5,8 +5,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
 
-  // @Cron(CronExpression.EVERY_10_SECONDS)
-  // logTest() {
-  //   this.logger.debug('CronExpression.EVERY_10_SECONDS');
-  // }
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  logTest() {
+    this.logger.debug('CronExpression.EVERY_10_SECONDS');
+  }
 }

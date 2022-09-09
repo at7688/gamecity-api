@@ -389,6 +389,15 @@ model GameCategory {
   platforms GamePlatform[]
 }
 
+model Maintenance {
+  id Int @id @default(autoincrement())
+  target_type Int // 主站 遊戲商
+  platform GamePlatform? @relation(fields: [platform_code], references: [code])
+  platform_code String?
+  start_at   DateTime? @db.Timestamptz()
+  end_at     DateTime? @db.Timestamptz()
+}
+
 model GamePlatform {
   code          String       @id
   name          String
@@ -400,6 +409,8 @@ model GamePlatform {
   exchange_rate Float @default(1) // 兌換台幣匯率
   bet_records BetRecord[]
   accounts GameAccount[]
+  currency Int @default(1) // 新台幣 人民幣...
+  maintenance Maintenance[]
 }
 
 model Game {
