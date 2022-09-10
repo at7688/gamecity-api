@@ -8,6 +8,7 @@ import { AviaService } from './avia.service';
 import {
   AviaBalanceCbReq,
   AviaCbRes,
+  AviaTradeCheckCbReq,
   AviaTransferCbReq,
   AviaTransferType,
 } from './types';
@@ -20,7 +21,7 @@ export class AviaCbService {
     private readonly aviaService: AviaService,
   ) {}
 
-  async getBalance(data: AviaBalanceCbReq, headers): Promise<AviaCbRes> {
+  async getBalance(data: AviaBalanceCbReq): Promise<AviaCbRes> {
     const isValid = await this.aviaService.signValidation(data);
     if (!isValid) {
       return {
@@ -52,7 +53,7 @@ export class AviaCbService {
     };
   }
 
-  async transfer(data: AviaTransferCbReq, headers): Promise<AviaCbRes> {
+  async transfer(data: AviaTransferCbReq): Promise<AviaCbRes> {
     const isValid = await this.aviaService.signValidation(data);
     if (!isValid) {
       return {
@@ -81,11 +82,11 @@ export class AviaCbService {
         return this.betResult(data, player.id);
       case AviaTransferType.PROMOTION:
         return this.promotion(data, player.id);
+      case AviaTransferType.BET_RESULT_MANUAL:
+        return this.reSettle(data, player.id);
+      case AviaTransferType.BET_REFOUND:
+        return this.refund(data, player.id);
     }
-    return {
-      success: 0,
-      msg: 'ERROR',
-    };
   }
 
   async promotion(data: AviaTransferCbReq, player_id: string) {
@@ -97,6 +98,80 @@ export class AviaCbService {
         data: data as unknown as Prisma.InputJsonObject,
       },
     });
+
+    await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.GAME_GIFT,
+        player_id,
+        amount: +data.Money,
+        source: `${this.aviaService.platformCode}/${data.Type}/${data.Description}`,
+        relative_id: data.ID,
+      })),
+    ]);
+    return {
+      success: 1,
+      msg: '',
+    };
+  }
+  async reSettle(data: AviaTransferCbReq, player_id: string) {
+    // 暫時紀錄Log
+    await this.prisma.merchantLog.create({
+      data: {
+        merchant_code: this.aviaService.platformCode,
+        action: 'ReSettle',
+        data: data as unknown as Prisma.InputJsonObject,
+      },
+    });
+
+    const tradeID = data.ID.split('-')[0];
+
+    await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type:
+          +data.Money > 0 ? WalletRecType.MANUAL_ADD : WalletRecType.MANUAL_SUB,
+        player_id,
+        amount: +data.Money,
+        source: `${this.aviaService.platformCode}/${data.Type}/${data.Description}`,
+        relative_id: tradeID,
+      })),
+      this.prisma.betRecord.update({
+        where: {
+          bet_no_platform_code: {
+            bet_no: tradeID,
+            platform_code: this.aviaService.platformCode,
+          },
+        },
+        data: {
+          status: BetRecordStatus.DONE,
+          win_lose_amount: +data.Money,
+        },
+      }),
+    ]);
+
+    return {
+      success: 1,
+      msg: '',
+    };
+  }
+  async refund(data: AviaTransferCbReq, player_id: string) {
+    // 暫時紀錄Log
+    await this.prisma.merchantLog.create({
+      data: {
+        merchant_code: this.aviaService.platformCode,
+        action: 'Refund',
+        data: data as unknown as Prisma.InputJsonObject,
+      },
+    });
+
+    await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.BET_REFOUND,
+        player_id,
+        amount: +data.Money,
+        source: `${this.aviaService.platformCode}/${data.Type}/${data.Description}`,
+        relative_id: data.ID,
+      })),
+    ]);
     return {
       success: 1,
       msg: '',
@@ -169,6 +244,41 @@ export class AviaCbService {
     return {
       success: 1,
       msg: '',
+    };
+  }
+
+  async tradeCheck(data: AviaTradeCheckCbReq) {
+    // 暫時紀錄Log
+    await this.prisma.merchantLog.create({
+      data: {
+        merchant_code: this.aviaService.platformCode,
+        action: 'TradeCheck',
+        data: data as unknown as Prisma.InputJsonObject,
+      },
+    });
+    const record = await this.prisma.betRecord.findUnique({
+      where: {
+        bet_no_platform_code: {
+          bet_no: data.ID,
+          platform_code: this.aviaService.platformCode,
+        },
+      },
+    });
+    if (!record) {
+      return {
+        success: 1,
+        msg: '',
+        info: {
+          Exists: 0,
+        },
+      };
+    }
+    return {
+      success: 1,
+      msg: '',
+      info: {
+        Exists: 1,
+      },
     };
   }
 }

@@ -10,14 +10,14 @@ export class AviaCbController {
   constructor(private readonly aviaCbService: AviaCbService) {}
 
   @Post()
-  callback(@Body() body: AviaCbReq, @Headers() headers) {
+  callback(@Body() body: AviaCbReq) {
     switch (body.Action) {
       case AviaActionType.GET_BALANCE:
-        return this.aviaCbService.getBalance(body, headers);
+        return this.aviaCbService.getBalance(body);
       case AviaActionType.TRANSFER:
-        return this.aviaCbService.transfer(body, headers);
+        return this.aviaCbService.transfer(body);
       case AviaActionType.TRADE_CHECK:
-      // return this.aviaService.transfer(body, headers);
+        return this.aviaCbService.tradeCheck(body);
     }
   }
 }
