@@ -656,12 +656,12 @@ model BetRecord {
   status Int @default(1) // 投注中 已派彩 已退款
   amount Float
   win_lose_amount Float?
-  bet_target String? // 下注目標 (莊,閒,和,..)
   bet_at DateTime @db.Timestamptz()
   platform GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
   game Game? @relation(fields: [game_code, platform_code], references: [code, platform_code])
   game_code String? // 遊戲類型 (普通百家乐,..)
+  bet_target String? // 下注目標 (莊,閒,和,..)
 
   @@unique([bet_no, platform_code])
 }

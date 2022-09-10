@@ -13,6 +13,7 @@ import * as IP from 'ip';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
 import { LoginDto } from './dto/login.dto';
+import { JwtParams } from './types';
 
 export type MenuWithSubMenu = Menu & {
   sub_menus: Menu[];
@@ -276,5 +277,9 @@ export class AuthService {
         'admin_role_id' in user ? user.admin_role.code : 'AGENT',
       ),
     };
+  }
+
+  playerValidate(token: string) {
+    return this.jwtService.decode(token) as JwtParams;
   }
 }
