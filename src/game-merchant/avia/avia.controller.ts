@@ -21,4 +21,12 @@ export class AviaController {
   logout(@User() player: Player) {
     return this.aviaService.logout(player);
   }
+  @Post('records')
+  fetchBetRecords(@Body('start') start, @Body('end') end) {
+    return this.aviaService.fetchBetRecords(new Date(start), new Date(end));
+  }
+  @Get('record/:id')
+  fetchBetRecord(@Param('id') id) {
+    return this.aviaService.fetchBetRecord(id);
+  }
 }

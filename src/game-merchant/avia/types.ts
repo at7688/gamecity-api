@@ -48,3 +48,15 @@ export interface AviaCbRes {
   msg: string;
   info?: any;
 }
+
+export interface AviaReqConfig {
+  method: string;
+  url: string;
+  data: any;
+}
+
+export interface AviaResBase {
+  success: 1 | 0;
+  msg?: string;
+  info?: any;
+}

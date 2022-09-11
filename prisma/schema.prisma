@@ -411,6 +411,7 @@ model GamePlatform {
   accounts GameAccount[]
   currency Int @default(1) // 新台幣 人民幣...
   maintenance Maintenance[]
+  record_check_at DateTime? @db.Timestamptz()
 }
 
 model Game {
@@ -662,6 +663,7 @@ model BetRecord {
   game Game? @relation(fields: [game_code, platform_code], references: [code, platform_code])
   game_code String? // 遊戲類型 (普通百家乐,..)
   bet_target String? // 下注目標 (莊,閒,和,..)
+  bet_detail Json?
 
   @@unique([bet_no, platform_code])
 }

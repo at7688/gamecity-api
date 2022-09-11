@@ -9,6 +9,7 @@ import { AviaCbController } from './avia/avia.cb.controller';
 import { AviaCbService } from './avia/avia.cb.service';
 import { AviaController } from './avia/avia.controller';
 import { AviaService } from './avia/avia.service';
+import { AviaTaskService } from './avia/avia.task.service';
 import { BwinCbController } from './bwin/bwin.cb.controller';
 import { BwinCbService } from './bwin/bwin.cb.service';
 import { BwinController } from './bwin/bwin.controller';
@@ -29,6 +30,7 @@ import { BwinService } from './bwin/bwin.service';
     AbCbService,
     AviaService,
     AviaCbService,
+    AviaTaskService,
     BwinService,
     BwinCbService,
   ],

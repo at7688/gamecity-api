@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { PlatformType } from '@prisma/client';
+import { Platforms } from 'src/metas/platforms.meta';
 import { Public } from 'src/metas/public.meta';
 import { CreateGameDto } from './dto/create-game.dto';
 import { CreateGamesDto } from './dto/create-games.dto';
@@ -14,6 +16,7 @@ export class GameController {
   }
 
   @Post('batch')
+  // @Platforms([PlatformType.PLAYER])
   batchCreate(@Body() body: CreateGamesDto) {
     return this.gameService.createMany(body);
   }

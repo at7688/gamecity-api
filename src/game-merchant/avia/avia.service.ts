@@ -12,21 +12,13 @@ import {
   AviaBalanceCbReq,
   AviaCbReq,
   AviaCbRes,
+  AviaReqConfig,
+  AviaResBase,
   AviaTransferCbReq,
   AviaTransferType,
 } from './types';
-
-interface ReqConfig {
-  method: string;
-  url: string;
-  data: any;
-}
-
-interface ResBase {
-  success: 1 | 0;
-  msg?: string;
-  info?: any;
-}
+import { format, sub, subDays, subHours } from 'date-fns';
+import { AviaBetRecordsRes, AviaBetStatus } from './types/fetchBetRecords';
 
 @Injectable()
 export class AviaService {
@@ -40,7 +32,7 @@ export class AviaService {
 
   pwSuffix = 'd3c';
 
-  async request(reqConfig: ReqConfig) {
+  async request<T extends AviaResBase>(reqConfig: AviaReqConfig) {
     const { method, url, data } = reqConfig;
 
     const formData = new FormData();
@@ -61,7 +53,7 @@ export class AviaService {
     };
     // console.log(axiosConfig);
     try {
-      const res = await axios.request<ResBase>(axiosConfig);
+      const res = await axios.request<T>(axiosConfig);
       if (res.data.success === 0) {
         throw new Error(res.data.msg);
       }
@@ -85,7 +77,7 @@ export class AviaService {
   }
 
   async createPlayer(player: Player) {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AviaReqConfig = {
       method: 'POST',
       url: '/api/user/register',
       data: {
@@ -131,7 +123,7 @@ export class AviaService {
       await this.createPlayer(player);
     }
 
-    const reqConfig: ReqConfig = {
+    const reqConfig: AviaReqConfig = {
       method: 'POST',
       url: '/api/user/login',
       data: {
@@ -146,7 +138,7 @@ export class AviaService {
     };
   }
   async logout(player: Player) {
-    const reqConfig: ReqConfig = {
+    const reqConfig: AviaReqConfig = {
       method: 'POST',
       url: '/api/user/logout',
       data: {
@@ -156,6 +148,61 @@ export class AviaService {
     await this.request(reqConfig);
     return {
       success: true,
+    };
+  }
+
+  async fetchBetRecords(
+    start: Date = subHours(new Date(), 2),
+    end: Date = subHours(new Date(), 1),
+  ) {
+    const reqConfig: AviaReqConfig = {
+      method: 'POST',
+      url: '/api/log/get',
+      data: {
+        StartAt: format(start, 'yyyy-MM-dd HH:mm:ss'),
+        EndAt: format(end, 'yyyy-MM-dd HH:mm:ss'),
+      },
+    };
+    const res = await this.request<AviaBetRecordsRes>(reqConfig);
+
+    await Promise.all(
+      res.info.list.map((t) =>
+        this.prisma.betRecord.update({
+          where: {
+            bet_no_platform_code: {
+              bet_no: t.OrderID,
+              platform_code: this.platformCode,
+            },
+          },
+          data: {
+            bet_detail: t as unknown as Prisma.InputJsonObject,
+            win_lose_amount: t.Status !== AviaBetStatus.None ? +t.Money : null,
+            bet_target: t.Content,
+            game_code: t.Type,
+            status:
+              t.Status !== AviaBetStatus.None
+                ? BetRecordStatus.DONE
+                : BetRecordStatus.BETTING,
+          },
+        }),
+      ),
+    );
+
+    return {
+      data: res.info,
+    };
+  }
+  async fetchBetRecord(bet_no: string) {
+    const reqConfig: AviaReqConfig = {
+      method: 'POST',
+      url: '/api/log/order',
+      data: {
+        OrderID: bet_no,
+      },
+    };
+    const data = await this.request(reqConfig);
+    return {
+      data: data.info,
     };
   }
 }
