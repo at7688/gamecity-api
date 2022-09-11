@@ -144,6 +144,7 @@ export class AviaCbService {
         data: {
           status: BetRecordStatus.DONE,
           win_lose_amount: +data.Money,
+          result_at: new Date(+data.Timestamp),
         },
       }),
     ]);

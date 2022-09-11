@@ -94,6 +94,7 @@ export class BwinCbService {
         data: {
           status: BetRecordStatus.DONE,
           win_lose_amount: data.amount / 100,
+          result_at: new Date(data.roundUpdatedAt),
         },
       }),
     ]);
@@ -138,6 +139,7 @@ export class BwinCbService {
         },
         data: {
           status: BetRecordStatus.REFUND,
+          result_at: new Date(data.roundUpdatedAt),
         },
       }),
     ]);

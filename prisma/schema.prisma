@@ -659,6 +659,7 @@ model BetRecord {
   valid_amount Float?
   win_lose_amount Float?
   bet_at DateTime @db.Timestamptz()
+  result_at DateTime? @db.Timestamptz()
   platform GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
   game Game? @relation(fields: [game_code, platform_code], references: [code, platform_code])

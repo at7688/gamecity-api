@@ -94,6 +94,7 @@ export class AbCbService {
           where: { id: record.id },
           data: {
             status: BetRecordStatus.REFUND,
+            // result_at: new Date(),
           },
         }),
         ...(await this.walletRecService.playerCreate({
@@ -205,6 +206,7 @@ export class AbCbService {
           status: BetRecordStatus.DONE,
           win_lose_amount: bet.winOrLossAmount,
           valid_amount: bet.validAmount,
+          result_at: bet.gameRoundEndTime,
         },
       }),
     ]);

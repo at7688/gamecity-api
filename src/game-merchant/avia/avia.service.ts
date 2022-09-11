@@ -179,6 +179,7 @@ export class AviaService {
             win_lose_amount: t.Status !== AviaBetStatus.None ? +t.Money : null,
             bet_target: t.Content,
             game_code: t.Type,
+            result_at: new Date(+t.Timestamp),
             status:
               t.Status !== AviaBetStatus.None
                 ? BetRecordStatus.DONE
