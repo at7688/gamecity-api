@@ -61,7 +61,7 @@ export class AbCbService {
       data: {
         merchant_code: this.abService.platformCode,
         action: 'CancelTransfer',
-        data: { data, headers } as unknown as Prisma.InputJsonObject,
+        data: data as unknown as Prisma.InputJsonObject,
       },
     });
 
@@ -145,13 +145,6 @@ export class AbCbService {
       default:
         break;
     }
-
-    return {
-      resultCode: 0,
-      message: null,
-      balance: numeral(player.balance).add(data.amount).value(),
-      version: new Date().getTime(),
-    };
   }
 
   async promotion(data: AbPromotionRes, player: Player) {
@@ -175,6 +168,12 @@ export class AbCbService {
         relative_id: data.tranId.toString(),
       })),
     ]);
+    return {
+      resultCode: 0,
+      message: null,
+      balance: numeral(player.balance).add(data.amount).value(),
+      version: new Date().getTime(),
+    };
   }
 
   async betResult(data: AbBetResultRes, player: Player) {
@@ -208,6 +207,12 @@ export class AbCbService {
         },
       }),
     ]);
+    return {
+      resultCode: 0,
+      message: null,
+      balance: numeral(player.balance).add(data.amount).value(),
+      version: new Date().getTime(),
+    };
   }
 
   async betting(data: AbBetRes, player: Player) {
@@ -252,5 +257,11 @@ export class AbCbService {
         },
       }),
     ]);
+    return {
+      resultCode: 0,
+      message: null,
+      balance: numeral(player.balance).add(data.amount).value(),
+      version: new Date().getTime(),
+    };
   }
 }

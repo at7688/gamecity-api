@@ -8,19 +8,19 @@ export interface AbCancelBetRes {
 }
 
 export interface AbCancelBetDetail {
+  ip: string;
   betNum: number;
-  gameRoundId: number;
   status: number;
-  betAmount: number;
+  appType: number;
+  betTime: Date;
+  betType: number;
   deposit: number;
   gameType: number;
-  betType: number;
-  commission: number;
-  exchangeRate: number;
-  betTime: Date;
-  tableName: string;
+  betAmount: number;
   betMethod: number;
-  appType: number;
+  tableName: string;
+  commission: number;
+  gameRoundId: number;
+  exchangeRate: number;
   gameRoundStartTime: Date;
-  ip: string;
 }
