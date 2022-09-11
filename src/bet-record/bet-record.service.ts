@@ -10,28 +10,7 @@ export class BetRecordService {
     private readonly walletRecService: WalletRecService,
   ) {}
 
-  // @Cron(CronExpression.EVERY_10_SECONDS)
-  // fetchAbBetRecord() {
-  //   console.log('hi');
-  // }
-
-  // async create(diffAmount: number, data: BetCreateInput) {
-  //   const record = await this.prisma.betRecord.create({
-  //     data,
-  //     include: { game: true, platform: true },
-  //   });
-  //   await this.prisma.$transaction([
-  //     this.prisma.betRecord.create({
-  //       data,
-  //     }),
-  //     ...(await this.walletRecService.playerCreate({
-  //       type: WalletRecType.BETTING,
-  //       player_id: data.player_id,
-  //       amount: diffAmount,
-  //       source: `${record.platform.name}|${record.game.code}`,
-  //       relative_id: record.bet_no,
-  //     })),
-  //   ]);
-  //   return { success: true };
-  // }
+  findAll() {
+    // return this.prisma.betRecord.findMany({ where });
+  }
 }

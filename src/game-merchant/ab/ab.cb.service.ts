@@ -204,6 +204,7 @@ export class AbCbService {
         data: {
           status: BetRecordStatus.DONE,
           win_lose_amount: bet.winOrLossAmount,
+          valid_amount: bet.validAmount,
         },
       }),
     ]);

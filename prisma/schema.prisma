@@ -656,6 +656,7 @@ model BetRecord {
   player_id String
   status Int @default(1) // 投注中 已派彩 已退款
   amount Float
+  valid_amount Float?
   win_lose_amount Float?
   bet_at DateTime @db.Timestamptz()
   platform GamePlatform @relation(fields: [platform_code], references: [code])
