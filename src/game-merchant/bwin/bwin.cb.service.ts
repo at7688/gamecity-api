@@ -123,7 +123,7 @@ export class BwinCbService {
 
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.BET_REFOUND,
+        type: WalletRecType.BET_REFUND,
         player_id: player.id,
         amount: data.amount / 100,
         source: `${this.bwinService.platformCode}/${data.gameId}/${data.productId}`,
@@ -137,7 +137,7 @@ export class BwinCbService {
           },
         },
         data: {
-          status: BetRecordStatus.REFOUND,
+          status: BetRecordStatus.REFUND,
         },
       }),
     ]);

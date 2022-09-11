@@ -91,7 +91,7 @@ export class AbCbService {
     if (record) {
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
-          type: WalletRecType.BET_REFOUND,
+          type: WalletRecType.BET_REFUND,
           player_id: player.id,
           amount: -record.amount,
           source: `ab/${data.originalDetails[0].betNum}`,

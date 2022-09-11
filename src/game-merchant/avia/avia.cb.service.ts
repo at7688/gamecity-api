@@ -84,7 +84,7 @@ export class AviaCbService {
         return this.promotion(data, player.id);
       case AviaTransferType.BET_RESULT_MANUAL:
         return this.reSettle(data, player.id);
-      case AviaTransferType.BET_REFOUND:
+      case AviaTransferType.BET_REFUND:
         return this.refund(data, player.id);
     }
   }
@@ -165,7 +165,7 @@ export class AviaCbService {
 
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.BET_REFOUND,
+        type: WalletRecType.BET_REFUND,
         player_id,
         amount: +data.Money,
         source: `${this.aviaService.platformCode}/${data.Type}/${data.Description}`,

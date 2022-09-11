@@ -5,7 +5,7 @@ export enum WalletRecType {
   TRANSFER_OUT = 4,
   TRANSFER_IN = 5,
   BETTING = 6,
-  BET_REFOUND = 7,
+  BET_REFUND = 7,
   BET_RESULT = 8,
 
   MANUAL_ADD = 9, // 人工加點

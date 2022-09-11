@@ -14,7 +14,7 @@ export interface AviaBalanceCbReq {
 export enum AviaTransferType {
   BETTING = 'Bet',
   BET_RESULT = 'Reward',
-  BET_REFOUND = 'Return',
+  BET_REFUND = 'Return',
   BET_RESULT_MANUAL = 'ReSettlement',
   PROMOTION = 'Event',
 }

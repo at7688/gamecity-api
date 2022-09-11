@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
+import { addHours, format, subHours, subMinutes } from 'date-fns';
 import * as numeral from 'numeral';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -17,6 +18,7 @@ import {
   AbTransferResData,
   AbTransferType,
 } from './types';
+import { AbBetRecordsRes, AbBetStatus } from './types/fetchBetRecords';
 
 @Injectable()
 export class AbService {
@@ -67,7 +69,7 @@ export class AbService {
     return this.getAuthBySignString(stringToSign, this.allBetKey);
   }
 
-  async request(reqConfig: AbReqConfig) {
+  async request<T extends AbResBase>(reqConfig: AbReqConfig) {
     const { method, path, data } = reqConfig;
     const md5 = this.getMD5Hash(data);
     const date = this.getDateTime();
@@ -85,7 +87,7 @@ export class AbService {
     };
     // console.log(axiosConfig);
     try {
-      const res = await axios.request<AbResBase>(axiosConfig);
+      const res = await axios.request<T>(axiosConfig);
       // console.log(res.data);
       if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
         throw new BadRequestException(res.data.message);
@@ -225,6 +227,67 @@ export class AbService {
     await this.request(reqConfig);
 
     return { success: true };
+  }
+
+  async fetchBetRecords(start: Date = subMinutes(new Date(), 30)) {
+    const reqConfig: AbReqConfig = {
+      method: 'POST',
+      path: '/PagingQueryBetRecords',
+      data: {
+        agent: this.agentAcc,
+        startDateTime: format(start, 'yyyy-MM-dd HH:mm:ss'),
+        endDateTime: format(addHours(start, 1), 'yyyy-MM-dd HH:mm:ss'),
+        pageSize: 1000,
+        pageNum: 1,
+      },
+    };
+
+    const res = await this.request<AbBetRecordsRes>(reqConfig);
+
+    if (res.resultCode === 'OK') {
+      await Promise.all(
+        res.data.list.map(async (t) => {
+          try {
+            await this.prisma.betRecord.update({
+              where: {
+                bet_no_platform_code: {
+                  bet_no: t.betNum.toString(),
+                  platform_code: this.platformCode,
+                },
+              },
+              data: {
+                bet_detail: t as unknown as Prisma.InputJsonObject,
+                win_lose_amount: t.winOrLossAmount,
+                // bet_target: t.betType.toString(),
+                // game_code: t.gameType.toString(),
+                status: {
+                  [AbBetStatus.BETTING]: BetRecordStatus.BETTING,
+                  [AbBetStatus.DONE]: BetRecordStatus.DONE,
+                  [AbBetStatus.REFUND]: BetRecordStatus.REFUND,
+                  [AbBetStatus.FAILED]: BetRecordStatus.REFUND,
+                  [AbBetStatus.WATING_RESULT]: BetRecordStatus.BETTING,
+                }[t.status],
+              },
+            });
+          } catch (err) {
+            console.log(t, err);
+          }
+        }),
+      );
+    }
+
+    return res;
+  }
+  async fetchBetRecord(bet_no: string) {
+    const reqConfig: AbReqConfig = {
+      method: 'POST',
+      path: '/QueryBetRecordByBetNum',
+      data: {
+        betNum: bet_no,
+      },
+    };
+
+    return this.request(reqConfig);
   }
 
   signValidation(reqConfig: AbReqConfig, headers) {

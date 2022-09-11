@@ -45,4 +45,13 @@ export class AbController {
   setMaintenance(@Body('state') state) {
     return this.abService.setMaintenance(state);
   }
+
+  @Post('records')
+  fetchBetRecords(@Body('start') start) {
+    return this.abService.fetchBetRecords(new Date(start));
+  }
+  @Get('record/:id')
+  fetchBetRecord(@Param('id') id) {
+    return this.abService.fetchBetRecord(id);
+  }
 }
