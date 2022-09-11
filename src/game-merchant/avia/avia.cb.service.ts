@@ -195,18 +195,6 @@ export class AviaCbService {
         source: `${this.aviaService.platformCode}/${data.Type}/${data.Description}`,
         relative_id: data.ID,
       })),
-      this.prisma.betRecord.update({
-        where: {
-          bet_no_platform_code: {
-            bet_no: data.ID,
-            platform_code: this.aviaService.platformCode,
-          },
-        },
-        data: {
-          status: BetRecordStatus.DONE,
-          win_lose_amount: +data.Money,
-        },
-      }),
     ]);
     return {
       success: 1,

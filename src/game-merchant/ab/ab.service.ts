@@ -2,22 +2,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
-import { addHours, format, subHours, subMinutes } from 'date-fns';
-import * as numeral from 'numeral';
+import { addHours, format, subMinutes } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import {
-  AbBetDetail,
-  AbBetResultDetail,
-  AbCancelTransferResData,
-  AbEventDetail,
-  AbReqConfig,
-  AbResBase,
-  AbTransferResData,
-  AbTransferType,
-} from './types';
+import { AbReqConfig, AbResBase } from './types';
 import { AbBetRecordsRes, AbBetStatus } from './types/fetchBetRecords';
 
 @Injectable()
