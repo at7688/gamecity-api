@@ -23,7 +23,7 @@ export class BwinService {
   platformCode = 'bwin';
   apiUrl = 'https://api-stage.at888888.com/service';
   token =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTU2NywidXNlcklkIjoxNDk5LCJwYXNzd29yZCI6IiQyYiQwNSRtTUNlWEdRWi5US1R6UVFLcEFLY0ouVHNleVhYc2ltN05qdkFYNnVLc3hJT3ZmVlIzZUtFbSIsInVzZXJuYW1lIjoia2lkdWx0Iiwic3ViIjowLCJjdXJyZW5jeSI6IlRXRCIsInBhcmVudElkIjoxLCJpYXQiOjE2NjI3Mjc3MTksImV4cCI6OTAwNzIwMDkxNzQ2ODcxMH0.V17GcF-slyNpxQ7dnsYsDF3f2zgR_rCG9eAr0VbbBh0';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTU2NywidXNlcklkIjoxNDk5LCJwYXNzd29yZCI6IiQyYiQwNSRtTUNlWEdRWi5US1R6UVFLcEFLY0ouVHNleVhYc2ltN05qdkFYNnVLc3hJT3ZmVlIzZUtFbSIsInVzZXJuYW1lIjoia2lkdWx0Iiwic3ViIjowLCJjdXJyZW5jeSI6IlRXRCIsInBhcmVudElkIjoxLCJpYXQiOjE2NjI5ODU1MzksImV4cCI6OTAwNzIwMDkxNzcyNjUzMH0.ky-Eh9E7giLMFGArXFK11Yis2-qqa8Y0rOMvIoBXelg';
   apiKey = '0f12914a-4714-4ed8-8248-2b2cfb473578';
 
   async request<T extends BwinResBase>(
