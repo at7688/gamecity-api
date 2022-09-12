@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateGameRatioDto } from './dto/create-game-ratio.dto';
 import { UpdateGameRatioDto } from './dto/update-game-ratio.dto';
@@ -26,8 +26,17 @@ export class GameRatioService {
         },
       },
     });
-    if (parent) {
-      console.log(parent);
+    let maxRatio = 100;
+    // 有上層代理 但未設置
+    if (parent && !parent.game_ratios[0]) {
+      throw new BadRequestException('請先設定上層代理佔成');
+    }
+    // 有上層代理，最高不能超過該代理佔成
+    if (parent && parent.game_ratios[0]) {
+      maxRatio = parent.game_ratios[0].ratio;
+    }
+    if (ratio > maxRatio) {
+      throw new BadRequestException(`不可超過${maxRatio}`);
     }
 
     // 設置的ratio不能高於上層agent
