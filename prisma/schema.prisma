@@ -266,6 +266,9 @@ model Player {
   balance       Float @default(0)
 
   identity IdentityVerify?
+
+
+  game_ratios GameRatio[]
 }
 
 model Member {
@@ -422,6 +425,7 @@ model Game {
   platform      GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
   bet_records BetRecord[]
+  ratio GameRatio[]
 
   // water_rules GameWaterRule[]
 
@@ -682,6 +686,18 @@ model GameAccount {
 
   @@unique([platform_code, account])
   @@unique([platform_code, player_id])
+}
+
+model GameRatio {
+  id Int @id @default(autoincrement())
+  game_code String
+  platform_code String
+  game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
+  player Player @relation(fields: [player_id], references: [id])
+  player_id String
+  ratio Float
+
+  @@unique([platform_code, game_code, player_id])
 }
 
 
