@@ -39,9 +39,9 @@ export class SearchBetRecordsDto extends PaginateDto {
   @IsOptional()
   bet_no?: string;
 
-  @IsString()
-  @IsOptional()
-  agent_username?: string;
+  // @IsString()
+  // @IsOptional()
+  // agent_username?: string;
 
   @IsEnum(BetRecordStatus, { each: true })
   @IsOptional()
@@ -67,9 +67,9 @@ export class SearchBetRecordsDto extends PaginateDto {
   @IsOptional()
   win_lose_amount_max?: number;
 
-  @IsInt()
-  @IsOptional()
-  win_lose_result?: number; // 0 全部, 1 贏, 2 輸
+  // @IsInt()
+  // @IsOptional()
+  // win_lose_result?: number; // 0 全部, 1 贏, 2 輸
 
   @IsString({ each: true })
   @IsOptional()
