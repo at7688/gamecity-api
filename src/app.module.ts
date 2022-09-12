@@ -50,6 +50,7 @@ import { AbService } from './game-merchant/ab/ab.service';
 import { GameMerchantModule } from './game-merchant/game-merchant.module';
 import { BetRecordModule } from './bet-record/bet-record.module';
 import { GameAccountModule } from './game-account/game-account.module';
+import { GameRatioModule } from './game-ratio/game-ratio.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { GameAccountModule } from './game-account/game-account.module';
     GameMerchantModule,
     BetRecordModule,
     GameAccountModule,
+    GameRatioModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

@@ -267,8 +267,6 @@ model Player {
 
   identity IdentityVerify?
 
-
-  game_ratios GameRatio[]
 }
 
 model Member {
@@ -295,6 +293,8 @@ model Member {
   transfer_sends    TransferRec[] @relation("source")
   transfer_recieves TransferRec[] @relation("target_agent")
   wallet_rec        WalletRec[]
+
+  game_ratios GameRatio[]
 }
 
 model IdentityVerify {
@@ -693,11 +693,11 @@ model GameRatio {
   game_code String
   platform_code String
   game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
-  player Player @relation(fields: [player_id], references: [id])
-  player_id String
+  agent Member @relation(fields: [agent_id], references: [id])
+  agent_id String
   ratio Float
 
-  @@unique([platform_code, game_code, player_id])
+  @@unique([platform_code, game_code, agent_id])
 }
 
 

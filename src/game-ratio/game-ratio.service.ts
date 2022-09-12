@@ -1,0 +1,69 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateGameRatioDto } from './dto/create-game-ratio.dto';
+import { UpdateGameRatioDto } from './dto/update-game-ratio.dto';
+
+@Injectable()
+export class GameRatioService {
+  constructor(private readonly prisma: PrismaService) {}
+  async create(data: CreateGameRatioDto) {
+    const { game_code, platform_code, agent_id, ratio } = data;
+    // 查看上層agent的ratio
+    const parent = await this.prisma.member.findFirst({
+      where: {
+        subs: {
+          some: {
+            id: agent_id,
+          },
+        },
+      },
+      select: {
+        game_ratios: {
+          where: {
+            platform_code,
+            game_code,
+          },
+        },
+      },
+    });
+    if (parent) {
+      console.log(parent);
+    }
+
+    // 設置的ratio不能高於上層agent
+    return this.prisma.gameRatio.upsert({
+      where: {
+        platform_code_game_code_agent_id: {
+          platform_code,
+          game_code,
+          agent_id,
+        },
+      },
+      create: {
+        platform_code,
+        game_code,
+        agent_id,
+        ratio,
+      },
+      update: {
+        ratio,
+      },
+    });
+  }
+
+  findAll() {
+    return `This action returns all gameRatio`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} gameRatio`;
+  }
+
+  update(id: number, updateGameRatioDto: UpdateGameRatioDto) {
+    return `This action updates a #${id} gameRatio`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} gameRatio`;
+  }
+}
