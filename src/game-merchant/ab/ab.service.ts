@@ -5,14 +5,18 @@ import * as CryptoJS from 'crypto-js';
 import { addHours, format, subMinutes } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import { AbReqConfig, AbResBase } from './types';
+import { GameMerchantService } from '../game-merchant.service';
+import { AbCbService } from './ab.cb.service';
+import { AbReqConfig, AbResBase, AbTransferType } from './types';
 import { AbBetRecordsRes, AbBetStatus } from './types/fetchBetRecords';
 
 @Injectable()
 export class AbService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'ab';
@@ -237,6 +241,35 @@ export class AbService {
       await Promise.all(
         res.data.list.map(async (t) => {
           try {
+            const player = await this.prisma.player.findUnique({
+              where: { username: t.player.replace(this.suffix, '') },
+            });
+            const record = await this.prisma.betRecord.findUnique({
+              where: {
+                bet_no_platform_code: {
+                  bet_no: t.betNum.toString(),
+                  platform_code: this.platformCode,
+                },
+              },
+            });
+            if (!record) {
+              await this.prisma.$transaction(
+                await this.walletRecService.playerCreate({
+                  type: WalletRecType.BETTING,
+                  player_id: player.id,
+                  amount: t.betAmount,
+                  source: `${this.platformCode}/${AbTransferType.BETTING}/${t.gameType}`,
+                  relative_id: t.betNum.toString(),
+                }),
+              );
+            }
+            // 上層佔成資訊
+            const [category_code, ratios] =
+              await this.gameMerchantService.getBetInfo(
+                player,
+                this.platformCode,
+                t.gameType.toString(),
+              );
             await this.prisma.betRecord.update({
               where: {
                 bet_no_platform_code: {
@@ -248,6 +281,8 @@ export class AbService {
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 win_lose_amount: t.winOrLossAmount,
                 result_at: new Date(t.gameRoundEndTime),
+                category_code,
+
                 // bet_target: t.betType.toString(),
                 // game_code: t.gameType.toString(),
                 status: {
@@ -257,6 +292,14 @@ export class AbService {
                   [AbBetStatus.FAILED]: BetRecordStatus.REFUND,
                   [AbBetStatus.WATING_RESULT]: BetRecordStatus.BETTING,
                 }[t.status],
+                ratios: {
+                  createMany: {
+                    data: ratios.map((t) => ({
+                      agent_id: t.agent_id,
+                      ratio: t.ratio,
+                    })),
+                  },
+                },
               },
             });
           } catch (err) {

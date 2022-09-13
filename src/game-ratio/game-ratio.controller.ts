@@ -14,8 +14,11 @@ import { UpdateGameRatioDto } from './dto/update-game-ratio.dto';
 import { Public } from 'src/metas/public.meta';
 import { SearchGameRatiosDto } from './dto/search-game-ratios.dto';
 import { BatchSetGameRatioDtos } from './dto/batch-set-game-ratios.dto';
+import { Platforms } from 'src/metas/platforms.meta';
+import { PlatformType } from '@prisma/client';
 
 @Controller('game-ratio')
+@Platforms([PlatformType.PLAYER])
 export class GameRatioController {
   constructor(private readonly gameRatioService: GameRatioService) {}
 

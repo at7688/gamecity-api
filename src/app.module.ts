@@ -16,10 +16,15 @@ import { BankDepositModule } from './bank-deposit/bank-deposit.module';
 import { BankController } from './bank/bank.controller';
 import { BankService } from './bank/bank.service';
 import { BannerModule } from './banner/banner.module';
+import { BetRecordModule } from './bet-record/bet-record.module';
 import { CBankcardModule } from './c-bankcard/c-bankcard.module';
 import { ClientPayModule } from './client-pay/client-pay.module';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { GameAccountModule } from './game-account/game-account.module';
+import { GameMerchantModule } from './game-merchant/game-merchant.module';
 import { GamePlatformModule } from './game-platform/game-platform.module';
+import { GameRatioModule } from './game-ratio/game-ratio.module';
+import { GameReportModule } from './game-report/game-report.module';
 import { GameModule } from './game/game.module';
 import { IdentityModule } from './identity/identity.module';
 import { InboxModule } from './inbox/inbox.module';
@@ -29,6 +34,7 @@ import { MenuModule } from './menu/menu.module';
 import { MerchantOrderModule } from './merchant-order/merchant-order.module';
 import { OperationRecModule } from './operation-rec/operation-rec.module';
 import { PBankcardModule } from './p-bankcard/p-bankcard.module';
+import { PageContentModule } from './page-content/page-content.module';
 import { PaymentDepositModule } from './payment-deposit/payment-deposit.module';
 import { PaymentMerchantModule } from './payment-merchant/payment-merchant.module';
 import { PaymentToolModule } from './payment-tool/payment-tool.module';
@@ -45,13 +51,6 @@ import { UserModule } from './user/user.module';
 import { VipModule } from './vip/vip.module';
 import { WalletRecModule } from './wallet-rec/wallet-rec.module';
 import { WithdrawModule } from './withdraw/withdraw.module';
-import { PageContentModule } from './page-content/page-content.module';
-import { AbService } from './game-merchant/ab/ab.service';
-import { GameMerchantModule } from './game-merchant/game-merchant.module';
-import { BetRecordModule } from './bet-record/bet-record.module';
-import { GameAccountModule } from './game-account/game-account.module';
-import { GameRatioModule } from './game-ratio/game-ratio.module';
-import { GameReportModule } from './game-report/game-report.module';
 
 @Module({
   imports: [
@@ -122,7 +121,6 @@ import { GameReportModule } from './game-report/game-report.module';
       useClass: HttpExceptionFilter,
     },
     BankService,
-    AbService,
   ],
   // exports: [AppService],
 })

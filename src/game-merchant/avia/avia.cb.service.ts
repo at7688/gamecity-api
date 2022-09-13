@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
@@ -77,7 +78,7 @@ export class AviaCbService {
 
     switch (data.Type) {
       case AviaTransferType.BETTING:
-        return this.betting(data, player.id);
+        return this.betting(data, player);
       case AviaTransferType.BET_RESULT:
         return this.betResult(data, player.id);
       case AviaTransferType.PROMOTION:
@@ -203,7 +204,7 @@ export class AviaCbService {
     };
   }
 
-  async betting(data: AviaTransferCbReq, player_id: string) {
+  async betting(data: AviaTransferCbReq, player: Player) {
     // 暫時紀錄Log
     await this.prisma.merchantLog.create({
       data: {
@@ -219,7 +220,7 @@ export class AviaCbService {
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.BETTING,
-        player_id,
+        player_id: player.id,
         amount: +data.Money,
         source: `${this.aviaService.platformCode}/${data.Type}/${data.Description}`,
         relative_id: data.ID,
@@ -229,7 +230,7 @@ export class AviaCbService {
           bet_no: data.ID,
           amount: -data.Money,
           bet_at: new Date(+data.Timestamp),
-          player_id,
+          player_id: player.id,
           category_code: platform.category_code,
           platform_code: this.aviaService.platformCode,
         },

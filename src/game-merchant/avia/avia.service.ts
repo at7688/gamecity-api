@@ -1,30 +1,22 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { MerchantCode, Player, Prisma } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
+import * as CryptoJS from 'crypto-js';
+import { format } from 'date-fns';
 import * as FormData from 'form-data';
 import { orderBy } from 'lodash';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import * as CryptoJS from 'crypto-js';
-import {
-  AviaBalanceCbReq,
-  AviaCbReq,
-  AviaCbRes,
-  AviaReqConfig,
-  AviaResBase,
-  AviaTransferCbReq,
-  AviaTransferType,
-} from './types';
-import { format, sub, subDays, subHours } from 'date-fns';
+import { GameMerchantService } from '../game-merchant.service';
+import { AviaCbReq, AviaReqConfig, AviaResBase } from './types';
 import { AviaBetRecordsRes, AviaBetStatus } from './types/fetchBetRecords';
 
 @Injectable()
 export class AviaService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly walletRecService: WalletRecService,
+    private readonly gameMerchantService: GameMerchantService,
   ) {}
   platformCode = 'avia';
   apiUrl = 'https://api.aviaapi.vip';
@@ -151,10 +143,7 @@ export class AviaService {
     };
   }
 
-  async fetchBetRecords(
-    start: Date = subHours(new Date(), 2),
-    end: Date = subHours(new Date(), 1),
-  ) {
+  async fetchBetRecords(start: Date, end: Date) {
     const reqConfig: AviaReqConfig = {
       method: 'POST',
       url: '/api/log/get',
@@ -166,8 +155,18 @@ export class AviaService {
     const res = await this.request<AviaBetRecordsRes>(reqConfig);
 
     await Promise.all(
-      res.info.list.map((t) =>
-        this.prisma.betRecord.update({
+      res.info.list.map(async (t) => {
+        const player = await this.prisma.player.findUnique({
+          where: { username: t.UserName },
+        });
+        // 上層佔成資訊
+        const [category_code, ratios] =
+          await this.gameMerchantService.getBetInfo(
+            player,
+            this.platformCode,
+            t.Type,
+          );
+        return this.prisma.betRecord.update({
           where: {
             bet_no_platform_code: {
               bet_no: t.OrderID,
@@ -179,14 +178,24 @@ export class AviaService {
             win_lose_amount: t.Status !== AviaBetStatus.None ? +t.Money : null,
             bet_target: t.Content,
             game_code: t.Type,
+            category_code,
+            ratios: {
+              createMany: {
+                data: ratios.map((t) => ({
+                  agent_id: t.agent_id,
+                  ratio: t.ratio,
+                })),
+                skipDuplicates: true,
+              },
+            },
             result_at: new Date(+t.Timestamp),
             status:
               t.Status !== AviaBetStatus.None
                 ? BetRecordStatus.DONE
                 : BetRecordStatus.BETTING,
           },
-        }),
-      ),
+        });
+      }),
     );
 
     return {

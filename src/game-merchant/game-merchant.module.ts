@@ -14,6 +14,7 @@ import { BwinCbController } from './bwin/bwin.cb.controller';
 import { BwinCbService } from './bwin/bwin.cb.service';
 import { BwinController } from './bwin/bwin.controller';
 import { BwinService } from './bwin/bwin.service';
+import { GameMerchantService } from './game-merchant.service';
 
 @Module({
   imports: [WalletRecModule, AuthModule],
@@ -33,6 +34,7 @@ import { BwinService } from './bwin/bwin.service';
     AviaTaskService,
     BwinService,
     BwinCbService,
+    GameMerchantService,
   ],
 })
 export class GameMerchantModule {}

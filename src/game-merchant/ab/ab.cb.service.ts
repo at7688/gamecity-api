@@ -7,6 +7,7 @@ import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { GameMerchantService } from '../game-merchant.service';
 import { AbService } from './ab.service';
 import { AbReqConfig, AbTransferType } from './types';
 import { AbBetRes } from './types/bet';
@@ -20,6 +21,7 @@ export class AbCbService {
     private readonly prisma: PrismaService,
     private readonly walletRecService: WalletRecService,
     private readonly abService: AbService,
+    private readonly gameMerchantService: GameMerchantService,
   ) {}
 
   async getBalance(username: string, headers) {
@@ -189,6 +191,17 @@ export class AbCbService {
       },
     });
     const bet = data.details[0];
+    const record = await this.prisma.betRecord.findUnique({
+      where: {
+        bet_no_platform_code: {
+          bet_no: bet.betNum.toString(),
+          platform_code: this.abService.platformCode,
+        },
+      },
+    });
+    if (!record) {
+      await this.betting(data, player, 'FromBetResult');
+    }
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.BET_RESULT,
@@ -220,63 +233,34 @@ export class AbCbService {
     };
   }
 
-  async betting(data: AbBetRes, player: Player) {
+  async betting(data: AbBetRes, player: Player, action?: string) {
     const platform_code = this.abService.platformCode;
 
     // 暫時紀錄Log
     await this.prisma.merchantLog.create({
       data: {
         merchant_code: platform_code,
-        action: 'Betting',
+        action: action || 'Betting',
         data: data as unknown as Prisma.InputJsonObject,
       },
     });
     const bet = data.details[0];
 
-    const platform = await this.prisma.gamePlatform.findUnique({
-      where: { code: this.abService.platformCode },
-    });
-
     const game_code = bet.gameType.toString();
 
-    // 確認該遊戲有設定值
-    const game = await this.prisma.game.findUnique({
-      where: {
-        code_platform_code: {
-          platform_code,
-          code: game_code,
-        },
-      },
-    });
-
-    if (!game) {
-      throw new BadRequestException('該遊戲未有設定值');
-    }
-
     // 上層佔成資訊
-    const agents = await this.prisma.$queryRaw<ParentBasic[]>(
-      getAllParents(player.agent_id),
+    const [category_code, ratios] = await this.gameMerchantService.getBetInfo(
+      player,
+      platform_code,
+      game_code,
     );
-    const ratios = await Promise.all(
-      agents.map((t) =>
-        this.prisma.gameRatio.findUnique({
-          where: {
-            platform_code_game_code_agent_id: {
-              platform_code,
-              game_code: game.code,
-              agent_id: t.id,
-            },
-          },
-        }),
-      ),
-    );
-    const filteredRatios = compact(ratios);
+
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.BETTING,
         player_id: player.id,
         amount: data.amount,
-        source: `${platform_code}/${data.type}/${bet.betNum}`,
+        source: `${platform_code}/${data.type}/${bet.gameType}`,
         relative_id: bet.betNum.toString(),
       })),
       this.prisma.betRecord.upsert({
@@ -293,14 +277,15 @@ export class AbCbService {
           bet_at: new Date(bet.betTime),
           player_id: player.id,
           platform_code,
-          category_code: platform.category_code,
-          game_code: game.code,
+          category_code,
+          game_code,
           ratios: {
             createMany: {
-              data: filteredRatios.map((t) => ({
+              data: ratios.map((t) => ({
                 agent_id: t.agent_id,
                 ratio: t.ratio,
               })),
+              skipDuplicates: true,
             },
           },
         },
