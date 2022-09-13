@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { SearchBetRecordsDto } from './dto/search-bet-records.dto';
@@ -27,9 +27,25 @@ export class BetRecordService {
       win_lose_amount_min,
       win_lose_amount_max,
       game_codes,
+      agent_username,
       page,
       perpage,
     } = search;
+
+    let playersByAgent = null;
+
+    if (agent_username) {
+      const agent = await this.prisma.member.findUnique({
+        where: { username: agent_username },
+      });
+      if (!agent) {
+        throw new BadRequestException('無此代理');
+      }
+      playersByAgent = await this.prisma.$queryRaw<SubPlayer[]>(
+        subPlayers(agent.id),
+      );
+    }
+
     const findManyArgs: Prisma.BetRecordFindManyArgs = {
       where: {
         bet_at: {
@@ -44,9 +60,20 @@ export class BetRecordService {
           contains: bet_no,
         },
         player: {
-          username: {
-            contains: username,
-          },
+          AND: [
+            {
+              username: {
+                contains: username,
+              },
+            },
+            {
+              id: {
+                in: playersByAgent
+                  ? playersByAgent.map((t) => t.id)
+                  : undefined,
+              },
+            },
+          ],
         },
         status: {
           in: status,
@@ -83,7 +110,24 @@ export class BetRecordService {
             platform: true,
           },
         },
-        ratios: true,
+        ratios: {
+          select: {
+            ratio: true,
+            agent: {
+              select: {
+                id: true,
+                username: true,
+                nickname: true,
+                layer: true,
+              },
+            },
+          },
+          orderBy: {
+            agent: {
+              layer: 'asc',
+            },
+          },
+        },
       },
       orderBy: [
         {

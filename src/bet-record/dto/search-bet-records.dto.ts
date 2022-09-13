@@ -39,9 +39,9 @@ export class SearchBetRecordsDto extends PaginateDto {
   @IsOptional()
   bet_no?: string;
 
-  // @IsString()
-  // @IsOptional()
-  // agent_username?: string;
+  @IsString()
+  @IsOptional()
+  agent_username?: string;
 
   @IsEnum(BetRecordStatus, { each: true })
   @IsOptional()
