@@ -9,18 +9,6 @@ import { BwinService } from './bwin.service';
 import * as CryptoJS from 'crypto-js';
 import { BwinBetReq, BwinResBase } from './types';
 
-interface ReqConfig {
-  method: string;
-  url: string;
-  data: any;
-}
-
-interface ResBase {
-  success: 1 | 0;
-  msg?: string;
-  info?: any;
-}
-
 @Injectable()
 export class BwinCbService {
   constructor(
@@ -177,6 +165,9 @@ export class BwinCbService {
     });
 
     if (!record) {
+      const platform = await this.prisma.gamePlatform.findUnique({
+        where: { code: this.bwinService.platformCode },
+      });
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
           type: WalletRecType.BETTING,
@@ -191,6 +182,7 @@ export class BwinCbService {
             amount: data.amount / 100,
             bet_at: data.roundCreatedAt,
             player_id: player.id,
+            category_code: platform.category_code,
             platform_code: this.bwinService.platformCode,
           },
         }),

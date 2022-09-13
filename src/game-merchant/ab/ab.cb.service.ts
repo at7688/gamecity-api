@@ -233,6 +233,10 @@ export class AbCbService {
     });
     const bet = data.details[0];
 
+    const platform = await this.prisma.gamePlatform.findUnique({
+      where: { code: this.abService.platformCode },
+    });
+
     const game_code = bet.gameType.toString();
 
     // 確認該遊戲有設定值
@@ -289,6 +293,7 @@ export class AbCbService {
           bet_at: new Date(bet.betTime),
           player_id: player.id,
           platform_code,
+          category_code: platform.category_code,
           game_code: game.code,
           ratios: {
             createMany: {

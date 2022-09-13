@@ -416,6 +416,8 @@ model GamePlatform {
   currency Int @default(1) // 新台幣 人民幣...
   maintenance Maintenance[]
   record_check_at DateTime? @db.Timestamptz()
+
+  @@unique([code, category_code])
 }
 
 model Game {
@@ -665,7 +667,8 @@ model BetRecord {
   win_lose_amount Float?
   bet_at DateTime @db.Timestamptz()
   result_at DateTime? @db.Timestamptz()
-  platform GamePlatform @relation(fields: [platform_code], references: [code])
+  platform GamePlatform @relation(fields: [platform_code, category_code], references: [code, category_code])
+  category_code String
   platform_code String
   game Game? @relation(fields: [game_code, platform_code], references: [code, platform_code])
   game_code String? // 遊戲類型 (普通百家乐,..)

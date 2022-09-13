@@ -65,6 +65,7 @@ export class WalletRecService {
   }
 
   async playerCreate(data: CreateWalletRecDto) {
+    console.log(data);
     const {
       type,
       player_id,

@@ -212,6 +212,10 @@ export class AviaCbService {
         data: data as unknown as Prisma.InputJsonObject,
       },
     });
+    const platform = await this.prisma.gamePlatform.findUnique({
+      where: { code: this.aviaService.platformCode },
+    });
+
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.BETTING,
@@ -226,6 +230,7 @@ export class AviaCbService {
           amount: -data.Money,
           bet_at: new Date(+data.Timestamp),
           player_id,
+          category_code: platform.category_code,
           platform_code: this.aviaService.platformCode,
         },
       }),

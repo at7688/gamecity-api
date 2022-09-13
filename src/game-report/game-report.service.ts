@@ -2,13 +2,15 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchGameReportsDto } from './dto/search-game-reports.dto';
-import { gameReport } from './raw/gameReport';
 
 @Injectable()
 export class GameReportService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(search: SearchGameReportsDto) {
+  async findAll(
+    groupBy: 'platform_code' | 'category_code',
+    search: SearchGameReportsDto,
+  ) {
     const {
       category_codes,
       game_ids,
@@ -33,7 +35,7 @@ export class GameReportService {
     }
 
     const result = await this.prisma.betRecord.groupBy({
-      by: ['platform_code'],
+      by: [groupBy],
       where: {
         bet_at: {
           gte: bet_start_at,
@@ -74,6 +76,7 @@ export class GameReportService {
       _sum: { amount: true, valid_amount: true, win_lose_amount: true },
     });
     return result.map((t) => ({
+      category_code: t.category_code,
       platform_code: t.platform_code,
       bet_count: t._count._all,
       bet_amount: +t._sum.amount?.toFixed(2) || 0,
