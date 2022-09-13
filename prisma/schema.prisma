@@ -295,6 +295,7 @@ model Member {
   wallet_rec        WalletRec[]
 
   game_ratios GameRatio[]
+  bet_ratio_rec BetRatioRec[]
 }
 
 model IdentityVerify {
@@ -670,8 +671,18 @@ model BetRecord {
   game_code String? // 遊戲類型 (普通百家乐,..)
   bet_target String? // 下注目標 (莊,閒,和,..)
   bet_detail Json?
+  ratios BetRatioRec[]
 
   @@unique([bet_no, platform_code])
+}
+
+model BetRatioRec {
+  id Int @id @default(autoincrement())
+  agent Member @relation(fields: [agent_id], references: [id])
+  agent_id String
+  bet BetRecord @relation(fields: [bet_id], references: [id])
+  bet_id String
+  ratio Float
 }
 
 model GameAccount {

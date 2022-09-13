@@ -1,5 +1,13 @@
 import { Prisma } from '@prisma/client';
 
+export interface ParentBasic {
+  id: string;
+  parent_id: string;
+  username: string;
+  nickname: string;
+  layer: string;
+}
+
 export const getAllParents = (parent_id: string) => Prisma.sql`
 WITH RECURSIVE getAllParents (id, parent_id, username) AS (
 	(

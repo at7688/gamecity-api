@@ -247,7 +247,7 @@ export class AbService {
               data: {
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 win_lose_amount: t.winOrLossAmount,
-                result_at: t.gameRoundEndTime,
+                result_at: new Date(t.gameRoundEndTime),
                 // bet_target: t.betType.toString(),
                 // game_code: t.gameType.toString(),
                 status: {
