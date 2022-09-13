@@ -51,6 +51,7 @@ import { GameMerchantModule } from './game-merchant/game-merchant.module';
 import { BetRecordModule } from './bet-record/bet-record.module';
 import { GameAccountModule } from './game-account/game-account.module';
 import { GameRatioModule } from './game-ratio/game-ratio.module';
+import { GameReportModule } from './game-report/game-report.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { GameRatioModule } from './game-ratio/game-ratio.module';
     BetRecordModule,
     GameAccountModule,
     GameRatioModule,
+    GameReportModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

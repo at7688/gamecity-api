@@ -26,7 +26,7 @@ export class BetRecordService {
       bet_amount_max,
       win_lose_amount_min,
       win_lose_amount_max,
-      game_codes,
+      game_ids,
       agent_username,
       page,
       perpage,
@@ -93,8 +93,10 @@ export class BetRecordService {
           gte: win_lose_amount_min,
           lte: win_lose_amount_max,
         },
-        game_code: {
-          in: game_codes,
+        game: {
+          id: {
+            in: game_ids,
+          },
         },
       },
       include: {

@@ -73,5 +73,5 @@ export class SearchBetRecordsDto extends PaginateDto {
 
   @IsString({ each: true })
   @IsOptional()
-  game_codes?: string[];
+  game_ids?: string[];
 }
