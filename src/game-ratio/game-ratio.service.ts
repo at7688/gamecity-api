@@ -1,12 +1,23 @@
+import { BatchSetGameRatioDtos } from './dto/batch-set-game-ratios.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateGameRatioDto } from './dto/create-game-ratio.dto';
+import { SearchGameRatiosDto } from './dto/search-game-ratios.dto';
 import { UpdateGameRatioDto } from './dto/update-game-ratio.dto';
 
 @Injectable()
 export class GameRatioService {
   constructor(private readonly prisma: PrismaService) {}
-  async create(data: CreateGameRatioDto) {
+  async batchSet(data: BatchSetGameRatioDtos) {
+    const { platform_code, agent_id, ratios } = data;
+    await Promise.all(
+      ratios.map(({ game_code, ratio }) =>
+        this.set({ platform_code, game_code, agent_id, ratio }),
+      ),
+    );
+    return { success: true };
+  }
+  async set(data: CreateGameRatioDto) {
     const { game_code, platform_code, agent_id, ratio } = data;
     // 查看上層agent的ratio
     const parent = await this.prisma.member.findFirst({
@@ -29,7 +40,7 @@ export class GameRatioService {
     let maxRatio = 100;
     // 有上層代理 但未設置
     if (parent && !parent.game_ratios[0]) {
-      throw new BadRequestException('請先設定上層代理佔成');
+      throw new BadRequestException(`請先設定上層代理佔成 (${game_code})`);
     }
     // 有上層代理，最高不能超過該代理佔成
     if (parent && parent.game_ratios[0]) {
@@ -60,8 +71,16 @@ export class GameRatioService {
     });
   }
 
-  findAll() {
-    return `This action returns all gameRatio`;
+  findAllByPlayer(agent_id: string, search: SearchGameRatiosDto) {
+    const { platform_code, game_code } = search;
+    return this.prisma.gameRatio.findMany({
+      where: {
+        platform_code,
+        game_code,
+        agent_id,
+      },
+      orderBy: [{ platform_code: 'asc' }, { game_code: 'asc' }],
+    });
   }
 
   findOne(id: number) {
