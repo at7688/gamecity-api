@@ -83,6 +83,7 @@ export class BetRecordService {
             platform: true,
           },
         },
+        ratios: true,
       },
       orderBy: [
         {

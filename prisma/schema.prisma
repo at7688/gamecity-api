@@ -677,12 +677,13 @@ model BetRecord {
 }
 
 model BetRatioRec {
-  id Int @id @default(autoincrement())
   agent Member @relation(fields: [agent_id], references: [id])
   agent_id String
   bet BetRecord @relation(fields: [bet_id], references: [id])
   bet_id String
   ratio Float
+
+  @@unique([agent_id, bet_id])
 }
 
 model GameAccount {
