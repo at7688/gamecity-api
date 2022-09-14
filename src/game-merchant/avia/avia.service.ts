@@ -7,7 +7,9 @@ import * as FormData from 'form-data';
 import { orderBy } from 'lodash';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { AbTransferType } from '../ab/types';
 import { GameMerchantService } from '../game-merchant.service';
 import { AviaCbReq, AviaReqConfig, AviaResBase } from './types';
 import { AviaBetRecordsRes, AviaBetStatus } from './types/fetchBetRecords';
@@ -16,9 +18,11 @@ import { AviaBetRecordsRes, AviaBetStatus } from './types/fetchBetRecords';
 export class AviaService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly walletRecService: WalletRecService,
     private readonly gameMerchantService: GameMerchantService,
   ) {}
   platformCode = 'avia';
+  categoryCode = 'VGAME';
   apiUrl = 'https://api.aviaapi.vip';
   apiKey = '35641436c239435fb51a639c93d76d3c';
 
@@ -166,6 +170,33 @@ export class AviaService {
             this.platformCode,
             t.Type,
           );
+
+        const record = await this.prisma.betRecord.findUnique({
+          where: {
+            bet_no_platform_code: {
+              bet_no: t.OrderID,
+              platform_code: this.platformCode,
+            },
+          },
+        });
+
+        if (!record) {
+          await this.prisma.betRecord.create({
+            data: {
+              bet_no: t.OrderID,
+              amount: -t.BetAmount,
+              valid_amount: -t.BetMoney,
+              bet_at: new Date(+t.Timestamp),
+              player_id: player.id,
+              category_code: this.categoryCode,
+              platform_code: this.platformCode,
+              status: BetRecordStatus.REFUND,
+              bet_detail: t as unknown as Prisma.InputJsonObject,
+            },
+          });
+          return;
+        }
+
         return this.prisma.betRecord.update({
           where: {
             bet_no_platform_code: {
@@ -174,6 +205,8 @@ export class AviaService {
             },
           },
           data: {
+            amount: +t.BetAmount,
+            valid_amount: +t.BetMoney,
             bet_detail: t as unknown as Prisma.InputJsonObject,
             win_lose_amount: t.Status !== AviaBetStatus.None ? +t.Money : null,
             bet_target: t.Content,

@@ -5,6 +5,7 @@ import { AbCbController } from './ab/ab.cb.controller';
 import { AbCbService } from './ab/ab.cb.service';
 import { AbController } from './ab/ab.controller';
 import { AbService } from './ab/ab.service';
+import { AbTaskService } from './ab/ab.task.service';
 import { AviaCbController } from './avia/avia.cb.controller';
 import { AviaCbService } from './avia/avia.cb.service';
 import { AviaController } from './avia/avia.controller';
@@ -29,6 +30,7 @@ import { GameMerchantService } from './game-merchant.service';
   providers: [
     AbService,
     AbCbService,
+    AbTaskService,
     AviaService,
     AviaCbService,
     AviaTaskService,

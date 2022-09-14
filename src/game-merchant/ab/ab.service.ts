@@ -20,6 +20,7 @@ export class AbService {
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'ab';
+  categoryCode = 'LIVE';
   operatorId = '3531761';
   apiUrl = 'https://sw2.apidemo.net:8443';
   allBetKey =
@@ -253,15 +254,21 @@ export class AbService {
               },
             });
             if (!record) {
-              await this.prisma.$transaction(
-                await this.walletRecService.playerCreate({
-                  type: WalletRecType.BETTING,
-                  player_id: player.id,
+              await this.prisma.betRecord.create({
+                data: {
+                  bet_no: t.betNum.toString(),
                   amount: t.betAmount,
-                  source: `${this.platformCode}/${AbTransferType.BETTING}/${t.gameType}`,
-                  relative_id: t.betNum.toString(),
-                }),
-              );
+                  bet_target: t.betType.toString(),
+                  bet_at: new Date(t.betTime),
+                  player_id: player.id,
+                  platform_code: this.platformCode,
+                  category_code: this.categoryCode,
+                  game_code: t.gameType.toString(),
+                  status: BetRecordStatus.REFUND,
+                  bet_detail: t as unknown as Prisma.InputJsonObject,
+                },
+              });
+              return;
             }
             // 上層佔成資訊
             const [category_code, ratios] =

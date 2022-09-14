@@ -200,7 +200,26 @@ export class AbCbService {
       },
     });
     if (!record) {
-      await this.betting(data, player, 'FromBetResult');
+      await this.prisma.betRecord.create({
+        data: {
+          bet_no: bet.betNum.toString(),
+          amount: bet.betAmount,
+          bet_target: bet.betType.toString(),
+          bet_at: new Date(bet.betTime),
+          player_id: player.id,
+          platform_code: this.abService.platformCode,
+          category_code: this.abService.categoryCode,
+          game_code: bet.gameType.toString(),
+          status: BetRecordStatus.REFUND,
+          bet_detail: bet as unknown as Prisma.InputJsonObject,
+        },
+      });
+      return {
+        resultCode: 10007,
+        message: '不列記錄',
+        balance: numeral(player.balance).add(data.amount).value(),
+        version: new Date().getTime(),
+      };
     }
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({

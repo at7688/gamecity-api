@@ -4,6 +4,7 @@ import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { SearchBetRecordsDto } from './dto/search-bet-records.dto';
+import { BetRecordStatus } from './enums';
 
 @Injectable()
 export class BetRecordService {

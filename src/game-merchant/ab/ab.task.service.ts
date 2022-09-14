@@ -11,6 +11,6 @@ export class AbTaskService {
   @Cron(CronExpression.EVERY_30_SECONDS)
   async fetchQuickBetRecords() {
     await this.abService.fetchBetRecords(subMinutes(new Date(), 1));
-    this.logger.debug('AVIA_FETCH_BET_RECORDS(EVERY_MINUTE)');
+    this.logger.debug('AB_FETCH_BET_RECORDS(EVERY_MINUTE)');
   }
 }

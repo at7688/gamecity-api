@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
-import { IsDate, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import { BetRecordStatus } from 'src/bet-record/enums';
 
 export class SearchGameReportsDto {
   @IsOptional()
@@ -27,4 +28,8 @@ export class SearchGameReportsDto {
   @IsString({ each: true })
   @IsOptional()
   game_ids?: string[];
+
+  @IsEnum(BetRecordStatus, { each: true })
+  @IsOptional()
+  status?: BetRecordStatus[];
 }

@@ -164,37 +164,34 @@ export class BwinCbService {
       },
     });
 
-    if (!record) {
-      const platform = await this.prisma.gamePlatform.findUnique({
-        where: { code: this.bwinService.platformCode },
-      });
-      await this.prisma.$transaction([
-        ...(await this.walletRecService.playerCreate({
-          type: WalletRecType.BETTING,
-          player_id: player.id,
-          amount: -data.amount / 100,
-          source: `${this.bwinService.platformCode}/${data.gameId}/${data.productId}`,
-          relative_id: data.transactionId.toString(),
-        })),
-        this.prisma.betRecord.create({
-          data: {
-            bet_no: data.transactionId.toString(),
-            amount: data.amount / 100,
-            bet_at: data.roundCreatedAt,
-            player_id: player.id,
-            category_code: platform.category_code,
-            platform_code: this.bwinService.platformCode,
-          },
-        }),
-      ]);
-    }
-
-    const newPlayer = await this.prisma.player.findUnique({
-      where: { username: player.username },
+    const platform = await this.prisma.gamePlatform.findUnique({
+      where: { code: this.bwinService.platformCode },
     });
+    await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.BETTING,
+        player_id: player.id,
+        amount: -data.amount / 100,
+        source: `${this.bwinService.platformCode}/${data.gameId}/${data.productId}`,
+        relative_id: data.transactionId.toString(),
+      })),
+      this.prisma.betRecord.create({
+        data: {
+          bet_no: data.transactionId.toString(),
+          amount: data.amount / 100,
+          bet_at: data.roundCreatedAt,
+          player_id: player.id,
+          category_code: platform.category_code,
+          platform_code: this.bwinService.platformCode,
+        },
+      }),
+    ]);
+    // const newPlayer = await this.prisma.player.findUnique({
+    //   where: { username: player.username },
+    // });
 
     return {
-      data: await this.getHashCb(newPlayer),
+      data: await this.getHashCb(player),
     };
   }
 

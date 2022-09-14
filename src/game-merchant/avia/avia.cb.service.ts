@@ -261,8 +261,8 @@ export class AviaCbService {
     });
     if (!record) {
       return {
-        success: 1,
-        msg: '',
+        success: 0,
+        msg: '無此紀錄',
         info: {
           Exists: 0,
         },

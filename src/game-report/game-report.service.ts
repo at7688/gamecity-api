@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { BetRecordStatus } from 'src/bet-record/enums';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchGameReportsDto } from './dto/search-game-reports.dto';
@@ -18,6 +19,7 @@ export class GameReportService {
       bet_end_at,
       username,
       agent_username,
+      status,
     } = search;
 
     let playersByAgent = null;
@@ -37,6 +39,9 @@ export class GameReportService {
     const result = await this.prisma.betRecord.groupBy({
       by: [groupBy],
       where: {
+        status: {
+          in: status,
+        },
         bet_at: {
           gte: bet_start_at,
           lte: bet_end_at,
