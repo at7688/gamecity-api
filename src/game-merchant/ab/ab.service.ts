@@ -305,6 +305,7 @@ export class AbService {
                       agent_id: t.agent_id,
                       ratio: t.ratio,
                     })),
+                    skipDuplicates: true,
                   },
                 },
               },

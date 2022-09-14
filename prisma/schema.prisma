@@ -344,6 +344,8 @@ model Vip {
   withdraw_fee_2 Float @default(0)
   withdraw_fee_3 Float @default(0)
   withdraw_fee   Float @default(0)
+
+  water GameWater[]
 }
 
 model LoginRec {
@@ -429,7 +431,7 @@ model Game {
   platform_code String
   bet_records BetRecord[]
   ratio GameRatio[]
-
+  water GameWater[]
   // water_rules GameWaterRule[]
 
   @@unique([code, platform_code])
@@ -704,17 +706,27 @@ model GameAccount {
 }
 
 model GameRatio {
-  id Int @id @default(autoincrement())
   game_code String
   platform_code String
   game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
   agent Member @relation(fields: [agent_id], references: [id])
   agent_id String
   ratio Float
+  water Float
 
   @@unique([platform_code, game_code, agent_id])
 }
 
+model GameWater {
+  game_code String
+  platform_code String
+  game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
+  vips Vip @relation(fields: [vip_id], references: [id])
+  vip_id String
+  water Float
+
+  @@unique([platform_code, game_code, vip_id])
+}
 
 
 enum PlatformType {
