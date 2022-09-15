@@ -51,6 +51,7 @@ import { UserModule } from './user/user.module';
 import { VipModule } from './vip/vip.module';
 import { WalletRecModule } from './wallet-rec/wallet-rec.module';
 import { WithdrawModule } from './withdraw/withdraw.module';
+import { PromotionModule } from './promotion/promotion.module';
 
 @Module({
   imports: [
@@ -111,6 +112,7 @@ import { WithdrawModule } from './withdraw/withdraw.module';
     GameAccountModule,
     GameRatioModule,
     GameReportModule,
+    PromotionModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

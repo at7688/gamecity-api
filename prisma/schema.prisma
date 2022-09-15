@@ -338,14 +338,12 @@ model Vip {
   card_rotate       RotationGroup @relation("card", fields: [card_rotate_id], references: [id])
   payment_rotate    RotationGroup @relation("payment", fields: [payment_rotate_id], references: [id])
   players           Player[]
-  // promotions Promotion[]
+  promotions Promotion[]
 
   withdraw_fee_1 Float @default(0)
   withdraw_fee_2 Float @default(0)
   withdraw_fee_3 Float @default(0)
   withdraw_fee   Float @default(0)
-
-  water GameWater[]
 }
 
 model LoginRec {
@@ -432,7 +430,6 @@ model Game {
   bet_records BetRecord[]
   ratio GameRatio[]
   water GameWater[]
-  // water_rules GameWaterRule[]
 
   @@unique([code, platform_code])
 }
@@ -610,52 +607,37 @@ model Bank {
   is_active Boolean @default(true)
 }
 
-// model GameWaterRule {
-//   id Int @id @default(autoincrement())
-//   game Game @relation(fields: [game_id], references: [id])
-//   game_id String
-//   promotion Promotion @relation(fields: [promotion_id], references: [id])
-//   promotion_id String
-//   value Float // 0.01 (1%)
+model GameWater {
+  game_code String
+  platform_code String
+  game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
+  promotion Promotion @relation(fields: [promotion_id], references: [id])
+  promotion_id String
+  water Float // 0.01 (1%)
 
-//   @@unique([game_id, promotion_id])
-// }
+  @@unique([platform_code, game_code , promotion_id])
+}
 
-// model Promotion {
-//   id String @id @default(cuid())
-//   type Int // 充值獎勵 遊戲返水
-//   condition Int // 首次儲值 遊戲有效投注
-//   title String
-//   start_at   DateTime? @db.Timestamptz()
-//   end_at     DateTime? @db.Timestamptz()
-//   is_active Boolean @default(false)
-//   apply_approval_rule Int @default(1) // 人工審核 自動審核
-//   auto_apply_schedule Int? // 立即 每天固定時間 每週固定時間
-//   pay_approval_rule Int @default(1) // 人工派發 自動派發
-//   auto_pay_schedule Int? // 立即 每天固定時間 每週固定時間
-//   vips Vip[]
-//   game_water_rules GameWaterRule[] // 返水活動(遊戲退水%)
-//   rolling_demand Int // 洗碼倍數
-//   reward_max Int // 獎勵金上限
-//   applicants_max Int // 申請人數上限
-//   each_apply_times Int // 每人可申請次數
-// }
 
-// "betNum": 5123456780000001,
-// "gameRoundId": 512345678,
-// "status": 100,
-// "betAmount": 10.50,
-// "deposit": 0.00,
-// "gameType": 101,
-// "betType": 1002,
-// "commission": 100,
-// "exchangeRate": 1.0000,
-// "betTime": "2020-04-30 16:08:00",
-// "tableName": "B001",
-// "betMethod": 0,
-// "appType": 6,
-// "gameRoundStartTime": "2020-04-30 16:07:30",
-// "ip": "192.168.1.1"
+model Promotion {
+  id String @id @default(cuid())
+  type Int // 首儲獎勵 續儲獎勵 遊戲返水
+  title String
+  start_at   DateTime? @db.Timestamptz()
+  end_at     DateTime? @db.Timestamptz()
+  is_active Boolean @default(false)
+  apply_approval_type Int @default(1) // 人工審核 自動審核
+  auto_apply_schedule Int? // 立即 每天固定時間 每週固定時間
+  pay_approval_type Int @default(1) // 人工派發 自動派發
+  auto_pay_schedule Int? // 立即 每天固定時間 每週固定時間
+  vips Vip[]
+  game_water GameWater[] // 返水活動(遊戲退水%)
+  rolling_demand Int @default(1) // 洗碼倍數
+  reward_max Int @default(0) // 獎勵金上限 (0為無上限)
+  applicants_max Int @default(0) // 申請人數上限 (0為無上限)
+  each_apply_times Int @default(1) // 每人可申請次數 (預設1次, 0為無上限)
+}
+
 
 
 model BetRecord {
@@ -712,21 +694,11 @@ model GameRatio {
   agent Member @relation(fields: [agent_id], references: [id])
   agent_id String
   ratio Float
-  water Float
+  water Float @default(0)
 
   @@unique([platform_code, game_code, agent_id])
 }
 
-model GameWater {
-  game_code String
-  platform_code String
-  game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
-  vips Vip @relation(fields: [vip_id], references: [id])
-  vip_id String
-  water Float
-
-  @@unique([platform_code, game_code, vip_id])
-}
 
 
 enum PlatformType {
