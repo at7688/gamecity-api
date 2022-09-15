@@ -16,12 +16,19 @@ import { BwinCbService } from './bwin/bwin.cb.service';
 import { BwinController } from './bwin/bwin.controller';
 import { BwinService } from './bwin/bwin.service';
 import { GameMerchantService } from './game-merchant.service';
+import { OgCbController } from './og/og.cb.controller';
+import { OgCbService } from './og/og.cb.service';
+import { OgController } from './og/og.controller';
+import { OgService } from './og/og.service';
+import { OgTaskService } from './og/og.task.service';
 
 @Module({
   imports: [WalletRecModule, AuthModule],
   controllers: [
     AbController,
     AbCbController,
+    OgController,
+    OgCbController,
     AviaController,
     AviaCbController,
     BwinController,
@@ -31,6 +38,9 @@ import { GameMerchantService } from './game-merchant.service';
     AbService,
     AbCbService,
     AbTaskService,
+    OgService,
+    OgCbService,
+    OgTaskService,
     AviaService,
     AviaCbService,
     AviaTaskService,
