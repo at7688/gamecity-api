@@ -14,6 +14,7 @@ import { OgBetRes } from './types/bet';
 import { OgBetResultRes } from './types/betResult';
 import { OgCancelBetRes } from './types/cancelBet';
 import { OgPromotionRes } from './types/promotion';
+import { OgValidationReq } from './types/validation';
 
 @Injectable()
 export class OgCbService {
@@ -23,6 +24,28 @@ export class OgCbService {
     private readonly ogService: OgService,
     private readonly gameMerchantService: GameMerchantService,
   ) {}
+
+  async authenticate(data: OgValidationReq, headers) {
+    const platform_code = this.ogService.platformCode;
+    // 暫時紀錄Log
+    await this.prisma.merchantLog.create({
+      data: {
+        merchant_code: platform_code,
+        action: 'Authenticate',
+        data: data as unknown as Prisma.InputJsonObject,
+      },
+    });
+
+    const res = {
+      player_status: 'activate',
+      rs_code: 'S-100',
+      rs_message: 'success',
+      token: data.token,
+    };
+    console.log(data);
+
+    return res;
+  }
 
   async getBalance(username: string, headers) {
     const reqConfig: OgReqConfig = {

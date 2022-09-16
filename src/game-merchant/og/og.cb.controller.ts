@@ -18,15 +18,8 @@ export class OgCbController {
   constructor(private readonly ogCbService: OgCbService) {}
 
   @Post('/api/v1/operator/security/authenticate')
-  validation(@Body() body: OgValidationReq) {
-    const res = {
-      player_status: 'activate',
-      rs_code: 'S-100',
-      rs_message: 'success',
-      token: body.token,
-    };
-    console.log(body);
-    return res;
+  validation(@Body() body: OgValidationReq, @Headers() headers) {
+    return this.ogCbService.authenticate(body, headers);
   }
   @Get('GetBalance/:username')
   getBalance(@Param('username') username: string, @Headers() headers) {
