@@ -618,25 +618,56 @@ model GameWater {
   @@unique([platform_code, game_code , promotion_id])
 }
 
+model RechargeReward {
+  promotion Promotion @relation(fields: [promotion_id], references: [id])
+  promotion_id String @unique
+
+  recharge_amount Int
+
+  reward_type Int // 比例, 固定
+  reward_amount Int?
+  reward_percent Float?
+
+  rolling_type Int @default(1) // 洗碼倍數是否含儲值金計算(不含/含)
+
+  @@unique([promotion_id, recharge_amount])
+}
+
 
 model Promotion {
   id String @id @default(cuid())
   type Int // 首儲獎勵 續儲獎勵 遊戲返水
   title String
-  start_at   DateTime? @db.Timestamptz()
-  end_at     DateTime? @db.Timestamptz()
-  is_active Boolean @default(false)
+
+  schedule_type Int @default(1) // (活動期間) 無限期 僅一次 月延續 周延續 日延續
+  start_at   DateTime? @db.Timestamptz() // 無限期則留空
+  end_at     DateTime? @db.Timestamptz() // 無限期則留空
+  settlement_type  Int @default(1) // 活動結束時結算 立即結算
+
+  is_active Boolean @default(false) // 關閉則佔不開放申請
   apply_approval_type Int @default(1) // 人工審核 自動審核
-  auto_apply_schedule Int? // 立即 每天固定時間 每週固定時間
-  pay_approval_type Int @default(1) // 人工派發 自動派發
-  auto_pay_schedule Int? // 立即 每天固定時間 每週固定時間
+  pay_approval_type Int @default(1) // (檔期結束時)審核派發 免審派發
+
   vips Vip[]
-  game_water GameWater[] // 返水活動(遊戲退水%)
-  rolling_demand Int @default(1) // 洗碼倍數
+
   reward_max Int @default(0) // 獎勵金上限 (0為無上限)
+
   applicants_max Int @default(0) // 申請人數上限 (0為無上限)
-  each_apply_times Int @default(1) // 每人可申請次數 (預設1次, 0為無上限)
+
+  apply_times Int @default(0) // 可申請次數 (0為無限制)
+
+  apply_gap Int @default(0) // 申請間隔 (0為不限制, 1小時, 1天, 1週)
+
+  // 返水活動(遊戲退水%)
+  game_water GameWater[]
+
+  rolling_demand Int @default(1) // 洗碼倍數
+
+  // 儲值活動公式
+  recharge_reward RechargeReward?
 }
+
+
 
 
 
