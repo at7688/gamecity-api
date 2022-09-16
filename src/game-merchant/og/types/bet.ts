@@ -1,27 +1,26 @@
-export interface OgBetRes {
-  type: number;
-  amount: number;
-  player: string;
-  tranId: number;
-  details: OgBetDetail[];
-  isRetry: boolean;
+export interface OgBetReq {
+  game_id: number;
+  records: Record[];
   currency: string;
+  round_id: string;
+  called_at: number;
+  player_id: string;
+  signature: string;
+  timestamp: number;
+  total_amount: string;
+  transaction_type: string;
 }
 
-export interface OgBetDetail {
-  ip: string;
-  betNum: number;
-  status: number;
-  appType: number;
-  betTime: Date;
-  betType: number;
-  deposit: number;
-  gameType: number;
-  betAmount: number;
-  betMethod: number;
-  togleName: string;
-  commission: number;
-  gameRoundId: number;
-  exchangeRate: number;
-  gameRoundStartTime: Date;
+export interface Record {
+  amount: string;
+  remark: any[];
+  bet_place: string;
+  other_info: any[];
+  secondary_info: SecondaryInfo;
+  transaction_id: string;
+}
+
+export interface SecondaryInfo {
+  bet_amount: string;
+  detain_amount: string;
 }
