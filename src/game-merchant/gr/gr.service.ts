@@ -49,6 +49,16 @@ export class GrService {
       }
       return res.data;
     } catch (err) {
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'ERROR',
+          path,
+          method,
+          sendData: data,
+          resData: err.response.data,
+        },
+      });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
     }

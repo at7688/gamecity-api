@@ -151,7 +151,7 @@ export class MerchantOrderService {
       await this.prisma.merchantLog.create({
         data: {
           merchant_code: MerchantCode.QIYU,
-          data: data as unknown as Prisma.InputJsonValue,
+          sendData: data as unknown as Prisma.InputJsonValue,
         },
       });
 

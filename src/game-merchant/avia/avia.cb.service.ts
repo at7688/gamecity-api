@@ -96,7 +96,7 @@ export class AviaCbService {
       data: {
         merchant_code: this.aviaService.platformCode,
         action: 'Promotion',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
 
@@ -120,7 +120,7 @@ export class AviaCbService {
       data: {
         merchant_code: this.aviaService.platformCode,
         action: 'ReSettle',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
 
@@ -161,7 +161,7 @@ export class AviaCbService {
       data: {
         merchant_code: this.aviaService.platformCode,
         action: 'Refund',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
 
@@ -186,7 +186,7 @@ export class AviaCbService {
       data: {
         merchant_code: this.aviaService.platformCode,
         action: 'BetResult',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     await this.prisma.$transaction([
@@ -210,7 +210,7 @@ export class AviaCbService {
       data: {
         merchant_code: this.aviaService.platformCode,
         action: 'Betting',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     const platform = await this.prisma.gamePlatform.findUnique({
@@ -248,7 +248,7 @@ export class AviaCbService {
       data: {
         merchant_code: this.aviaService.platformCode,
         action: 'TradeCheck',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     const record = await this.prisma.betRecord.findUnique({

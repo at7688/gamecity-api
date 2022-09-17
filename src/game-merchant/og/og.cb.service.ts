@@ -27,7 +27,7 @@ export class OgCbService {
       data: {
         merchant_code: platform_code,
         action: 'Authenticate',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     const { player_id, token } = data;
@@ -56,7 +56,7 @@ export class OgCbService {
       data: {
         merchant_code: this.ogService.platformCode,
         action: 'GetBalance',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
 
@@ -94,7 +94,7 @@ export class OgCbService {
       data: {
         merchant_code: platform_code,
         action: 'Betting',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
 
@@ -185,7 +185,7 @@ export class OgCbService {
       data: {
         merchant_code: platform_code,
         action: 'BetResult',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
 

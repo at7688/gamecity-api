@@ -24,7 +24,7 @@ export class BwinCbService {
       data: {
         merchant_code: this.bwinService.platformCode,
         action: 'getBalance',
-        data: query.token,
+        sendData: query.token,
       },
     });
     const player = await this.getPlayerByToken(query.token);
@@ -59,7 +59,7 @@ export class BwinCbService {
       data: {
         merchant_code: this.bwinService.platformCode,
         action: 'BetResult',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     const player = await this.getPlayerByToken(data.token);
@@ -97,7 +97,7 @@ export class BwinCbService {
       data: {
         merchant_code: this.bwinService.platformCode,
         action: 'CancelBetting',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     const player = await this.getPlayerByToken(data.token);
@@ -142,7 +142,7 @@ export class BwinCbService {
       data: {
         merchant_code: this.bwinService.platformCode,
         action: 'Betting',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     const player = await this.getPlayerByToken(data.token);
@@ -211,7 +211,7 @@ export class BwinCbService {
       data: {
         merchant_code: this.bwinService.platformCode,
         action: 'PlayerValidate',
-        data: query.token,
+        sendData: query.token,
       },
     });
 
@@ -234,9 +234,7 @@ export class BwinCbService {
       data: {
         merchant_code: this.bwinService.platformCode,
         action: 'PlayerValidateResponse',
-        data: {
-          data: await this.getHashCb(player),
-        },
+        sendData: await this.getHashCb(player),
       },
     });
 

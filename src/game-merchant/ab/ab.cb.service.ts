@@ -65,7 +65,7 @@ export class AbCbService {
       data: {
         merchant_code: this.abService.platformCode,
         action: 'CancelTransfer',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
 
@@ -158,7 +158,7 @@ export class AbCbService {
       data: {
         merchant_code: this.abService.platformCode,
         action: 'Promotion',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
 
@@ -187,7 +187,7 @@ export class AbCbService {
       data: {
         merchant_code: this.abService.platformCode,
         action: 'BetResult',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     const bet = data.details[0];
@@ -260,7 +260,7 @@ export class AbCbService {
       data: {
         merchant_code: platform_code,
         action: action || 'Betting',
-        data: data as unknown as Prisma.InputJsonObject,
+        sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
     const bet = data.details[0];

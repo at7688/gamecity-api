@@ -580,7 +580,10 @@ model MerchantLog {
   created_at    DateTime     @default(now()) @db.Timestamptz()
   action  String?
   merchant_code String
-  data          Json?
+  sendData          Json?
+  resData          Json?
+  path String?
+  method String?
 }
 
 model Image {
