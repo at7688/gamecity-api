@@ -270,7 +270,10 @@ export class AuthService {
     }
   }
 
-  async getLoginInfo(user: LoginUser) {
+  async getLoginInfo(user: LoginUser | Player) {
+    if ('vip_id' in user) {
+      return this.prisma.player.findUnique({ where: { id: user.id } });
+    }
     return {
       user,
       menu: await this.fetchRoleMenu(

@@ -1,95 +1,216 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Player } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import * as CryptoJS from 'crypto-js';
-import { orderBy } from 'lodash';
+import {
+  addHours,
+  addMinutes,
+  format,
+  getUnixTime,
+  subMinutes,
+} from 'date-fns';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import { BwinGameListRes, BwinResBase } from './types';
-
-interface ReqConfig {
-  method: string;
-  url: string;
-  data?: any;
-  query?: any;
-}
-
+import { GameMerchantService } from '../game-merchant.service';
+import { BwinReqBase, BwinResBase } from './types/base';
+import { BwinCreatePlayerReq, BwinCreatePlayerRes } from './types/createPlayer';
+import { BwinGameListReq, BwinGameListRes } from './types/gameList';
+import * as qs from 'query-string';
+import { BwinTransferToReq, BwinTransferToRes } from './types/transferTo';
+import { WalletRecType } from 'src/wallet-rec/enums';
+import { BwinGetBalanceReq, BwinGetBalanceRes } from './types/getBalance';
+import { BwinTransferBackReq, BwinTransferBackRes } from './types/transferBack';
+import { BwinGetGameLinkReq, BwinGetGameLinkRes } from './types/getGameLink';
+import * as numeral from 'numeral';
+import { BwinBetRecordsReq, BwinBetRecordsRes } from './types/fetchBetRecords';
+import { BetRecordStatus } from 'src/bet-record/enums';
 @Injectable()
 export class BwinService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'bwin';
+  categoryCode = 'SLOT';
   apiUrl = 'https://api-stage.at888888.com/service';
-  token =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTU2NywidXNlcklkIjoxNDk5LCJwYXNzd29yZCI6IiQyYiQwNSRtTUNlWEdRWi5US1R6UVFLcEFLY0ouVHNleVhYc2ltN05qdkFYNnVLc3hJT3ZmVlIzZUtFbSIsInVzZXJuYW1lIjoia2lkdWx0Iiwic3ViIjowLCJjdXJyZW5jeSI6IlRXRCIsInBhcmVudElkIjoxLCJpYXQiOjE2NjI5ODU1MzksImV4cCI6OTAwNzIwMDkxNzcyNjUzMH0.ky-Eh9E7giLMFGArXFK11Yis2-qqa8Y0rOMvIoBXelg';
   apiKey = '0f12914a-4714-4ed8-8248-2b2cfb473578';
+  apiToken =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTU2NywidXNlcklkIjoxNDk5LCJwYXNzd29yZCI6IiQyYiQwNSRtTUNlWEdRWi5US1R6UVFLcEFLY0ouVHNleVhYc2ltN05qdkFYNnVLc3hJT3ZmVlIzZUtFbSIsInVzZXJuYW1lIjoia2lkdWx0Iiwic3ViIjowLCJjdXJyZW5jeSI6IlRXRCIsInBhcmVudElkIjoxLCJpYXQiOjE2NjI5ODU1MzksImV4cCI6OTAwNzIwMDkxNzcyNjUzMH0.ky-Eh9E7giLMFGArXFK11Yis2-qqa8Y0rOMvIoBXelg';
+  creditMultiple = 100;
 
-  async request<T extends BwinResBase>(
-    reqConfig: ReqConfig,
-    playerToken?: string,
-  ) {
-    const { method, url, data } = reqConfig;
+  async request<T extends BwinResBase>(reqConfig: BwinReqBase) {
+    const { method, path, data } = reqConfig;
 
     const axiosConfig: AxiosRequestConfig<any> = {
       method,
       baseURL: this.apiUrl,
-      url,
+      url: path,
       headers: {
-        Authorization: 'Bearer ' + this.token,
+        Authorization: 'Bearer ' + this.apiToken,
       },
       data,
     };
-    // console.log(axiosConfig);
     try {
       const res = await axios.request<T>(axiosConfig);
+      console.log(res.data);
       if (res.data.error) {
         throw new Error(res.data.error.message);
       }
       return res.data;
     } catch (err) {
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'ERROR',
+          path,
+          method,
+          sendData: data,
+          resData: err.response.data,
+        },
+      });
       console.log('Error :' + err.message);
-      throw new BadRequestException(err.message);
+      console.log('Error Info:' + JSON.stringify(err.response.data));
     }
   }
 
   async createPlayer(player: Player) {
-    const reqConfig: ReqConfig = {
+    const reqConfig: BwinReqBase<BwinCreatePlayerReq> = {
       method: 'POST',
-      url: '/api/v1/players',
+      path: '/api/v1/players',
       data: {
         username: player.username,
         nickname: player.nickname,
       },
     };
 
-    try {
-      const result = await this.request(reqConfig);
+    await this.request<BwinCreatePlayerRes>(reqConfig);
 
-      // if (result?.error) {
-      //   throw new BadRequestException(result.msg);
-      // }
+    // 新增廠商對應遊戲帳號
+    await this.prisma.gameAccount.create({
+      data: {
+        platform_code: this.platformCode,
+        player_id: player.id,
+        account: player.username,
+      },
+    });
 
-      if (result?.data) {
-        // 新增廠商對應遊戲帳號
-        return this.prisma.gameAccount.create({
-          data: {
-            platform_code: this.platformCode,
-            player_id: player.id,
-            account: player.username,
-          },
-        });
-      }
-    } catch (err) {
-      throw err;
-    }
+    return {
+      success: true,
+    };
   }
 
-  async login(gameUrl: string, player: Player, playerToken: string) {
-    if (!gameUrl) {
-      throw new BadRequestException('gameUrl為空');
+  async getGameList() {
+    const query = qs.stringify({
+      type: 'all',
+      lang: 'zh',
+    });
+    const reqConfig: BwinReqBase<BwinGameListReq> = {
+      method: 'GET',
+      path: `/api/v1/games?${query}`,
+    };
+
+    const res = await this.request<BwinGameListRes>(reqConfig);
+
+    await this.prisma.game.createMany({
+      data: res.data.map((t, i) => ({
+        name: t.name,
+        sort: i,
+        code: t.productId,
+        platform_code: this.platformCode,
+      })),
+      skipDuplicates: true,
+    });
+
+    return res;
+  }
+
+  async getGameLink(productId: string, player: Player) {
+    const query = qs.stringify({
+      productId,
+      player: player.username,
+    });
+
+    const reqConfig: BwinReqBase<BwinGetGameLinkReq> = {
+      method: 'GET',
+      path: `/api/v1/games/gamelink?${query}`,
+    };
+
+    const res = await this.request<BwinGetGameLinkRes>(reqConfig);
+
+    return res.data.url;
+  }
+
+  async transferTo(player: Player) {
+    const [walletRec] = await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.TRANSFER_TO_GAME,
+        player_id: player.id,
+        amount: -player.balance,
+        source: this.platformCode,
+      })),
+    ]);
+
+    const reqConfig: BwinReqBase<BwinTransferToReq> = {
+      method: 'POST',
+      path: '/api/v1/players/deposit',
+      data: {
+        transactionId: walletRec.id,
+        amount: numeral(player.balance).multiply(this.creditMultiple).value(),
+        player: player.username,
+      },
+    };
+
+    const res = await this.request<BwinTransferToRes>(reqConfig);
+
+    if (res.error) {
+      await this.prisma.$transaction([
+        ...(await this.walletRecService.playerCreate({
+          type: WalletRecType.TRANSFER_FROM_GAME,
+          player_id: player.id,
+          amount: player.balance,
+          source: this.platformCode,
+          relative_id: walletRec.id,
+          note: '轉入遊戲失敗',
+        })),
+      ]);
     }
+
+    return res.data;
+  }
+
+  async transferBack(player: Player) {
+    const balance = await this.getBalance(player);
+
+    const [walletRec] = await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.TRANSFER_FROM_GAME,
+        player_id: player.id,
+        amount: balance,
+        source: this.platformCode,
+      })),
+    ]);
+
+    if (balance > 0) {
+      const reqConfig: BwinReqBase<BwinTransferBackReq> = {
+        method: 'POST',
+        path: '/api/v1/players/withdraw',
+        data: {
+          transactionId: walletRec.id,
+          amount: numeral(balance).multiply(this.creditMultiple).value(),
+          player: player.username,
+        },
+      };
+
+      await this.request<BwinTransferBackRes>(reqConfig);
+    }
+
+    return {
+      success: true,
+      balance, // 轉回的餘額
+    };
+  }
+
+  async login(game_id: string, player: Player) {
     const gameAcc = await this.prisma.gameAccount.findUnique({
       where: {
         platform_code_player_id: {
@@ -103,33 +224,111 @@ export class BwinService {
       await this.createPlayer(player);
     }
 
+    const gameUrl = await this.getGameLink(game_id, player);
+
+    const currentPlayer = await this.prisma.player.findUnique({
+      where: { id: player.id },
+    });
+
+    if (currentPlayer.balance) {
+      await this.transferTo(currentPlayer);
+    }
+
     return {
-      url: `${gameUrl}&token=${playerToken}&lang=zh`,
+      path: gameUrl,
     };
   }
-  async logout(player: Player) {
-    const reqConfig: ReqConfig = {
-      method: 'POST',
-      url: '/api/user/logout',
-      data: {
-        UserName: player.username,
-      },
-    };
-    await this.request(reqConfig);
-    return {
-      success: true,
-    };
-  }
-  async gameList(playerToken: string) {
-    const reqConfig: ReqConfig = {
+
+  async getBalance(player: Player) {
+    const reqConfig: BwinReqBase<BwinGetBalanceReq> = {
       method: 'GET',
-      url: '/api/v1/games',
-      query: {
-        type: 'all',
-        lang: 'zh',
+      path: `/api/v1/players?player=${player.username}`,
+    };
+    const res = await this.request<BwinGetBalanceRes>(reqConfig);
+    return numeral(res.data[0].balance).divide(this.creditMultiple).value();
+  }
+
+  async fetchBetRecords(start: Date, end: Date) {
+    const query = qs.stringify({
+      start: getUnixTime(start) * 1000,
+      end: getUnixTime(end) * 1000,
+      pageSize: 10000,
+    });
+    const reqConfig: BwinReqBase<BwinBetRecordsReq> = {
+      method: 'GET',
+      path: `/api/v1/profile/rounds?${query}`,
+    };
+
+    const res = await this.request<BwinBetRecordsRes>(reqConfig);
+
+    await Promise.all(
+      res.data.map(async (t) => {
+        try {
+          const player = await this.prisma.player.findUnique({
+            where: { username: t.player },
+          });
+          if (!player) {
+            // 略過RAW測試帳號
+            return;
+          }
+          // 上層佔成資訊
+          const [category_code, ratios] =
+            await this.gameMerchantService.getBetInfo(
+              player,
+              this.platformCode,
+              t.productId.toString(),
+            );
+          await this.prisma.betRecord.upsert({
+            where: {
+              bet_no_platform_code: {
+                bet_no: t.id.toString(),
+                platform_code: this.platformCode,
+              },
+            },
+            create: {
+              bet_no: t.id.toString(),
+              amount: t.bet,
+              valid_amount: t.validBet,
+              bet_at: new Date(t.createdAt),
+              player_id: player.id,
+              platform_code: this.platformCode,
+              category_code: this.categoryCode,
+              game_code: t.productId,
+              status: {
+                playing: BetRecordStatus.BETTING,
+                finish: BetRecordStatus.DONE,
+                cancel: BetRecordStatus.REFUND,
+              }[t.status],
+              bet_detail: t as unknown as Prisma.InputJsonObject,
+              ratios: {
+                createMany: {
+                  data: ratios.map((r) => ({
+                    agent_id: r.agent_id,
+                    ratio: r.ratio,
+                  })),
+                  skipDuplicates: true,
+                },
+              },
+            },
+            update: {},
+          });
+        } catch (err) {
+          console.log(t, err);
+        }
+      }),
+    );
+
+    return res;
+  }
+  async fetchBetRecord(bet_no: string) {
+    const reqConfig: BwinReqBase = {
+      method: 'POST',
+      path: '/QueryBetRecordByBetNum',
+      data: {
+        betNum: bet_no,
       },
     };
-    const res = await this.request<BwinGameListRes>(reqConfig, playerToken);
-    return res;
+
+    return this.request(reqConfig);
   }
 }

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Request } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Player } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
 import { Platforms } from 'src/metas/platforms.meta';
 import { Public } from 'src/metas/public.meta';
@@ -39,8 +40,8 @@ export class AuthController {
   }
 
   @Get('me')
-  @Platforms(['ADMIN', 'AGENT'])
-  async me(@User() user: LoginUser) {
+  @Platforms(['ADMIN', 'AGENT', 'PLAYER'])
+  async me(@User() user: LoginUser | Player) {
     return this.authService.getLoginInfo(user);
   }
 }

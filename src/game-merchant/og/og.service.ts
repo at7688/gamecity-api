@@ -223,7 +223,7 @@ export class OgService {
     return { success: true };
   }
 
-  async fetchBetRecords(start: Date = subMinutes(new Date(), 30)) {
+  async fetchBetRecords(start: Date) {
     const reqConfig: OgReqConfig = {
       method: 'POST',
       path: '/PagingQueryBetRecords',

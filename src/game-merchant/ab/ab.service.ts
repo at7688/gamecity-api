@@ -223,7 +223,7 @@ export class AbService {
     return { success: true };
   }
 
-  async fetchBetRecords(start: Date = subMinutes(new Date(), 30)) {
+  async fetchBetRecords(start: Date) {
     const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/PagingQueryBetRecords',

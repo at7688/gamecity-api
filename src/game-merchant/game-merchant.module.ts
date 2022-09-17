@@ -11,8 +11,6 @@ import { AviaCbService } from './avia/avia.cb.service';
 import { AviaController } from './avia/avia.controller';
 import { AviaService } from './avia/avia.service';
 import { AviaTaskService } from './avia/avia.task.service';
-import { BwinCbController } from './bwin/bwin.cb.controller';
-import { BwinCbService } from './bwin/bwin.cb.service';
 import { BwinController } from './bwin/bwin.controller';
 import { BwinService } from './bwin/bwin.service';
 import { GameMerchantService } from './game-merchant.service';
@@ -34,7 +32,6 @@ import { OgTaskService } from './og/og.task.service';
     AviaController,
     AviaCbController,
     BwinController,
-    BwinCbController,
     GrController,
   ],
   providers: [
@@ -48,7 +45,6 @@ import { OgTaskService } from './og/og.task.service';
     AviaCbService,
     AviaTaskService,
     BwinService,
-    BwinCbService,
     GrService,
     GameMerchantService,
   ],

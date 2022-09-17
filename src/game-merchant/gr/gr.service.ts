@@ -232,7 +232,7 @@ export class GrService {
     return res.data;
   }
 
-  async fetchBetRecords(start: Date = subMinutes(new Date(), 30)) {
+  async fetchBetRecords(start: Date) {
     const reqConfig: GrReqBase = {
       method: 'POST',
       path: '/PagingQueryBetRecords',

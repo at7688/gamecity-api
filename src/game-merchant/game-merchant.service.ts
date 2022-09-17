@@ -34,7 +34,7 @@ export class GameMerchantService {
   async getBetRatios(player: Player, platform_code: string, game_code: string) {
     // 上層佔成資訊
     const agents = await this.prisma.$queryRaw<ParentBasic[]>(
-      getAllParents(player.agent_id),
+      getAllParents(player?.agent_id),
     );
     const ratios = await Promise.all(
       agents.map((t) =>
