@@ -155,12 +155,18 @@ export class OgCbService {
       }),
     );
 
+    const newPlayer = await this.prisma.player.findUnique({
+      where: {
+        id: player_id,
+      },
+    });
+
     return {
       rs_code: 'S-100',
       rs_message: 'success',
       player_id: player.id,
       total_amount: data.total_amount,
-      updated_balance: player.balance,
+      updated_balance: newPlayer.balance,
       records: JSON.stringify(
         data.records.map((t) => ({
           amount: t.amount,
@@ -205,40 +211,43 @@ export class OgCbService {
     //   game_code,
     // );
 
-    // await Promise.all(
-    //   data.records.map(async (bet) => {
-    //     await this.prisma.$transaction([
-    //       ...(await this.walletRecService.playerCreate({
-    //         type: WalletRecType.BETTING,
-    //         player_id: player.id,
-    //         amount: -bet.amount,
-    //         source: `${platform_code}/${data.transaction_type}/${bet.bet_place}`,
-    //         relative_id: bet.transaction_id,
-    //       })),
-    //       this.prisma.betRecord.create({
-    //         data: {
-    //           bet_no: bet.transaction_id,
-    //           amount: +bet.amount,
-    //           bet_target: bet.bet_place,
-    //           bet_at: new Date(data.called_at * 1000),
-    //           player_id: player.id,
-    //           platform_code,
-    //           category_code: this.ogService.categoryCode,
-    //           // game_code,
-    //           // ratios: {
-    //           //   createMany: {
-    //           //     data: ratios.map((t) => ({
-    //           //       agent_id: t.agent_id,
-    //           //       ratio: t.ratio,
-    //           //     })),
-    //           //     skipDuplicates: true,
-    //           //   },
-    //           // },
-    //         },
-    //       }),
-    //     ]);
-    //   }),
-    // );
+    await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.BETTING,
+        player_id: player.id,
+        amount: +data.amount,
+        source: `${platform_code}/${data.transaction_type}/${data.bet_place}`,
+        relative_id: data.transaction_id,
+      })),
+      this.prisma.betRecord.update({
+        where: {
+          bet_no_platform_code: {
+            platform_code,
+            bet_no: data.transaction_id,
+          },
+        },
+        data: {
+          win_lose_amount: +data.winlose_amount,
+          result_at: new Date(data.called_at * 1000),
+          // game_code,
+          // ratios: {
+          //   createMany: {
+          //     data: ratios.map((t) => ({
+          //       agent_id: t.agent_id,
+          //       ratio: t.ratio,
+          //     })),
+          //     skipDuplicates: true,
+          //   },
+          // },
+        },
+      }),
+    ]);
+
+    const newPlayer = await this.prisma.player.findUnique({
+      where: {
+        id: player_id,
+      },
+    });
 
     return {
       rs_code: 'S-100',
@@ -246,7 +255,7 @@ export class OgCbService {
       player_id: player.id,
       amount: data.amount,
       transaction_id: data.transaction_id,
-      updated_balance: player.balance,
+      updated_balance: newPlayer.balance,
       billing_at: getUnixTime(new Date()),
     };
   }
