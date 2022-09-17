@@ -122,15 +122,11 @@ export class GrService {
   }
 
   async transferTo(player: Player) {
-    const currentPlayer = await this.prisma.player.findUnique({
-      where: { id: player.id },
-    });
-
     const [walletRec] = await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.TRANSFER_TO_GAME,
         player_id: player.id,
-        amount: -currentPlayer.balance,
+        amount: -player.balance,
         source: this.platformCode,
       })),
     ]);
@@ -140,7 +136,7 @@ export class GrService {
       path: '/api/platform/credit_balance_v3',
       data: {
         account: `${player.username}@${this.suffix}`,
-        credit_amount: currentPlayer.balance,
+        credit_amount: player.balance,
         order_id: walletRec.id,
       },
     };
@@ -201,10 +197,15 @@ export class GrService {
 
     const query = qs.stringify({ sid, game_type: game_id });
 
-    const result = await this.transferTo(player);
+    const currentPlayer = await this.prisma.player.findUnique({
+      where: { id: player.id },
+    });
+
+    if (currentPlayer.balance) {
+      await this.transferTo(currentPlayer);
+    }
 
     return {
-      credit: result.balance, // 轉入後，遊戲平台內餘額
       path: `${game_url}?${query}`,
     };
   }
