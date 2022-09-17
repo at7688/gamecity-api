@@ -9,28 +9,29 @@ import { GrService } from './gr.service';
 export class GrController {
   constructor(private readonly grService: GrService) {}
 
-  @Post('create')
-  createPlayer(@User() player: Player) {
-    return this.grService.createPlayer(player);
-  }
+  // @Post('create')
+  // createPlayer(@User() player: Player) {
+  //   return this.grService.createPlayer(player);
+  // }
 
   @Get('games')
   getGameList() {
     return this.grService.getGameList();
   }
 
-  @Post('login')
-  login(@Body('game_id') game_id: string, @User() player: Player) {
+  @Get('login')
+  login(@Query('game_id') game_id: string, @User() player: Player) {
     return this.grService.login(game_id, player);
   }
-  @Post('logout')
-  logout(@User() player: Player) {
-    return this.grService.logout(player);
+
+  @Get('balance')
+  getPlayer(@User() player: Player) {
+    return this.grService.getBalance(player);
   }
 
-  @Post('info')
-  getPlayer(@User() player: Player) {
-    return this.grService.getPlayer(player);
+  @Get('back')
+  transferBack(@User() player: Player) {
+    return this.grService.transferBack(player);
   }
 
   @Post('records')

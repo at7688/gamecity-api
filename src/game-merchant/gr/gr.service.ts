@@ -11,6 +11,10 @@ import { GrBetRecordsRes } from './types/fetchBetRecords';
 import { GrGameListReq, GrGameListRes } from './types/gameList';
 import { GrGetPlayerSidReq, GrGetPlayerSidRes } from './types/getPlayerSid';
 import * as qs from 'query-string';
+import { GrTransferToReq, GrTransferToRes } from './types/transferTo';
+import { WalletRecType } from 'src/wallet-rec/enums';
+import { GrGetBalanceReq, GrGetBalanceRes } from './types/getBalance';
+import { GrTransferBackReq, GrTransferBackRes } from './types/transferBack';
 @Injectable()
 export class GrService {
   constructor(
@@ -117,6 +121,67 @@ export class GrService {
     return res.data;
   }
 
+  async transferTo(player: Player) {
+    const currentPlayer = await this.prisma.player.findUnique({
+      where: { id: player.id },
+    });
+
+    const [walletRec] = await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.TRANSFER_TO_GAME,
+        player_id: player.id,
+        amount: -currentPlayer.balance,
+        source: this.platformCode,
+      })),
+    ]);
+
+    const reqConfig: GrReqBase<GrTransferToReq> = {
+      method: 'POST',
+      path: '/api/platform/credit_balance_v3',
+      data: {
+        account: `${player.username}@${this.suffix}`,
+        credit_amount: currentPlayer.balance,
+        order_id: walletRec.id,
+      },
+    };
+
+    const res = await this.request<GrTransferToRes>(reqConfig);
+
+    return res.data;
+  }
+
+  async transferBack(player: Player) {
+    const { balance, account } = await this.getBalance(player);
+
+    const [walletRec] = await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.TRANSFER_FROM_GAME,
+        player_id: player.id,
+        amount: balance,
+        source: this.platformCode,
+      })),
+    ]);
+
+    if (balance > 0) {
+      const reqConfig: GrReqBase<GrTransferBackReq> = {
+        method: 'POST',
+        path: '/api/platform/debit_balance_v3',
+        data: {
+          account,
+          debit_amount: balance,
+          order_id: walletRec.id,
+        },
+      };
+
+      await this.request<GrTransferBackRes>(reqConfig);
+    }
+
+    return {
+      success: true,
+      balance, // 轉回的餘額
+    };
+  }
+
   async login(game_id: string, player: Player) {
     const gameAcc = await this.prisma.gameAccount.findUnique({
       where: {
@@ -136,32 +201,24 @@ export class GrService {
 
     const query = qs.stringify({ sid, game_type: game_id });
 
+    const result = await this.transferTo(player);
+
     return {
+      credit: result.balance, // 轉入後，遊戲平台內餘額
       path: `${game_url}?${query}`,
     };
   }
 
-  async logout(player: Player) {
-    const reqConfig: GrReqBase = {
+  async getBalance(player: Player) {
+    const reqConfig: GrReqBase<GrGetBalanceReq> = {
       method: 'POST',
-      path: '/logout',
+      path: '/api/platform/get_balance',
       data: {
-        player: player.username + this.suffix,
+        account: `${player.username}@${this.suffix}`,
       },
     };
-    const res = await this.request(reqConfig);
-    return res;
-  }
-  async getPlayer(player: Player) {
-    const reqConfig: GrReqBase = {
-      method: 'POST',
-      path: '/GetPlayerSetting',
-      data: {
-        player: player.username + this.suffix,
-      },
-    };
-    const res = await this.request(reqConfig);
-    return res;
+    const res = await this.request<GrGetBalanceRes>(reqConfig);
+    return res.data;
   }
 
   async fetchBetRecords(start: Date = subMinutes(new Date(), 30)) {

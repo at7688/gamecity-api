@@ -1,16 +1,22 @@
 export enum WalletRecType {
-  PAYMENT_DEPOSIT = 1,
-  BANK_DEPOSIT = 2,
-  WITHDRAW = 3,
-  TRANSFER_OUT = 4,
-  TRANSFER_IN = 5,
-  BETTING = 6,
-  BET_REFUND = 7,
-  BET_RESULT = 8,
+  PAYMENT_DEPOSIT = 11,
+  BANK_DEPOSIT = 12,
 
-  MANUAL_ADD = 9, // 人工加點
-  MANUAL_SUB = 10, // 人工扣點
-  GAME_GIFT = 11, // 紅包
+  WITHDRAW = 21,
+
+  TRANSFER_OUT = 31,
+  TRANSFER_IN = 32,
+
+  MANUAL_ADD = 41, // 人工加點
+  MANUAL_SUB = 42, // 人工扣點
+
+  TRANSFER_TO_GAME = 51,
+  TRANSFER_FROM_GAME = 52,
+
+  BETTING = 61,
+  BET_REFUND = 62,
+  BET_RESULT = 63,
+  GAME_GIFT = 64, // 遊戲商紅包
 }
 
 export enum WalletTargetType {
