@@ -1,10 +1,10 @@
-import { GrBaseRes } from './base';
+import { GrResBase } from './base';
 
 export interface GrGetPlayerSidReq {
   account: string;
 }
 
-export type GrGetPlayerSidRes = GrBaseRes<{
+export type GrGetPlayerSidRes = GrResBase<{
   sid: string;
   account: string;
   expire_time: Date;

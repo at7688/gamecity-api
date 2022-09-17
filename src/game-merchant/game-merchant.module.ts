@@ -16,6 +16,8 @@ import { BwinCbService } from './bwin/bwin.cb.service';
 import { BwinController } from './bwin/bwin.controller';
 import { BwinService } from './bwin/bwin.service';
 import { GameMerchantService } from './game-merchant.service';
+import { GrController } from './gr/gr.controller';
+import { GrService } from './gr/gr.service';
 import { OgCbController } from './og/og.cb.controller';
 import { OgCbService } from './og/og.cb.service';
 import { OgController } from './og/og.controller';
@@ -33,6 +35,7 @@ import { OgTaskService } from './og/og.task.service';
     AviaCbController,
     BwinController,
     BwinCbController,
+    GrController,
   ],
   providers: [
     AbService,
@@ -46,6 +49,7 @@ import { OgTaskService } from './og/og.task.service';
     AviaTaskService,
     BwinService,
     BwinCbService,
+    GrService,
     GameMerchantService,
   ],
 })

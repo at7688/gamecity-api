@@ -13,9 +13,15 @@ export class GrController {
   createPlayer(@User() player: Player) {
     return this.grService.createPlayer(player);
   }
+
+  @Get('games')
+  getGameList() {
+    return this.grService.getGameList();
+  }
+
   @Post('login')
-  login(@User() player: Player) {
-    return this.grService.login(player);
+  login(@Body('game_id') game_id: string, @User() player: Player) {
+    return this.grService.login(game_id, player);
   }
   @Post('logout')
   logout(@User() player: Player) {

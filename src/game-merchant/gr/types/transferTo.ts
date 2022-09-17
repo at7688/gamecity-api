@@ -1,4 +1,4 @@
-import { GrBaseRes } from './base';
+import { GrResBase } from './base';
 
 export interface GrTransferToReq {
   account: string;
@@ -6,7 +6,7 @@ export interface GrTransferToReq {
   order_id: string;
 }
 
-export type GrTransferToRes = GrBaseRes<{
+export type GrTransferToRes = GrResBase<{
   account: string;
   balance: number;
   order_id: string;

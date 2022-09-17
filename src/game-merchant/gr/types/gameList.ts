@@ -1,13 +1,12 @@
-import { GrBaseRes } from './base';
+import { GrResBase } from './base';
 
 export interface GrGameListReq {
   page_index: number;
   page_size: number;
-  display_name: string;
-  site_code: string;
+  language_type: string;
 }
 
-export type GrGameListRes = GrBaseRes<{
+export type GrGameListRes = GrResBase<{
   site_code: string;
   game_list: GrGame[];
   page_index: number;

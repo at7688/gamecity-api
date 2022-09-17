@@ -9,7 +9,7 @@ export class GrTaskService {
   private readonly Logger = new Logger(GrTaskService.name);
 
   @Cron(CronExpression.EVERY_30_SECONDS)
-  async fetchQuickBetRecords() {
+  async fetchGameList() {
     await this.grService.fetchBetRecords(subMinutes(new Date(), 1));
     this.Logger.debug('AB_FETCH_BET_RECORDS(EVERY_MINUTE)');
   }

@@ -1,16 +1,16 @@
-import { GrReqBase } from './types/base';
-import { GrResBase } from './../../../dist/game-merchant/gr/types.d';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Player, Prisma } from '@prisma/client';
+import { Player } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import * as CryptoJS from 'crypto-js';
 import { addHours, format, subMinutes } from 'date-fns';
-import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { GameMerchantService } from '../game-merchant.service';
-import { GrBetRecordsRes, GrBetStatus } from './types/fetchBetRecords';
-
+import { GrReqBase, GrResBase } from './types/base';
+import { GrCreatePlayerReq, GrCreatePlayerRes } from './types/createPlayer';
+import { GrBetRecordsRes } from './types/fetchBetRecords';
+import { GrGameListReq, GrGameListRes } from './types/gameList';
+import { GrGetPlayerSidReq, GrGetPlayerSidRes } from './types/getPlayerSid';
+import * as qs from 'query-string';
 @Injectable()
 export class GrService {
   constructor(
@@ -30,7 +30,8 @@ export class GrService {
 
     const axiosConfig: AxiosRequestConfig<any> = {
       method,
-      url: this.apiUrl + path,
+      baseURL: this.apiUrl,
+      url: path,
       headers: {
         Cookie: `secret_key=${this.secretKey};`,
       },
@@ -38,9 +39,9 @@ export class GrService {
     };
     try {
       const res = await axios.request<T>(axiosConfig);
-      // console.log(res.data);
-      if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
-        throw new BadRequestException(res.data.message);
+      console.log(res.data);
+      if (res.data.status === 'N') {
+        throw new BadRequestException(`${res.data.message}(${res.data.code})`);
       }
       return res.data;
     } catch (err) {
@@ -50,22 +51,24 @@ export class GrService {
   }
 
   async createPlayer(player: Player) {
-    const reqConfig: GrReqBase = {
+    const reqConfig: GrReqBase<GrCreatePlayerReq> = {
       method: 'POST',
-      path: '/CheckOrCreate',
+      path: '/api/platform/reg_user_info',
       data: {
-        player: player.username + this.suffix,
+        account: player.username,
+        display_name: player.nickname,
+        site_code: this.suffix,
       },
     };
 
-    await this.request(reqConfig);
+    await this.request<GrCreatePlayerRes>(reqConfig);
 
     // 新增廠商對應遊戲帳號
     await this.prisma.gameAccount.create({
       data: {
         platform_code: this.platformCode,
         player_id: player.id,
-        account: player.username + this.suffix,
+        account: `${player.username}@${this.suffix}`,
       },
     });
 
@@ -74,7 +77,47 @@ export class GrService {
     };
   }
 
-  async login(player: Player) {
+  async getGameList() {
+    const reqConfig: GrReqBase<GrGameListReq> = {
+      method: 'POST',
+      path: '/api/platform/get_agent_game_list',
+      data: {
+        page_index: 1,
+        page_size: 100,
+        language_type: 'zh_TW',
+      },
+    };
+
+    const res = await this.request<GrGameListRes>(reqConfig);
+
+    await this.prisma.game.createMany({
+      data: res.data.game_list.map((t, i) => ({
+        name: t.game_name,
+        sort: i,
+        code: t.game_type.toString(),
+        platform_code: this.platformCode,
+      })),
+      skipDuplicates: true,
+    });
+
+    return res;
+  }
+
+  async getPlayerSid(account: string) {
+    const reqConfig: GrReqBase<GrGetPlayerSidReq> = {
+      method: 'POST',
+      path: '/api/platform/get_sid_by_account',
+      data: {
+        account,
+      },
+    };
+
+    const res = await this.request<GrGetPlayerSidRes>(reqConfig);
+
+    return res.data;
+  }
+
+  async login(game_id: string, player: Player) {
     const gameAcc = await this.prisma.gameAccount.findUnique({
       where: {
         platform_code_player_id: {
@@ -87,21 +130,17 @@ export class GrService {
     if (!gameAcc) {
       await this.createPlayer(player);
     }
-    const reqConfig: GrReqBase = {
-      method: 'POST',
-      path: '/login',
-      data: {
-        player: player.username + this.suffix,
-        language: 'zh_TW',
-        returnUrl: 'https://gamecityad.kidult.one/login',
-      },
-    };
-    const result = await this.request(reqConfig);
+
+    const account = `${player.username}@${this.suffix}`;
+    const { game_url, sid } = await this.getPlayerSid(account);
+
+    const query = qs.stringify({ sid, game_type: game_id });
 
     return {
-      path: result.data.gameloginUrl,
+      path: `${game_url}?${query}`,
     };
   }
+
   async logout(player: Player) {
     const reqConfig: GrReqBase = {
       method: 'POST',
@@ -111,9 +150,7 @@ export class GrService {
       },
     };
     const res = await this.request(reqConfig);
-    return {
-      success: true,
-    };
+    return res;
   }
   async getPlayer(player: Player) {
     const reqConfig: GrReqBase = {
@@ -124,9 +161,7 @@ export class GrService {
       },
     };
     const res = await this.request(reqConfig);
-    return {
-      ...res,
-    };
+    return res;
   }
 
   async fetchBetRecords(start: Date = subMinutes(new Date(), 30)) {
@@ -141,86 +176,7 @@ export class GrService {
       },
     };
 
-    const res = await this.request<GrBetRecordsRes>(reqConfig);
-
-    if (res.resultCode === 'OK') {
-      await Promise.all(
-        res.data.list.map(async (t) => {
-          try {
-            const player = await this.prisma.player.findUnique({
-              where: { username: t.player.replace(this.suffix, '') },
-            });
-            const record = await this.prisma.betRecord.findUnique({
-              where: {
-                bet_no_platform_code: {
-                  bet_no: t.betNum.toString(),
-                  platform_code: this.platformCode,
-                },
-              },
-            });
-            if (!record) {
-              await this.prisma.betRecord.create({
-                data: {
-                  bet_no: t.betNum.toString(),
-                  amount: t.betAmount,
-                  bet_target: t.betType.toString(),
-                  bet_at: new Date(t.betTime),
-                  player_id: player.id,
-                  platform_code: this.platformCode,
-                  category_code: this.categoryCode,
-                  game_code: t.gameType.toString(),
-                  status: BetRecordStatus.REFUND,
-                  bet_detail: t as unknown as Prisma.InputJsonObject,
-                },
-              });
-              return;
-            }
-            // 上層佔成資訊
-            const [category_code, ratios] =
-              await this.gameMerchantService.getBetInfo(
-                player,
-                this.platformCode,
-                t.gameType.toString(),
-              );
-            await this.prisma.betRecord.update({
-              where: {
-                bet_no_platform_code: {
-                  bet_no: t.betNum.toString(),
-                  platform_code: this.platformCode,
-                },
-              },
-              data: {
-                bet_detail: t as unknown as Prisma.InputJsonObject,
-                win_lose_amount: t.winOrLossAmount,
-                result_at: new Date(t.gameRoundEndTime),
-                category_code,
-
-                // bet_target: t.betType.toString(),
-                // game_code: t.gameType.toString(),
-                status: {
-                  [GrBetStatus.BETTING]: BetRecordStatus.BETTING,
-                  [GrBetStatus.DONE]: BetRecordStatus.DONE,
-                  [GrBetStatus.REFUND]: BetRecordStatus.REFUND,
-                  [GrBetStatus.FAILED]: BetRecordStatus.REFUND,
-                  [GrBetStatus.WATING_RESULT]: BetRecordStatus.BETTING,
-                }[t.status],
-                ratios: {
-                  createMany: {
-                    data: ratios.map((t) => ({
-                      agent_id: t.agent_id,
-                      ratio: t.ratio,
-                    })),
-                    skipDuplicates: true,
-                  },
-                },
-              },
-            });
-          } catch (err) {
-            console.log(t, err);
-          }
-        }),
-      );
-    }
+    const res = await this.request(reqConfig);
 
     return res;
   }

@@ -1,4 +1,4 @@
-import { GrBaseRes } from './base';
+import { GrResBase } from './base';
 
 export interface GrCreatePlayerReq {
   account: string;
@@ -6,7 +6,7 @@ export interface GrCreatePlayerReq {
   site_code: string;
 }
 
-export type GrCreatePlayerRes = GrBaseRes<{
+export type GrCreatePlayerRes = GrResBase<{
   account: string;
   display_name: string;
   currency_type: string;
