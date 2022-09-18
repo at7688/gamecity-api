@@ -13,9 +13,11 @@ import { AviaService } from './avia/avia.service';
 import { AviaTaskService } from './avia/avia.task.service';
 import { BwinController } from './bwin/bwin.controller';
 import { BwinService } from './bwin/bwin.service';
+import { BwinTaskService } from './bwin/bwin.task.service';
 import { GameMerchantService } from './game-merchant.service';
 import { GrController } from './gr/gr.controller';
 import { GrService } from './gr/gr.service';
+import { GrTaskService } from './gr/gr.task.service';
 import { OgCbController } from './og/og.cb.controller';
 import { OgCbService } from './og/og.cb.service';
 import { OgController } from './og/og.controller';
@@ -45,8 +47,10 @@ import { OgTaskService } from './og/og.task.service';
     AviaCbService,
     AviaTaskService,
     BwinService,
+    BwinTaskService,
     GrService,
     GameMerchantService,
+    GrTaskService,
   ],
 })
 export class GameMerchantModule {}

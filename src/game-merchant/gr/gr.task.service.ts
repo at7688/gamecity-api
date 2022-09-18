@@ -10,7 +10,10 @@ export class GrTaskService {
 
   @Cron(CronExpression.EVERY_10_MINUTES)
   async fetchGameList() {
-    await this.grService.fetchBetRecords(subMinutes(new Date(), 1));
+    await this.grService.fetchBetRecords(
+      subMinutes(new Date(), 20),
+      subMinutes(new Date(), 10),
+    );
     this.Logger.debug('GR_FETCH_BET_RECORDS(EVERY_10_MINUTES)');
   }
 }

@@ -289,6 +289,7 @@ export class BwinService {
               bet_no: t.id.toString(),
               amount: t.bet,
               valid_amount: t.validBet,
+              win_lose_amount: t.win,
               bet_at: new Date(t.createdAt),
               player_id: player.id,
               platform_code: this.platformCode,
@@ -310,7 +311,16 @@ export class BwinService {
                 },
               },
             },
-            update: {},
+            update: {
+              bet_detail: t as unknown as Prisma.InputJsonObject,
+              status: {
+                playing: BetRecordStatus.BETTING,
+                finish: BetRecordStatus.DONE,
+                cancel: BetRecordStatus.REFUND,
+              }[t.status],
+              valid_amount: t.validBet,
+              win_lose_amount: t.result,
+            },
           });
         } catch (err) {
           console.log(t, err);

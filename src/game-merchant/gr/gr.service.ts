@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Player } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import { addHours, format, subMinutes } from 'date-fns';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -7,7 +7,7 @@ import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { GameMerchantService } from '../game-merchant.service';
 import { GrReqBase, GrResBase } from './types/base';
 import { GrCreatePlayerReq, GrCreatePlayerRes } from './types/createPlayer';
-import { GrBetRecordsRes } from './types/fetchBetRecords';
+import { GrBetRecordsReq, GrBetRecordsRes } from './types/fetchBetRecords';
 import { GrGameListReq, GrGameListRes } from './types/gameList';
 import { GrGetPlayerSidReq, GrGetPlayerSidRes } from './types/getPlayerSid';
 import * as qs from 'query-string';
@@ -15,6 +15,7 @@ import { GrTransferToReq, GrTransferToRes } from './types/transferTo';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { GrGetBalanceReq, GrGetBalanceRes } from './types/getBalance';
 import { GrTransferBackReq, GrTransferBackRes } from './types/transferBack';
+import { BetRecordStatus } from 'src/bet-record/enums';
 @Injectable()
 export class GrService {
   constructor(
@@ -232,19 +233,77 @@ export class GrService {
     return res.data;
   }
 
-  async fetchBetRecords(start: Date) {
-    const reqConfig: GrReqBase = {
+  async fetchBetRecords(start: Date, end: Date) {
+    const reqConfig: GrReqBase<GrBetRecordsReq> = {
       method: 'POST',
-      path: '/PagingQueryBetRecords',
+      path: '/api/platform/get_all_bet_details',
       data: {
-        startDateTime: format(start, 'yyyy-MM-dd HH:mm:ss'),
-        endDateTime: format(addHours(start, 1), 'yyyy-MM-dd HH:mm:ss'),
-        pageSize: 1000,
-        pageNum: 1,
+        start_time: format(start, 'yyyy-MM-dd HH:mm:ss'),
+        end_time: format(end, 'yyyy-MM-dd HH:mm:ss'),
+        page_index: 1,
+        page_size: 1000,
       },
     };
 
-    const res = await this.request(reqConfig);
+    const res = await this.request<GrBetRecordsRes>(reqConfig);
+
+    await Promise.all(
+      res.data.bet_details.map(async (t) => {
+        try {
+          const player = await this.prisma.player.findUnique({
+            where: { username: t.account.replace(`@${this.suffix}`, '') },
+          });
+          if (!player) {
+            // 略過RAW測試帳號
+            return;
+          }
+          // 上層佔成資訊
+          const [category_code, ratios] =
+            await this.gameMerchantService.getBetInfo(
+              player,
+              this.platformCode,
+              t.game_type.toString(),
+            );
+          await this.prisma.betRecord.upsert({
+            where: {
+              bet_no_platform_code: {
+                bet_no: t.id_str.toString(),
+                platform_code: this.platformCode,
+              },
+            },
+            create: {
+              bet_no: t.id_str.toString(),
+              amount: t.bet,
+              valid_amount: t.valid_bet,
+              win_lose_amount: t.profit,
+              bet_at: new Date(t.create_time),
+              player_id: player.id,
+              platform_code: this.platformCode,
+              category_code: this.categoryCode,
+              game_code: t.game_type.toString(),
+              status: BetRecordStatus.DONE,
+              bet_detail: t as unknown as Prisma.InputJsonObject,
+              ratios: {
+                createMany: {
+                  data: ratios.map((r) => ({
+                    agent_id: r.agent_id,
+                    ratio: r.ratio,
+                  })),
+                  skipDuplicates: true,
+                },
+              },
+            },
+            update: {
+              valid_amount: t.valid_bet,
+              win_lose_amount: t.profit,
+              bet_detail: t as unknown as Prisma.InputJsonObject,
+            },
+          });
+        } catch (err) {
+          console.log(t, err);
+        }
+      }),
+    );
 
     return res;
   }

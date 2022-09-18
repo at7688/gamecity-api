@@ -35,8 +35,8 @@ export class GrController {
   }
 
   @Post('records')
-  fetchBetRecords(@Body('start') start) {
-    return this.grService.fetchBetRecords(new Date(start));
+  fetchBetRecords(@Body('start') start, @Body('end') end) {
+    return this.grService.fetchBetRecords(new Date(start), new Date(end));
   }
   @Get('record/:id')
   fetchBetRecord(@Param('id') id) {
