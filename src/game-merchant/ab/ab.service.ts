@@ -1,13 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import { getUnixTime } from 'date-fns';
-import * as numeral from 'numeral';
+import * as CryptoJS from 'crypto-js';
+import { format } from 'date-fns';
 import * as qs from 'query-string';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
 import { AbReqBase, AbResBase } from './types/base';
 import { AbCreatePlayerReq, AbCreatePlayerRes } from './types/createPlayer';
@@ -17,8 +18,6 @@ import { AbGetBalanceReq, AbGetBalanceRes } from './types/getBalance';
 import { AbGetGameLinkReq, AbGetGameLinkRes } from './types/getGameLink';
 import { AbTransferBackReq, AbTransferBackRes } from './types/transferBack';
 import { AbTransferToReq, AbTransferToRes } from './types/transferTo';
-import * as CryptoJS from 'crypto-js';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AbService {
@@ -313,23 +312,25 @@ export class AbService {
   }
 
   async fetchBetRecords(start: Date, end: Date) {
-    const query = qs.stringify({
-      start: getUnixTime(start) * 1000,
-      end: getUnixTime(end) * 1000,
-      pageSize: 10000,
-    });
     const reqConfig: AbReqBase<AbBetRecordsReq> = {
-      method: 'GET',
-      path: `/api/v1/profile/rounds?${query}`,
+      method: 'POST',
+      path: '/PagingQueryBetRecords',
+      data: {
+        agent: this.agentAcc,
+        startDateTime: format(start, 'yyyy-MM-dd HH:mm:ss'),
+        endDateTime: format(end, 'yyyy-MM-dd HH:mm:ss'),
+        pageSize: 1000,
+        pageNum: 1,
+      },
     };
 
     const res = await this.request<AbBetRecordsRes>(reqConfig);
 
     await Promise.all(
-      res.data.map(async (t) => {
+      res.data.list.map(async (t) => {
         try {
           const player = await this.prisma.player.findUnique({
-            where: { username: t.player },
+            where: { username: t.player.replace(this.suffix, '') },
           });
           if (!player) {
             // 略過RAW測試帳號
@@ -340,29 +341,29 @@ export class AbService {
             await this.gameMerchantService.getBetInfo(
               player,
               this.platformCode,
-              t.productId.toString(),
+              t.gameType.toString(),
             );
           await this.prisma.betRecord.upsert({
             where: {
               bet_no_platform_code: {
-                bet_no: t.id.toString(),
+                bet_no: t.betNum.toString(),
                 platform_code: this.platformCode,
               },
             },
             create: {
-              bet_no: t.id.toString(),
-              amount: t.bet,
-              valid_amount: t.validBet,
-              win_lose_amount: t.win,
-              bet_at: new Date(t.createdAt),
+              bet_no: t.betNum.toString(),
+              amount: t.betAmount,
+              valid_amount: t.validAmount,
+              win_lose_amount: t.winOrLossAmount,
+              bet_at: new Date(t.betTime),
               player_id: player.id,
               platform_code: this.platformCode,
               category_code: this.categoryCode,
-              game_code: t.productId,
+              game_code: t.gameType.toString(),
               status: {
-                playing: BetRecordStatus.BETTING,
-                finish: BetRecordStatus.DONE,
-                cancel: BetRecordStatus.REFUND,
+                110: BetRecordStatus.BETTING,
+                111: BetRecordStatus.DONE,
+                120: BetRecordStatus.REFUND,
               }[t.status],
               bet_detail: t as unknown as Prisma.InputJsonObject,
               ratios: {
@@ -378,12 +379,12 @@ export class AbService {
             update: {
               bet_detail: t as unknown as Prisma.InputJsonObject,
               status: {
-                playing: BetRecordStatus.BETTING,
-                finish: BetRecordStatus.DONE,
-                cancel: BetRecordStatus.REFUND,
+                110: BetRecordStatus.BETTING,
+                111: BetRecordStatus.DONE,
+                120: BetRecordStatus.REFUND,
               }[t.status],
-              valid_amount: t.validBet,
-              win_lose_amount: t.result,
+              valid_amount: t.validAmount,
+              win_lose_amount: t.winOrLossAmount,
             },
           });
         } catch (err) {
