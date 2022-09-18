@@ -8,18 +8,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { GameMerchantService } from '../game-merchant.service';
-import { OgCbService } from './og.cb.service';
-import { OgReqConfig, OgResBase, OgTransferType } from './types';
-import { OgBetRecordsRes, OgBetStatus } from './types/fetchBetRecords';
+import { AbCbService } from './ab.cb.service';
+import { AbReqConfig, AbResBase, AbTransferType } from './types';
+import { AbBetRecordsRes, AbBetStatus } from './types/fetchBetRecords';
 
 @Injectable()
-export class OgService {
+export class AbService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
   ) {}
-  platformCode = 'og';
+  platformCode = 'ab';
   categoryCode = 'LIVE';
   operatorId = '3531761';
   apiUrl = 'https://sw2.apidemo.net:8443';
@@ -54,7 +54,7 @@ export class OgService {
     return ah;
   }
 
-  getAuthorizationHeader(reqConfig: OgReqConfig) {
+  getAuthorizationHeader(reqConfig: AbReqConfig) {
     const { method, path, md5, date } = reqConfig;
 
     const stringToSign =
@@ -63,7 +63,7 @@ export class OgService {
     return this.getAuthBySignString(stringToSign, this.allBetKey);
   }
 
-  async request<T extends OgResBase>(reqConfig: OgReqConfig) {
+  async request<T extends AbResBase>(reqConfig: AbReqConfig) {
     const { method, path, data } = reqConfig;
     const md5 = this.getMD5Hash(data);
     const date = this.getDateTime();
@@ -83,6 +83,9 @@ export class OgService {
     try {
       const res = await axios.request<T>(axiosConfig);
       // console.log(res.data);
+      if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
+        throw new BadRequestException(res.data.message);
+      }
       return res.data;
     } catch (err) {
       console.log('Error :' + err.message);
@@ -91,7 +94,7 @@ export class OgService {
   }
 
   async getAgentHandicaps() {
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/GetAgentHandicaps',
       data: {
@@ -103,7 +106,7 @@ export class OgService {
   }
 
   async createPlayer(player: Player) {
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/CheckOrCreate',
       data: {
@@ -141,7 +144,7 @@ export class OgService {
     if (!gameAcc) {
       await this.createPlayer(player);
     }
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/Login',
       data: {
@@ -157,7 +160,7 @@ export class OgService {
     };
   }
   async logout(player: Player) {
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/Logout',
       data: {
@@ -170,7 +173,7 @@ export class OgService {
     };
   }
   async getPlayer(player: Player) {
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/GetPlayerSetting',
       data: {
@@ -182,10 +185,10 @@ export class OgService {
       ...res,
     };
   }
-  async getTogles() {
-    const reqConfig: OgReqConfig = {
+  async getTables() {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
-      path: '/GetGameTogles',
+      path: '/GetGameTables',
       data: {
         agent: this.agentAcc,
       },
@@ -197,7 +200,7 @@ export class OgService {
     };
   }
   async getMaintenance() {
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/GetMaintenanceState',
       data: {},
@@ -208,7 +211,7 @@ export class OgService {
   }
   async setMaintenance(state: 1 | 0) {
     // 維護中(1), 正常(0)
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/SetMaintenanceState',
       data: {
@@ -221,7 +224,7 @@ export class OgService {
   }
 
   async fetchBetRecords(start: Date) {
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/PagingQueryBetRecords',
       data: {
@@ -233,7 +236,7 @@ export class OgService {
       },
     };
 
-    const res = await this.request<OgBetRecordsRes>(reqConfig);
+    const res = await this.request<AbBetRecordsRes>(reqConfig);
 
     if (res.resultCode === 'OK') {
       await Promise.all(
@@ -290,11 +293,11 @@ export class OgService {
                 // bet_target: t.betType.toString(),
                 // game_code: t.gameType.toString(),
                 status: {
-                  [OgBetStatus.BETTING]: BetRecordStatus.BETTING,
-                  [OgBetStatus.DONE]: BetRecordStatus.DONE,
-                  [OgBetStatus.REFUND]: BetRecordStatus.REFUND,
-                  [OgBetStatus.FAILED]: BetRecordStatus.REFUND,
-                  [OgBetStatus.WATING_RESULT]: BetRecordStatus.BETTING,
+                  [AbBetStatus.BETTING]: BetRecordStatus.BETTING,
+                  [AbBetStatus.DONE]: BetRecordStatus.DONE,
+                  [AbBetStatus.REFUND]: BetRecordStatus.REFUND,
+                  [AbBetStatus.FAILED]: BetRecordStatus.REFUND,
+                  [AbBetStatus.WATING_RESULT]: BetRecordStatus.BETTING,
                 }[t.status],
                 ratios: {
                   createMany: {
@@ -317,7 +320,7 @@ export class OgService {
     return res;
   }
   async fetchBetRecord(bet_no: string) {
-    const reqConfig: OgReqConfig = {
+    const reqConfig: AbReqConfig = {
       method: 'POST',
       path: '/QueryBetRecordByBetNum',
       data: {
@@ -328,7 +331,7 @@ export class OgService {
     return this.request(reqConfig);
   }
 
-  signValidation(reqConfig: OgReqConfig, headers) {
+  signValidation(reqConfig: AbReqConfig, headers) {
     const md5 = headers['content-md5'] || '';
     const contentType = headers['content-type'] || '';
     const stringToSign =

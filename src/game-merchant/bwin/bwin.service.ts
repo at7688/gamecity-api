@@ -1,28 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import {
-  addHours,
-  addMinutes,
-  format,
-  getUnixTime,
-  subMinutes,
-} from 'date-fns';
+import { getUnixTime } from 'date-fns';
+import * as numeral from 'numeral';
+import * as qs from 'query-string';
+import { BetRecordStatus } from 'src/bet-record/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { GameMerchantService } from '../game-merchant.service';
 import { BwinReqBase, BwinResBase } from './types/base';
 import { BwinCreatePlayerReq, BwinCreatePlayerRes } from './types/createPlayer';
-import { BwinGameListReq, BwinGameListRes } from './types/gameList';
-import * as qs from 'query-string';
-import { BwinTransferToReq, BwinTransferToRes } from './types/transferTo';
-import { WalletRecType } from 'src/wallet-rec/enums';
-import { BwinGetBalanceReq, BwinGetBalanceRes } from './types/getBalance';
-import { BwinTransferBackReq, BwinTransferBackRes } from './types/transferBack';
-import { BwinGetGameLinkReq, BwinGetGameLinkRes } from './types/getGameLink';
-import * as numeral from 'numeral';
 import { BwinBetRecordsReq, BwinBetRecordsRes } from './types/fetchBetRecords';
-import { BetRecordStatus } from 'src/bet-record/enums';
+import { BwinGameListReq, BwinGameListRes } from './types/gameList';
+import { BwinGetBalanceReq, BwinGetBalanceRes } from './types/getBalance';
+import { BwinGetGameLinkReq, BwinGetGameLinkRes } from './types/getGameLink';
+import { BwinTransferBackReq, BwinTransferBackRes } from './types/transferBack';
+import { BwinTransferToReq, BwinTransferToRes } from './types/transferTo';
 @Injectable()
 export class BwinService {
   constructor(

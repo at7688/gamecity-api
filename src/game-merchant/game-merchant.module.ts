@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
 import { WalletRecModule } from 'src/wallet-rec/wallet-rec.module';
-import { AbCbController } from './ab/ab.cb.controller';
-import { AbCbService } from './ab/ab.cb.service';
 import { AbController } from './ab/ab.controller';
 import { AbService } from './ab/ab.service';
 import { AbTaskService } from './ab/ab.task.service';
@@ -28,7 +26,6 @@ import { OgTaskService } from './og/og.task.service';
   imports: [WalletRecModule, AuthModule],
   controllers: [
     AbController,
-    AbCbController,
     OgController,
     OgCbController,
     AviaController,
@@ -38,7 +35,6 @@ import { OgTaskService } from './og/og.task.service';
   ],
   providers: [
     AbService,
-    AbCbService,
     AbTaskService,
     OgService,
     OgCbService,
