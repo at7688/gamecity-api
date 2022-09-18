@@ -16,6 +16,8 @@ import { WalletRecType } from 'src/wallet-rec/enums';
 import { GrGetBalanceReq, GrGetBalanceRes } from './types/getBalance';
 import { GrTransferBackReq, GrTransferBackRes } from './types/transferBack';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { v4 as uuidv4 } from 'uuid';
+
 @Injectable()
 export class GrService {
   constructor(
@@ -133,12 +135,14 @@ export class GrService {
   }
 
   async transferTo(player: Player) {
-    const [walletRec] = await this.prisma.$transaction([
+    const trans_id = uuidv4().substring(0, 13);
+    await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.TRANSFER_TO_GAME,
         player_id: player.id,
         amount: -player.balance,
         source: this.platformCode,
+        relative_id: trans_id,
       })),
     ]);
 
@@ -148,11 +152,24 @@ export class GrService {
       data: {
         account: `${player.username}@${this.suffix}`,
         credit_amount: player.balance,
-        order_id: walletRec.id,
+        order_id: trans_id,
       },
     };
 
     const res = await this.request<GrTransferToRes>(reqConfig);
+
+    if (res.status === 'N') {
+      await this.prisma.$transaction([
+        ...(await this.walletRecService.playerCreate({
+          type: WalletRecType.TRANSFER_FROM_GAME,
+          player_id: player.id,
+          amount: player.balance,
+          source: this.platformCode,
+          relative_id: trans_id,
+          note: '轉入遊戲失敗',
+        })),
+      ]);
+    }
 
     return res.data;
   }
@@ -160,23 +177,25 @@ export class GrService {
   async transferBack(player: Player) {
     const { balance, account } = await this.getBalance(player);
 
-    const [walletRec] = await this.prisma.$transaction([
-      ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_FROM_GAME,
-        player_id: player.id,
-        amount: balance,
-        source: this.platformCode,
-      })),
-    ]);
+    const trans_id = uuidv4().substring(0, 13);
 
     if (balance > 0) {
+      await this.prisma.$transaction([
+        ...(await this.walletRecService.playerCreate({
+          type: WalletRecType.TRANSFER_FROM_GAME,
+          player_id: player.id,
+          amount: balance,
+          source: this.platformCode,
+          relative_id: trans_id,
+        })),
+      ]);
       const reqConfig: GrReqBase<GrTransferBackReq> = {
         method: 'POST',
         path: '/api/platform/debit_balance_v3',
         data: {
           account,
           debit_amount: balance,
-          order_id: walletRec.id,
+          order_id: trans_id,
         },
       };
 

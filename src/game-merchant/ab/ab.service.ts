@@ -18,6 +18,7 @@ import { AbGetGameLinkReq, AbGetGameLinkRes } from './types/getGameLink';
 import { AbTransferBackReq, AbTransferBackRes } from './types/transferBack';
 import { AbTransferToReq, AbTransferToRes } from './types/transferTo';
 import * as CryptoJS from 'crypto-js';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AbService {
@@ -87,9 +88,11 @@ export class AbService {
       },
       data,
     };
-    console.log(axiosConfig);
     try {
       const res = await axios.request<T>(axiosConfig);
+      if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
+        throw new BadRequestException(JSON.stringify(res.data));
+      }
       await this.prisma.merchantLog.create({
         data: {
           merchant_code: this.platformCode,
@@ -100,21 +103,18 @@ export class AbService {
           resData: res.data as unknown as Prisma.InputJsonObject,
         },
       });
-      if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
-        throw new BadRequestException(res.data.message);
-      }
       return res.data;
     } catch (err) {
-      // await this.prisma.merchantLog.create({
-      //   data: {
-      //     merchant_code: this.platformCode,
-      //     action: 'ERROR',
-      //     path,
-      //     method,
-      //     sendData: data,
-      //     resData: err,
-      //   },
-      // });
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'ERROR',
+          path,
+          method,
+          sendData: data,
+          resData: err.response.data || JSON.parse(err.message),
+        },
+      });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
     }
@@ -188,22 +188,27 @@ export class AbService {
   }
 
   async transferTo(player: Player) {
-    const [walletRec] = await this.prisma.$transaction([
+    const trans_id = this.operatorId + uuidv4().substring(0, 13);
+
+    await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.TRANSFER_TO_GAME,
         player_id: player.id,
         amount: -player.balance,
         source: this.platformCode,
+        relative_id: trans_id,
       })),
     ]);
 
     const reqConfig: AbReqBase<AbTransferToReq> = {
       method: 'POST',
-      path: '/api/v1/players/deposit',
+      path: '/Transfer',
       data: {
-        transactionId: walletRec.id,
+        sn: trans_id,
+        agent: this.agentAcc,
         amount: player.balance,
-        player: player.username,
+        player: player.username + this.suffix,
+        type: 1,
       },
     };
 
@@ -216,7 +221,7 @@ export class AbService {
           player_id: player.id,
           amount: player.balance,
           source: this.platformCode,
-          relative_id: walletRec.id,
+          relative_id: trans_id,
           note: '轉入遊戲失敗',
         })),
       ]);
@@ -228,27 +233,32 @@ export class AbService {
   async transferBack(player: Player) {
     const balance = await this.getBalance(player);
 
-    const [walletRec] = await this.prisma.$transaction([
-      ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_FROM_GAME,
-        player_id: player.id,
-        amount: balance,
-        source: this.platformCode,
-      })),
-    ]);
-
     if (balance > 0) {
+      const trans_id = this.operatorId + uuidv4().substring(0, 13);
       const reqConfig: AbReqBase<AbTransferBackReq> = {
         method: 'POST',
-        path: '/api/v1/players/withdraw',
+        path: '/Transfer',
         data: {
-          transactionId: walletRec.id,
+          sn: trans_id,
+          agent: this.agentAcc,
           amount: balance,
-          player: player.username,
+          player: player.username + this.suffix,
+          type: 0,
         },
       };
 
-      await this.request<AbTransferBackRes>(reqConfig);
+      const res = await this.request<AbTransferBackRes>(reqConfig);
+      if (res.resultCode === 'OK') {
+        await this.prisma.$transaction([
+          ...(await this.walletRecService.playerCreate({
+            type: WalletRecType.TRANSFER_FROM_GAME,
+            player_id: player.id,
+            amount: balance,
+            source: this.platformCode,
+            relative_id: trans_id,
+          })),
+        ]);
+      }
     }
 
     return {
@@ -288,11 +298,18 @@ export class AbService {
 
   async getBalance(player: Player) {
     const reqConfig: AbReqBase<AbGetBalanceReq> = {
-      method: 'GET',
-      path: `/api/v1/players?player=${player.username}`,
+      method: 'POST',
+      path: '/GetBalances',
+      data: {
+        agent: this.agentAcc,
+        pageSize: 100,
+        pageIndex: 1,
+        recursion: 0, // 0: 指定代理下的直属玩家 , 1：所有下线玩家
+        players: [player.username + this.suffix],
+      },
     };
     const res = await this.request<AbGetBalanceRes>(reqConfig);
-    return res.data[0].balance;
+    return res.data.list[0].amount;
   }
 
   async fetchBetRecords(start: Date, end: Date) {

@@ -1,20 +1,11 @@
 import { AbResBase } from './base';
 
 export interface AbTransferBackReq {
-  transactionId: string;
+  sn: string;
+  agent: string;
   amount: number;
   player: string;
+  type: 0;
 }
 
-export type AbTransferBackRes = AbResBase<{
-  parentId: number;
-  parent: string;
-  playerId: number;
-  username: string;
-  transactionId: string;
-  method: string;
-  amount: number;
-  balance: number;
-  promo: number;
-  isPromo: boolean;
-}>;
+export type AbTransferBackRes = AbResBase;

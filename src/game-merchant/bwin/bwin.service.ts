@@ -17,6 +17,7 @@ import { BwinGetBalanceReq, BwinGetBalanceRes } from './types/getBalance';
 import { BwinGetGameLinkReq, BwinGetGameLinkRes } from './types/getGameLink';
 import { BwinTransferBackReq, BwinTransferBackRes } from './types/transferBack';
 import { BwinTransferToReq, BwinTransferToRes } from './types/transferTo';
+import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class BwinService {
   constructor(
@@ -135,12 +136,14 @@ export class BwinService {
   }
 
   async transferTo(player: Player) {
-    const [walletRec] = await this.prisma.$transaction([
+    const trans_id = uuidv4().substring(0, 13);
+    await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.TRANSFER_TO_GAME,
         player_id: player.id,
         amount: -player.balance,
         source: this.platformCode,
+        relative_id: trans_id,
       })),
     ]);
 
@@ -148,7 +151,7 @@ export class BwinService {
       method: 'POST',
       path: '/api/v1/players/deposit',
       data: {
-        transactionId: walletRec.id,
+        transactionId: trans_id,
         amount: numeral(player.balance).multiply(this.creditMultiple).value(),
         player: player.username,
       },
@@ -163,7 +166,7 @@ export class BwinService {
           player_id: player.id,
           amount: player.balance,
           source: this.platformCode,
-          relative_id: walletRec.id,
+          relative_id: trans_id,
           note: '轉入遊戲失敗',
         })),
       ]);
@@ -174,22 +177,23 @@ export class BwinService {
 
   async transferBack(player: Player) {
     const balance = await this.getBalance(player);
-
-    const [walletRec] = await this.prisma.$transaction([
-      ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_FROM_GAME,
-        player_id: player.id,
-        amount: balance,
-        source: this.platformCode,
-      })),
-    ]);
+    const trans_id = uuidv4().substring(0, 13);
 
     if (balance > 0) {
+      await this.prisma.$transaction([
+        ...(await this.walletRecService.playerCreate({
+          type: WalletRecType.TRANSFER_FROM_GAME,
+          player_id: player.id,
+          amount: balance,
+          source: this.platformCode,
+          relative_id: trans_id,
+        })),
+      ]);
       const reqConfig: BwinReqBase<BwinTransferBackReq> = {
         method: 'POST',
         path: '/api/v1/players/withdraw',
         data: {
-          transactionId: walletRec.id,
+          transactionId: trans_id,
           amount: numeral(balance).multiply(this.creditMultiple).value(),
           player: player.username,
         },

@@ -1,20 +1,20 @@
 import { AbResBase } from './base';
 
 export interface AbGetBalanceReq {
-  account: string;
+  agent?: string;
+  pageSize: number;
+  pageIndex: number;
+  recursion: 1 | 0; // 0: 指定代理下的直属玩家 , 1：所有下线玩家
+  players?: string[];
 }
 
-export type AbGetBalanceRes = AbResBase<AbPlayerInfo[]>;
+export type AbGetBalanceRes = AbResBase<{
+  count: number;
+  list: PlayerBalanceInfo[];
+}>;
 
-export interface AbPlayerInfo {
-  id: number;
-  username: string;
-  nickname: string;
-  status: string;
-  balance: number;
-  promo: number;
-  parent: string;
-  parentId: number;
-  createdAt: Date;
-  wallets: any[];
+export interface PlayerBalanceInfo {
+  amount: number;
+  player: string;
+  currency: string;
 }
