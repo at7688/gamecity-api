@@ -8,7 +8,7 @@ export interface GrBetRecordsReq {
   page_size: number;
 }
 export type GrBetRecordsRes = GrResBase<{
-  bet_details: GrBetRecord[];
+  bet_details?: GrBetRecord[];
   page_index: number;
   page_size: number;
   total_elements: number;

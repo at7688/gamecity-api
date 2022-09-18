@@ -311,7 +311,7 @@ export class AbService {
     return res.data.list[0].amount;
   }
 
-  async fetchBetRecords(start: Date, end: Date) {
+  async fetchBetRecords(start: Date, end: Date, isTask?: boolean) {
     const reqConfig: AbReqBase<AbBetRecordsReq> = {
       method: 'POST',
       path: '/PagingQueryBetRecords',
@@ -392,6 +392,15 @@ export class AbService {
         }
       }),
     );
+
+    if (isTask) {
+      await this.prisma.gamePlatform.update({
+        where: { code: this.platformCode },
+        data: {
+          record_check_at: end,
+        },
+      });
+    }
 
     return res;
   }

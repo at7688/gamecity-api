@@ -10,10 +10,10 @@ export class AbTaskService {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async fetchGameList() {
-    await this.abService.fetchBetRecords(
-      subMinutes(new Date(), 15),
-      subMinutes(new Date(), 10),
-    );
+    const startAt = subMinutes(new Date(), 15);
+    const endAt = subMinutes(new Date(), 10);
+    await this.abService.fetchBetRecords(startAt, endAt, true);
+
     this.Logger.debug('BWIN_FETCH_BET_RECORDS(EVERY_5_MINUTES)');
   }
 }

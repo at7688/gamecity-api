@@ -402,6 +402,13 @@ model Maintenance {
   end_at     DateTime? @db.Timestamptz()
 }
 
+// model GamePlatformRec {
+//   platform GamePlatform @relation(fields: [platform_code], references: [code])
+//   platform_code String
+//   created_at  DateTime   @default(now()) @db.Timestamptz(6)
+//   updated_at  DateTime?  @updatedAt @db.Timestamptz(6)
+// }
+
 model GamePlatform {
   code          String       @id
   name          String
@@ -415,7 +422,10 @@ model GamePlatform {
   accounts GameAccount[]
   currency Int @default(1) // 新台幣 人民幣...
   maintenance Maintenance[]
+
   record_check_at DateTime? @db.Timestamptz()
+  transfer_to_at DateTime? @db.Timestamptz()
+  transfer_back_at DateTime?  @db.Timestamptz()
 
   @@unique([code, category_code])
 }

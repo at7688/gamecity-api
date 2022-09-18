@@ -267,7 +267,7 @@ export class GrService {
     const res = await this.request<GrBetRecordsRes>(reqConfig);
 
     await Promise.all(
-      res.data.bet_details.map(async (t) => {
+      res.data.bet_details?.map(async (t) => {
         try {
           const player = await this.prisma.player.findUnique({
             where: { username: t.account.replace(`@${this.suffix}`, '') },
