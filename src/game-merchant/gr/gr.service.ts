@@ -171,6 +171,19 @@ export class GrService {
       ]);
     }
 
+    // 紀錄轉入
+    await this.prisma.gameAccount.update({
+      where: {
+        platform_code_player_id: {
+          player_id: player.id,
+          platform_code: this.platformCode,
+        },
+      },
+      data: {
+        has_credit: true,
+      },
+    });
+
     return res.data;
   }
 
@@ -201,6 +214,19 @@ export class GrService {
 
       await this.request<GrTransferBackRes>(reqConfig);
     }
+
+    // 紀錄轉回
+    await this.prisma.gameAccount.update({
+      where: {
+        platform_code_player_id: {
+          player_id: player.id,
+          platform_code: this.platformCode,
+        },
+      },
+      data: {
+        has_credit: false,
+      },
+    });
 
     return {
       success: true,
@@ -265,64 +291,65 @@ export class GrService {
     };
 
     const res = await this.request<GrBetRecordsRes>(reqConfig);
-
-    await Promise.all(
-      res.data.bet_details?.map(async (t) => {
-        try {
-          const player = await this.prisma.player.findUnique({
-            where: { username: t.account.replace(`@${this.suffix}`, '') },
-          });
-          if (!player) {
-            // 略過RAW測試帳號
-            return;
-          }
-          // 上層佔成資訊
-          const [category_code, ratios] =
-            await this.gameMerchantService.getBetInfo(
-              player,
-              this.platformCode,
-              t.game_type.toString(),
-            );
-          await this.prisma.betRecord.upsert({
-            where: {
-              bet_no_platform_code: {
-                bet_no: t.id_str.toString(),
-                platform_code: this.platformCode,
-              },
-            },
-            create: {
-              bet_no: t.id_str.toString(),
-              amount: t.bet,
-              valid_amount: t.valid_bet,
-              win_lose_amount: t.profit,
-              bet_at: new Date(t.create_time),
-              player_id: player.id,
-              platform_code: this.platformCode,
-              category_code: this.categoryCode,
-              game_code: t.game_type.toString(),
-              status: BetRecordStatus.DONE,
-              bet_detail: t as unknown as Prisma.InputJsonObject,
-              ratios: {
-                createMany: {
-                  data: ratios.map((r) => ({
-                    agent_id: r.agent_id,
-                    ratio: r.ratio,
-                  })),
-                  skipDuplicates: true,
+    if (res.data.bet_details.length) {
+      await Promise.all(
+        res.data.bet_details.map(async (t) => {
+          try {
+            const player = await this.prisma.player.findUnique({
+              where: { username: t.account.replace(`@${this.suffix}`, '') },
+            });
+            if (!player) {
+              // 略過RAW測試帳號
+              return;
+            }
+            // 上層佔成資訊
+            const [category_code, ratios] =
+              await this.gameMerchantService.getBetInfo(
+                player,
+                this.platformCode,
+                t.game_type.toString(),
+              );
+            await this.prisma.betRecord.upsert({
+              where: {
+                bet_no_platform_code: {
+                  bet_no: t.id_str.toString(),
+                  platform_code: this.platformCode,
                 },
               },
-            },
-            update: {
-              valid_amount: t.valid_bet,
-              win_lose_amount: t.profit,
-              bet_detail: t as unknown as Prisma.InputJsonObject,
-            },
-          });
-        } catch (err) {
-          console.log(t, err);
-        }
-      }),
-    );
+              create: {
+                bet_no: t.id_str.toString(),
+                amount: t.bet,
+                valid_amount: t.valid_bet,
+                win_lose_amount: t.profit,
+                bet_at: new Date(t.create_time),
+                player_id: player.id,
+                platform_code: this.platformCode,
+                category_code: this.categoryCode,
+                game_code: t.game_type.toString(),
+                status: BetRecordStatus.DONE,
+                bet_detail: t as unknown as Prisma.InputJsonObject,
+                ratios: {
+                  createMany: {
+                    data: ratios.map((r) => ({
+                      agent_id: r.agent_id,
+                      ratio: r.ratio,
+                    })),
+                    skipDuplicates: true,
+                  },
+                },
+              },
+              update: {
+                valid_amount: t.valid_bet,
+                win_lose_amount: t.profit,
+                bet_detail: t as unknown as Prisma.InputJsonObject,
+              },
+            });
+          } catch (err) {
+            console.log(t, err);
+          }
+        }),
+      );
+    }
 
     return res;
   }

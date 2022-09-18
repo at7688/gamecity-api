@@ -424,8 +424,6 @@ model GamePlatform {
   maintenance Maintenance[]
 
   record_check_at DateTime? @db.Timestamptz()
-  transfer_to_at DateTime? @db.Timestamptz()
-  transfer_back_at DateTime?  @db.Timestamptz()
 
   @@unique([code, category_code])
 }
@@ -726,6 +724,8 @@ model GameAccount {
   player Player @relation(fields: [player_id], references: [id])
   player_id String
   created_at DateTime @default(now()) @db.Timestamptz()
+
+  has_credit Boolean @default(false)
 
   @@unique([platform_code, account])
   @@unique([platform_code, player_id])

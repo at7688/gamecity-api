@@ -226,6 +226,19 @@ export class AbService {
       ]);
     }
 
+    // 紀錄轉入
+    await this.prisma.gameAccount.update({
+      where: {
+        platform_code_player_id: {
+          player_id: player.id,
+          platform_code: this.platformCode,
+        },
+      },
+      data: {
+        has_credit: true,
+      },
+    });
+
     return res.data;
   }
 
@@ -259,6 +272,19 @@ export class AbService {
         ]);
       }
     }
+
+    // 紀錄轉回
+    await this.prisma.gameAccount.update({
+      where: {
+        platform_code_player_id: {
+          player_id: player.id,
+          platform_code: this.platformCode,
+        },
+      },
+      data: {
+        has_credit: false,
+      },
+    });
 
     return {
       success: true,

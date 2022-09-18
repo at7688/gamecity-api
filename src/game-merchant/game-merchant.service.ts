@@ -3,6 +3,9 @@ import { Player } from '@prisma/client';
 import { compact } from 'lodash';
 import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AbService } from './ab/ab.service';
+import { BwinService } from './bwin/bwin.service';
+import { GrService } from './gr/gr.service';
 
 @Injectable()
 export class GameMerchantService {

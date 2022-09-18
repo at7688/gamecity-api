@@ -21,6 +21,8 @@ import { OgCbService } from './og/og.cb.service';
 import { OgController } from './og/og.controller';
 import { OgService } from './og/og.service';
 import { OgTaskService } from './og/og.task.service';
+import { PlatformsBridgeService } from './platforms-bridge/platforms-bridge.service';
+import { PlatformsBridgeController } from './platforms-bridge/platforms-bridge.controller';
 
 @Module({
   imports: [WalletRecModule, AuthModule],
@@ -32,6 +34,7 @@ import { OgTaskService } from './og/og.task.service';
     AviaCbController,
     BwinController,
     GrController,
+    PlatformsBridgeController,
   ],
   providers: [
     AbService,
@@ -47,6 +50,7 @@ import { OgTaskService } from './og/og.task.service';
     GrService,
     GameMerchantService,
     GrTaskService,
+    PlatformsBridgeService,
   ],
 })
 export class GameMerchantModule {}
