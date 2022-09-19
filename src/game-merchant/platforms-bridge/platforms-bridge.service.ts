@@ -14,7 +14,16 @@ export class PlatformsBridgeService {
     private readonly grService: GrService,
   ) {}
 
-  async tranferAllBack(player: Player) {
+  async transferBack(player: Player, platform?: string) {
+    const _map = {
+      ab: this.abService.transferBack(player),
+      bwin: this.bwinService.transferBack(player),
+      gr: this.grService.transferBack(player),
+    };
+
+    if (platform) {
+      return _map[platform];
+    }
     const platforms = await this.prisma.gameAccount.findMany({
       where: {
         player_id: player.id,
@@ -22,17 +31,9 @@ export class PlatformsBridgeService {
       },
     });
     const result = await Promise.all(
-      platforms.map((t) => {
-        switch (t.platform_code) {
-          case 'ab':
-            return this.abService.transferBack(player);
-          case 'bwin':
-            return this.bwinService.transferBack(player);
-          case 'gr':
-            return this.grService.transferBack(player);
-        }
-      }),
+      platforms.map((t) => _map[t.platform_code]),
     );
+
     return {
       platforms: platforms.map((t, i) => ({
         code: t.platform_code,

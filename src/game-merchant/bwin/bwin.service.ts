@@ -229,7 +229,6 @@ export class BwinService {
     });
 
     return {
-      success: true,
       balance, // 轉回的餘額
     };
   }

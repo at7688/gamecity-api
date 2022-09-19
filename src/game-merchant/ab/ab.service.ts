@@ -116,6 +116,7 @@ export class AbService {
       });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
+      return err.response.data;
     }
   }
 
@@ -287,7 +288,6 @@ export class AbService {
     });
 
     return {
-      success: true,
       balance, // 轉回的餘額
     };
   }
