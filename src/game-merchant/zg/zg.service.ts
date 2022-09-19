@@ -339,7 +339,13 @@ export class ZgService {
                 platform_code: this.platformCode,
                 category_code: game.category_code,
                 game_code: t.game_id,
-                status: BetRecordStatus.DONE,
+                status: {
+                  1: BetRecordStatus.DONE,
+                  2: BetRecordStatus.REFUND,
+                  3: BetRecordStatus.REFUND,
+                  4: BetRecordStatus.REFUND,
+                  5: BetRecordStatus.REFUND,
+                }[t.status],
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 ratios: {
                   createMany: {
