@@ -317,7 +317,7 @@ export class ZgService {
             const [game, ratios] = await this.gameMerchantService.getBetInfo(
               player,
               this.platformCode,
-              t.game_type.toString(),
+              t.game_id.toString(),
             );
             await this.prisma.betRecord.upsert({
               where: {
@@ -338,7 +338,7 @@ export class ZgService {
                 player_id: player.id,
                 platform_code: this.platformCode,
                 category_code: game.category_code,
-                game_code: t.game_type.toString(),
+                game_code: t.game_id,
                 status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 ratios: {
