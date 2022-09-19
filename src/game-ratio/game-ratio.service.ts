@@ -11,14 +11,22 @@ export class GameRatioService {
   async batchSet(data: BatchSetGameRatioDtos) {
     const { platform_code, agent_id, ratios } = data;
     await Promise.all(
-      ratios.map(({ game_code, ratio }) =>
-        this.set({ platform_code, game_code, agent_id, ratio }),
+      ratios.map(({ game_code, ratio, water, water_duty }) =>
+        this.set({
+          platform_code,
+          game_code,
+          agent_id,
+          ratio,
+          water,
+          water_duty,
+        }),
       ),
     );
     return { success: true };
   }
   async set(data: CreateGameRatioDto) {
-    const { game_code, platform_code, agent_id, ratio } = data;
+    const { game_code, platform_code, agent_id, ratio, water, water_duty } =
+      data;
     // 查看上層agent的ratio
     const parent = await this.prisma.member.findFirst({
       where: {
@@ -37,17 +45,30 @@ export class GameRatioService {
         },
       },
     });
-    let maxRatio = 100;
+    const max = {
+      ratio: 100,
+      water_duty: 100,
+      water: 1,
+    };
     // 有上層代理 但未設置
     if (parent && !parent.game_ratios[0]) {
       throw new BadRequestException(`請先設定上層代理佔成 (${game_code})`);
     }
     // 有上層代理，最高不能超過該代理佔成
     if (parent && parent.game_ratios[0]) {
-      maxRatio = parent.game_ratios[0].ratio;
+      const setting = parent.game_ratios[0];
+      max.ratio = setting.ratio;
+      max.water_duty = setting.water_duty;
+      max.water = setting.water;
     }
-    if (ratio > maxRatio) {
-      throw new BadRequestException(`不可超過${maxRatio}`);
+    if (ratio > max.ratio) {
+      throw new BadRequestException(`輸贏佔成不可超過${max.ratio}`);
+    }
+    if (water_duty > max.water_duty) {
+      throw new BadRequestException(`退水負擔不可超過${max.water_duty}`);
+    }
+    if (water > max.water) {
+      throw new BadRequestException(`退水紅利不可超過${max.water}`);
     }
 
     // 設置的ratio不能高於上層agent
@@ -64,9 +85,13 @@ export class GameRatioService {
         game_code,
         agent_id,
         ratio,
+        water,
+        water_duty,
       },
       update: {
         ratio,
+        water,
+        water_duty,
       },
     });
   }

@@ -14,6 +14,14 @@ class GameSetting {
   @IsNumber()
   @IsNotEmpty()
   ratio: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  water: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  water_duty: number;
 }
 
 export class BatchSetGameRatioDtos {
