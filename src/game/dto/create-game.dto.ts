@@ -12,4 +12,8 @@ export class CreateGameDto {
   @IsString()
   @IsNotEmpty()
   platform_code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  category_code: string;
 }

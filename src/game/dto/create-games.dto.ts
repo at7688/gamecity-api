@@ -9,6 +9,10 @@ class GameDto {
   @IsString()
   @IsNotEmpty()
   code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  category_code: string;
 }
 export class CreateGamesDto {
   @IsString()

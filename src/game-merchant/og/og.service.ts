@@ -20,7 +20,6 @@ export class OgService {
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'og';
-  categoryCode = 'LIVE';
   operatorId = '3531761';
   apiUrl = 'https://sw2.apidemo.net:8443';
   allBetKey =
@@ -242,6 +241,12 @@ export class OgService {
             const player = await this.prisma.player.findUnique({
               where: { username: t.player.replace(this.suffix, '') },
             });
+            // 上層佔成資訊
+            const [game, ratios] = await this.gameMerchantService.getBetInfo(
+              player,
+              this.platformCode,
+              t.gameType.toString(),
+            );
             const record = await this.prisma.betRecord.findUnique({
               where: {
                 bet_no_platform_code: {
@@ -259,7 +264,7 @@ export class OgService {
                   bet_at: new Date(t.betTime),
                   player_id: player.id,
                   platform_code: this.platformCode,
-                  category_code: this.categoryCode,
+                  category_code: game.category_code,
                   game_code: t.gameType.toString(),
                   status: BetRecordStatus.REFUND,
                   bet_detail: t as unknown as Prisma.InputJsonObject,
@@ -267,13 +272,7 @@ export class OgService {
               });
               return;
             }
-            // 上層佔成資訊
-            const [category_code, ratios] =
-              await this.gameMerchantService.getBetInfo(
-                player,
-                this.platformCode,
-                t.gameType.toString(),
-              );
+
             await this.prisma.betRecord.update({
               where: {
                 bet_no_platform_code: {
@@ -285,7 +284,7 @@ export class OgService {
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 win_lose_amount: t.winOrLossAmount,
                 result_at: new Date(t.gameRoundEndTime),
-                category_code,
+                category_code: game.category_code,
 
                 // bet_target: t.betType.toString(),
                 // game_code: t.gameType.toString(),

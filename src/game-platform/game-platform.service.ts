@@ -9,9 +9,7 @@ export class GamePlatformService {
 
   findAll(search: SearchGamePlatformsDto) {
     const {} = search;
-    return this.prisma.gameCategory.findMany({
-      include: { platforms: true },
-    });
+    return this.prisma.gamePlatform.findMany();
   }
 
   async update(code: string, data: UpdateGamePlatformDto) {

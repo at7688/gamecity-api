@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { GameCategory } from 'src/game/enums';
 import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
@@ -231,7 +232,7 @@ export class AviaCbService {
           amount: -data.Money,
           bet_at: new Date(+data.Timestamp),
           player_id: player.id,
-          category_code: platform.category_code,
+          category_code: GameCategory.VGAME,
           platform_code: this.aviaService.platformCode,
         },
       }),

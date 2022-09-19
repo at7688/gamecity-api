@@ -18,6 +18,7 @@ import { BwinGetGameLinkReq, BwinGetGameLinkRes } from './types/getGameLink';
 import { BwinTransferBackReq, BwinTransferBackRes } from './types/transferBack';
 import { BwinTransferToReq, BwinTransferToRes } from './types/transferTo';
 import { v4 as uuidv4 } from 'uuid';
+import { GameCategory } from 'src/game/enums';
 @Injectable()
 export class BwinService {
   constructor(
@@ -26,7 +27,6 @@ export class BwinService {
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'bwin';
-  categoryCode = 'SLOT';
   apiUrl = 'https://api-stage.at888888.com/service';
   apiKey = '0f12914a-4714-4ed8-8248-2b2cfb473578';
   apiToken =
@@ -112,6 +112,11 @@ export class BwinService {
         sort: i,
         code: t.productId,
         platform_code: this.platformCode,
+        category_code: {
+          fish: GameCategory.FISH,
+          slot: GameCategory.SLOT,
+          coc: GameCategory.STREET,
+        }[t.type],
       })),
       skipDuplicates: true,
     });
@@ -283,12 +288,11 @@ export class BwinService {
             return;
           }
           // 上層佔成資訊
-          const [category_code, ratios] =
-            await this.gameMerchantService.getBetInfo(
-              player,
-              this.platformCode,
-              t.productId.toString(),
-            );
+          const [game, ratios] = await this.gameMerchantService.getBetInfo(
+            player,
+            this.platformCode,
+            t.productId.toString(),
+          );
           await this.prisma.betRecord.upsert({
             where: {
               bet_no_platform_code: {
@@ -304,7 +308,7 @@ export class BwinService {
               bet_at: new Date(t.createdAt),
               player_id: player.id,
               platform_code: this.platformCode,
-              category_code: this.categoryCode,
+              category_code: game.category_code,
               game_code: t.productId,
               status: {
                 playing: BetRecordStatus.BETTING,

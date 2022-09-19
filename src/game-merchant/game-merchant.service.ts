@@ -16,19 +16,12 @@ export class GameMerchantService {
           code: game_code,
         },
       },
-      include: {
-        platform: {
-          select: {
-            category_code: true,
-          },
-        },
-      },
     });
 
     if (!game) {
       throw new BadRequestException(`無此遊戲 [${game_code}]`);
     }
-    return game.platform.category_code;
+    return game;
   }
 
   async getBetRatios(player: Player, platform_code: string, game_code: string) {

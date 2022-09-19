@@ -396,7 +396,7 @@ model GameCategory {
   code      String         @id
   name      String
   sort      Int            @default(0)
-  platforms GamePlatform[]
+  game Game[]
 }
 
 model Maintenance {
@@ -421,8 +421,7 @@ model GamePlatform {
   status        Int          @default(1) // 啟用 停用 維護中
   sort          Int          @default(0)
   games         Game[]
-  category      GameCategory @relation(fields: [category_code], references: [code])
-  category_code String
+
   exchange_rate Float @default(1) // 兌換台幣匯率
   bet_records BetRecord[]
   accounts GameAccount[]
@@ -431,7 +430,6 @@ model GamePlatform {
 
   record_check_at DateTime? @db.Timestamptz()
 
-  @@unique([code, category_code])
 }
 
 model Game {
@@ -444,6 +442,8 @@ model Game {
   bet_records BetRecord[]
   ratio GameRatio[]
   water GameWater[]
+  category      GameCategory? @relation(fields: [category_code], references: [code])
+  category_code String?
 
   @@unique([code, platform_code])
 }
@@ -703,7 +703,7 @@ model BetRecord {
   win_lose_amount Float?
   bet_at DateTime @db.Timestamptz()
   result_at DateTime? @db.Timestamptz()
-  platform GamePlatform @relation(fields: [platform_code, category_code], references: [code, category_code])
+  platform GamePlatform @relation(fields: [platform_code], references: [code])
   category_code String
   platform_code String
   game Game? @relation(fields: [game_code, platform_code], references: [code, platform_code])

@@ -63,17 +63,14 @@ export class GameReportService {
             },
           ],
         },
-        platform: {
+        game: {
+          id: {
+            in: game_ids,
+          },
           category: {
             code: {
               in: category_codes,
             },
-          },
-        },
-
-        game: {
-          id: {
-            in: game_ids,
           },
         },
       },

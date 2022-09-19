@@ -79,13 +79,6 @@ export class BetRecordService {
         status: {
           in: status,
         },
-        platform: {
-          category: {
-            code: {
-              in: category_codes,
-            },
-          },
-        },
         amount: {
           gte: bet_amount_min,
           lte: bet_amount_max,
@@ -97,6 +90,11 @@ export class BetRecordService {
         game: {
           id: {
             in: game_ids,
+          },
+          category: {
+            code: {
+              in: category_codes,
+            },
           },
         },
       },

@@ -20,7 +20,6 @@ export class AviaService {
     private readonly gameMerchantService: GameMerchantService,
   ) {}
   platformCode = 'avia';
-  categoryCode = 'VGAME';
   apiUrl = 'https://api.aviaapi.vip';
   apiKey = '35641436c239435fb51a639c93d76d3c';
 
@@ -162,12 +161,11 @@ export class AviaService {
           where: { username: t.UserName },
         });
         // 上層佔成資訊
-        const [category_code, ratios] =
-          await this.gameMerchantService.getBetInfo(
-            player,
-            this.platformCode,
-            t.Type,
-          );
+        const [game, ratios] = await this.gameMerchantService.getBetInfo(
+          player,
+          this.platformCode,
+          t.Type,
+        );
 
         const record = await this.prisma.betRecord.findUnique({
           where: {
@@ -186,7 +184,7 @@ export class AviaService {
               valid_amount: -t.BetMoney,
               bet_at: new Date(+t.Timestamp),
               player_id: player.id,
-              category_code: this.categoryCode,
+              category_code: game.category_code,
               platform_code: this.platformCode,
               status: BetRecordStatus.REFUND,
               bet_detail: t as unknown as Prisma.InputJsonObject,
@@ -209,7 +207,7 @@ export class AviaService {
             win_lose_amount: t.Status !== AviaBetStatus.None ? +t.Money : null,
             bet_target: t.Content,
             game_code: t.Type,
-            category_code,
+            category_code: game.category_code,
             ratios: {
               createMany: {
                 data: ratios.map((t) => ({

@@ -17,6 +17,7 @@ import { ZgGetBalanceReq, ZgGetBalanceRes } from './types/getBalance';
 import { ZgTransferBackReq, ZgTransferBackRes } from './types/transferBack';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { v4 as uuidv4 } from 'uuid';
+import { GameCategory } from 'src/game/enums';
 
 @Injectable()
 export class ZgService {
@@ -26,7 +27,6 @@ export class ZgService {
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'zg';
-  categoryCode = 'CHESS';
   apiUrl = 'https://api.sandsys.pw';
   channel = '34937514';
   aesKey = '6vEG7IFphbkM59eOPdyofBQSgXYUzZlJ';
@@ -115,6 +115,12 @@ export class ZgService {
         sort: i,
         code: t.game_type.toString(),
         platform_code: this.platformCode,
+        category_code: {
+          1: GameCategory.HUNDRED,
+          2: GameCategory.STREET,
+          3: GameCategory.SLOT,
+          4: GameCategory.FISH,
+        }[t.game_module_type],
       })),
       skipDuplicates: true,
     });
@@ -292,12 +298,11 @@ export class ZgService {
               return;
             }
             // 上層佔成資訊
-            const [category_code, ratios] =
-              await this.gameMerchantService.getBetInfo(
-                player,
-                this.platformCode,
-                t.game_type.toString(),
-              );
+            const [game, ratios] = await this.gameMerchantService.getBetInfo(
+              player,
+              this.platformCode,
+              t.game_type.toString(),
+            );
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
@@ -313,7 +318,7 @@ export class ZgService {
                 bet_at: new Date(t.create_time),
                 player_id: player.id,
                 platform_code: this.platformCode,
-                category_code: this.categoryCode,
+                category_code: game.category_code,
                 game_code: t.game_type.toString(),
                 status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,

@@ -5,6 +5,7 @@ import * as CryptoJS from 'crypto-js';
 import { format } from 'date-fns';
 import * as qs from 'query-string';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
@@ -28,7 +29,6 @@ export class AbService {
   ) {}
 
   platformCode = 'ab';
-  categoryCode = 'LIVE';
   operatorId = '1716859';
   apiUrl = 'https://sw2.apidemo.net:8443';
   allBetKey =
@@ -164,6 +164,7 @@ export class AbService {
         sort: i,
         code: t.productId,
         platform_code: this.platformCode,
+        category_code: GameCategory.LIVE,
       })),
       skipDuplicates: true,
     });
@@ -351,12 +352,11 @@ export class AbService {
             return;
           }
           // 上層佔成資訊
-          const [category_code, ratios] =
-            await this.gameMerchantService.getBetInfo(
-              player,
-              this.platformCode,
-              t.gameType.toString(),
-            );
+          const [game, ratios] = await this.gameMerchantService.getBetInfo(
+            player,
+            this.platformCode,
+            t.gameType.toString(),
+          );
           await this.prisma.betRecord.upsert({
             where: {
               bet_no_platform_code: {
@@ -372,7 +372,7 @@ export class AbService {
               bet_at: new Date(t.betTime),
               player_id: player.id,
               platform_code: this.platformCode,
-              category_code: this.categoryCode,
+              category_code: game.category_code,
               game_code: t.gameType.toString(),
               status: {
                 110: BetRecordStatus.BETTING,

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { getUnixTime } from 'date-fns';
+import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
@@ -138,7 +139,7 @@ export class OgCbService {
               bet_at: new Date(data.called_at * 1000),
               player_id: player.id,
               platform_code,
-              category_code: this.ogService.categoryCode,
+              category_code: GameCategory.LIVE,
               // game_code,
               // ratios: {
               //   createMany: {

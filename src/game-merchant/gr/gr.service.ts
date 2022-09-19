@@ -17,6 +17,7 @@ import { GrGetBalanceReq, GrGetBalanceRes } from './types/getBalance';
 import { GrTransferBackReq, GrTransferBackRes } from './types/transferBack';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { v4 as uuidv4 } from 'uuid';
+import { GameCategory } from 'src/game/enums';
 
 @Injectable()
 export class GrService {
@@ -26,7 +27,6 @@ export class GrService {
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'gr';
-  categoryCode = 'CHESS';
   apiUrl = 'https://grtestbackend.richgaming.net';
   secretKey = 'b6723b61301bc1e51b9d627ee687646b';
 
@@ -113,6 +113,12 @@ export class GrService {
         sort: i,
         code: t.game_type.toString(),
         platform_code: this.platformCode,
+        category_code: {
+          1: GameCategory.HUNDRED,
+          2: GameCategory.STREET,
+          3: GameCategory.SLOT,
+          4: GameCategory.FISH,
+        }[t.game_module_type],
       })),
       skipDuplicates: true,
     });
@@ -290,12 +296,11 @@ export class GrService {
               return;
             }
             // 上層佔成資訊
-            const [category_code, ratios] =
-              await this.gameMerchantService.getBetInfo(
-                player,
-                this.platformCode,
-                t.game_type.toString(),
-              );
+            const [game, ratios] = await this.gameMerchantService.getBetInfo(
+              player,
+              this.platformCode,
+              t.game_type.toString(),
+            );
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
@@ -311,7 +316,7 @@ export class GrService {
                 bet_at: new Date(t.create_time),
                 player_id: player.id,
                 platform_code: this.platformCode,
-                category_code: this.categoryCode,
+                category_code: game.category_code,
                 game_code: t.game_type.toString(),
                 status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
