@@ -1,8 +1,9 @@
-export interface ZgResBase<T = any> {
-  status: string;
-  code: string;
-  message: string;
-  data: T;
+export interface ZgResBase {
+  result: {
+    code: number;
+    msg: string;
+    timestamp?: string;
+  };
 }
 
 export interface ZgReqBase<R = any> {

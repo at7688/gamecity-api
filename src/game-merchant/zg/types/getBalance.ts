@@ -1,11 +1,10 @@
 import { ZgResBase } from './base';
 
 export interface ZgGetBalanceReq {
+  agent: string;
   account: string;
 }
 
-export type ZgGetBalanceRes = ZgResBase<{
-  balance: number;
-  account: string;
-  c_type: string;
-}>;
+export interface ZgGetBalanceRes extends ZgResBase {
+  balance: string;
+}

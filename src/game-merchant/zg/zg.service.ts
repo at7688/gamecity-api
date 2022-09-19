@@ -8,8 +8,7 @@ import { GameMerchantService } from '../game-merchant.service';
 import { ZgReqBase, ZgResBase } from './types/base';
 import { ZgCreatePlayerReq, ZgCreatePlayerRes } from './types/createPlayer';
 import { ZgBetRecordsReq, ZgBetRecordsRes } from './types/fetchBetRecords';
-import { ZgGameListReq, ZgGameListRes } from './types/gameList';
-import { ZgGetPlayerSidReq, ZgGetPlayerSidRes } from './types/getPlayerSid';
+import { ZgGameListRes } from './types/gameList';
 import * as qs from 'query-string';
 import { ZgTransferToReq, ZgTransferToRes } from './types/transferTo';
 import { WalletRecType } from 'src/wallet-rec/enums';
@@ -18,6 +17,9 @@ import { ZgTransferBackReq, ZgTransferBackRes } from './types/transferBack';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { v4 as uuidv4 } from 'uuid';
 import { GameCategory } from 'src/game/enums';
+import * as CryptoJS from 'crypto-js';
+import { ZgGetGameLinkReq, ZgGetGameLinkRes } from './types/getGameLink';
+import * as numeral from 'numeral';
 
 @Injectable()
 export class ZgService {
@@ -30,28 +32,40 @@ export class ZgService {
   apiUrl = 'https://api.sandsys.pw';
   channel = '34937514';
   aesKey = '6vEG7IFphbkM59eOPdyofBQSgXYUzZlJ';
-  md5Key = 'SxzIAbNGWfnqmHKL7tY8dFCuX6VR1wjP';
+  signKey = 'SxzIAbNGWfnqmHKL7tY8dFCuX6VR1wjP';
+
+  agentAcc = 'ASG0001UAT';
 
   suffix = 'asg';
 
   async request<T extends ZgResBase>(reqConfig: ZgReqBase) {
     const { method, path, data } = reqConfig;
 
+    const encrypted = CryptoJS.AES.encrypt(
+      JSON.stringify(data),
+      this.aesKey,
+    ).toString();
+
+    const sign = CryptoJS.MD5(encrypted + this.signKey).toString();
+
+    const encrptedData = {
+      channel: this.channel,
+      data: encrypted,
+      sign,
+    };
+
     const axiosConfig: AxiosRequestConfig<any> = {
       method,
       baseURL: this.apiUrl,
       url: path,
-      headers: {
-        // Cookie: `secret_key=${this.secretKey};`,
-      },
-      data,
+      data: encrptedData,
     };
     try {
       const res = await axios.request<T>(axiosConfig);
       console.log(res.data);
-      if (res.data.status === 'N') {
-        throw new BadRequestException(`${res.data.message}(${res.data.code})`);
-      }
+      // if (res.data.status === 'N') {
+      //   throw new BadRequestException(`${res.data.message}(${res.data.code})`);
+      // }
       return res.data;
     } catch (err) {
       await this.prisma.merchantLog.create({
@@ -72,11 +86,11 @@ export class ZgService {
   async createPlayer(player: Player) {
     const reqConfig: ZgReqBase<ZgCreatePlayerReq> = {
       method: 'POST',
-      path: '/api/platform/reg_user_info',
+      path: '/v1/member/create',
       data: {
+        agent: this.agentAcc,
         account: player.username,
-        display_name: player.nickname,
-        site_code: this.suffix,
+        password: CryptoJS.MD5(player.username).toString(),
       },
     };
 
@@ -97,30 +111,25 @@ export class ZgService {
   }
 
   async getGameList() {
-    const reqConfig: ZgReqBase<ZgGameListReq> = {
+    const reqConfig: ZgReqBase = {
       method: 'POST',
-      path: '/api/platform/get_agent_game_list',
-      data: {
-        page_index: 1,
-        page_size: 100,
-        language_type: 'zh_TW',
-      },
+      path: '/v1/config/get_game_info_state_list',
+      data: {},
     };
 
     const res = await this.request<ZgGameListRes>(reqConfig);
 
     await this.prisma.game.createMany({
-      data: res.data.game_list.map((t, i) => ({
-        name: t.game_name,
+      data: res.game_info_state_list.map((t, i) => ({
+        name: t.names.zh_cn,
         sort: i,
-        code: t.game_type.toString(),
+        code: t.id,
         platform_code: this.platformCode,
         category_code: {
-          1: GameCategory.HUNDRED,
-          2: GameCategory.STREET,
+          1: GameCategory.FISH,
           3: GameCategory.SLOT,
-          4: GameCategory.FISH,
-        }[t.game_module_type],
+          4: GameCategory.STREET,
+        }[t.type],
       })),
       skipDuplicates: true,
     });
@@ -128,18 +137,21 @@ export class ZgService {
     return res;
   }
 
-  async getPlayerSid(account: string) {
-    const reqConfig: ZgReqBase<ZgGetPlayerSidReq> = {
+  async getGameLink(game_id: string, player: Player) {
+    const reqConfig: ZgReqBase<ZgGetGameLinkReq> = {
       method: 'POST',
-      path: '/api/platform/get_sid_by_account',
+      path: '/v1/member/login_game',
       data: {
-        account,
+        account: player.username,
+        game_id,
+        lang: 'zh_cn',
+        agent: this.agentAcc,
       },
     };
 
-    const res = await this.request<ZgGetPlayerSidRes>(reqConfig);
+    const res = await this.request<ZgGetGameLinkRes>(reqConfig);
 
-    return res.data;
+    return res.url;
   }
 
   async transferTo(player: Player) {
@@ -156,17 +168,19 @@ export class ZgService {
 
     const reqConfig: ZgReqBase<ZgTransferToReq> = {
       method: 'POST',
-      path: '/api/platform/credit_balance_v3',
+      path: '/v1/trans/transfer',
       data: {
-        account: `${player.username}@${this.suffix}`,
-        credit_amount: player.balance,
-        order_id: trans_id,
+        serial: trans_id,
+        agent: this.agentAcc,
+        account: player.username,
+        amount: player.balance.toString(),
+        oper_type: 1,
       },
     };
 
     const res = await this.request<ZgTransferToRes>(reqConfig);
 
-    if (res.status === 'N') {
+    if (res.result.code !== 1) {
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
           type: WalletRecType.TRANSFER_FROM_GAME,
@@ -186,11 +200,11 @@ export class ZgService {
       true,
     );
 
-    return res.data;
+    return res;
   }
 
   async transferBack(player: Player) {
-    const { balance, account } = await this.getBalance(player);
+    const balance = await this.getBalance(player);
 
     const trans_id = uuidv4();
 
@@ -206,11 +220,13 @@ export class ZgService {
       ]);
       const reqConfig: ZgReqBase<ZgTransferBackReq> = {
         method: 'POST',
-        path: '/api/platform/debit_balance_v3',
+        path: '/v1/trans/transfer',
         data: {
-          account,
-          debit_amount: balance,
-          order_id: trans_id,
+          serial: trans_id,
+          agent: this.agentAcc,
+          account: player.username,
+          amount: balance.toString(),
+          oper_type: 0,
         },
       };
 
@@ -243,10 +259,7 @@ export class ZgService {
       await this.createPlayer(player);
     }
 
-    const account = `${player.username}@${this.suffix}`;
-    const { game_url, sid } = await this.getPlayerSid(account);
-
-    const query = qs.stringify({ sid, game_type: game_id });
+    const gameUrl = await this.getGameLink(game_id, player);
 
     const currentPlayer = await this.prisma.player.findUnique({
       where: { id: player.id },
@@ -257,41 +270,44 @@ export class ZgService {
     }
 
     return {
-      path: `${game_url}?${query}`,
+      path: gameUrl,
     };
   }
 
   async getBalance(player: Player) {
     const reqConfig: ZgReqBase<ZgGetBalanceReq> = {
       method: 'POST',
-      path: '/api/platform/get_balance',
+      path: '/v1/trans/check_balance',
       data: {
-        account: `${player.username}@${this.suffix}`,
+        account: player.username,
+        agent: this.agentAcc,
       },
     };
     const res = await this.request<ZgGetBalanceRes>(reqConfig);
-    return res.data;
+    return +res.balance;
   }
 
   async fetchBetRecords(start: Date, end: Date) {
     const reqConfig: ZgReqBase<ZgBetRecordsReq> = {
       method: 'POST',
-      path: '/api/platform/get_all_bet_details',
+      path: '/v1/record/get_bet_records',
       data: {
-        start_time: format(start, 'yyyy-MM-dd HH:mm:ss'),
-        end_time: format(end, 'yyyy-MM-dd HH:mm:ss'),
-        page_index: 1,
-        page_size: 1000,
+        finish_time: {
+          start_time: start,
+          end_time: end,
+        },
+        index: 0,
+        limit: 5000,
       },
     };
 
     const res = await this.request<ZgBetRecordsRes>(reqConfig);
-    if (res.data.bet_details.length) {
+    if (res.rows.length) {
       await Promise.all(
-        res.data.bet_details.map(async (t) => {
+        res.rows.map(async (t) => {
           try {
             const player = await this.prisma.player.findUnique({
-              where: { username: t.account.replace(`@${this.suffix}`, '') },
+              where: { username: t.member },
             });
             if (!player) {
               // 略過RAW測試帳號
@@ -306,16 +322,19 @@ export class ZgService {
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
-                  bet_no: t.id_str.toString(),
+                  bet_no: t.id,
                   platform_code: this.platformCode,
                 },
               },
               create: {
-                bet_no: t.id_str.toString(),
-                amount: t.bet,
-                valid_amount: t.valid_bet,
-                win_lose_amount: t.profit,
-                bet_at: new Date(t.create_time),
+                bet_no: t.id,
+                amount: t.bet_amount,
+                valid_amount: t.valid_amount,
+                win_lose_amount: numeral(t.payout_amount)
+                  .subtract(t.bet_amount)
+                  .value(),
+                bet_at: new Date(t.bet_at),
+                result_at: new Date(t.finish_at),
                 player_id: player.id,
                 platform_code: this.platformCode,
                 category_code: game.category_code,
@@ -333,8 +352,10 @@ export class ZgService {
                 },
               },
               update: {
-                valid_amount: t.valid_bet,
-                win_lose_amount: t.profit,
+                valid_amount: t.valid_amount,
+                win_lose_amount: numeral(t.payout_amount)
+                  .subtract(t.bet_amount)
+                  .value(),
                 bet_detail: t as unknown as Prisma.InputJsonObject,
               },
             });
@@ -346,16 +367,5 @@ export class ZgService {
     }
 
     return res;
-  }
-  async fetchBetRecord(bet_no: string) {
-    const reqConfig: ZgReqBase = {
-      method: 'POST',
-      path: '/QueryBetRecordByBetNum',
-      data: {
-        betNum: bet_no,
-      },
-    };
-
-    return this.request(reqConfig);
   }
 }

@@ -1,14 +1,9 @@
 import { ZgResBase } from './base';
 
 export interface ZgCreatePlayerReq {
+  agent: string;
   account: string;
-  display_name: string;
-  site_code: string;
+  password: string;
 }
 
-export type ZgCreatePlayerRes = ZgResBase<{
-  account: string;
-  display_name: string;
-  currency_type: string;
-  create_time: Date;
-}>;
+export type ZgCreatePlayerRes = ZgResBase;

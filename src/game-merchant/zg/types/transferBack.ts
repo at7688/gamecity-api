@@ -1,15 +1,15 @@
 import { ZgResBase } from './base';
 
 export interface ZgTransferBackReq {
+  serial: string;
+  agent: string;
   account: string;
-  debit_amount: number;
-  order_id: string;
+  amount: string;
+  oper_type: 0;
 }
 
-export type ZgTransferBackRes = ZgResBase<{
-  account: string;
-  balance: number;
-  order_id: string;
-  debit_amount: number;
-  c_type: string;
-}>;
+export interface ZgTransferBackRes extends ZgResBase {
+  trans_id: string;
+  serial: string;
+  balance: string;
+}

@@ -1,39 +1,54 @@
 import { ZgResBase } from './base';
 
 export interface ZgBetRecordsReq {
-  account?: string;
-  start_time: string;
-  end_time: string;
-  page_index: number;
-  page_size: number;
+  finish_time: {
+    start_time: Date | string;
+    end_time: Date | string;
+  };
+  index: number;
+  limit: number;
 }
-export type ZgBetRecordsRes = ZgResBase<{
-  bet_details?: ZgBetRecord[];
-  page_index: number;
-  page_size: number;
-  total_elements: number;
-  total_pages: number;
-}>;
+
+export interface ZgBetRecordsRes extends ZgResBase {
+  total: string;
+  rows: ZgBetRecord[];
+}
 
 export interface ZgBetRecord {
-  id_str: string;
-  id: number;
-  sid: string;
-  account: string;
+  id: string;
+  bet_at: Date;
+  finish_at: Date;
+  agent: Agent;
+  member: Member;
+  game_id: string;
+  game_serial: string;
   game_type: number;
-  game_module_type: number;
-  game_round: string;
-  bet: number;
-  bet_result: string;
-  game_result: string;
-  valid_bet: number;
-  win: number;
-  create_time: Date;
-  room_id: number;
-  table_id: number;
-  order_id: string;
-  device: string;
-  client_ip: string;
-  c_type: string;
-  profit: number;
+  round_id: string;
+  bet_amount: number;
+  payout_amount: number;
+  valid_amount: number;
+  fee_amount: number;
+  jp_amount: number;
+  status: number;
+  wallet_token: WalletToken;
+  owner: Agent;
+  currency: Currency;
+  event_id: string;
+  event_amount: number;
+}
+
+export enum Agent {
+  Asg0001UAT = 'ASG0001UAT',
+}
+
+export enum Currency {
+  Ttt = 'TTT',
+}
+
+export enum Member {
+  Player99 = 'player99',
+}
+
+export enum WalletToken {
+  QDqeasqjeOHERkmu6328160F6Ab9Bc2Ea3Ba6092 = 'qDqeasqjeOHERkmu:6328160f6ab9bc2ea3ba6092',
 }

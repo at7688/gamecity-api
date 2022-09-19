@@ -38,8 +38,4 @@ export class ZgController {
   fetchBetRecords(@Body('start') start, @Body('end') end) {
     return this.zgService.fetchBetRecords(new Date(start), new Date(end));
   }
-  @Get('record/:id')
-  fetchBetRecord(@Param('id') id) {
-    return this.zgService.fetchBetRecord(id);
-  }
 }

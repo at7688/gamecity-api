@@ -23,11 +23,15 @@ import { OgService } from './og/og.service';
 import { OgTaskService } from './og/og.task.service';
 import { PlatformsBridgeService } from './platforms-bridge/platforms-bridge.service';
 import { PlatformsBridgeController } from './platforms-bridge/platforms-bridge.controller';
+import { ZgService } from './zg/zg.service';
+import { ZgTaskService } from './zg/zg.task.service';
+import { ZgController } from './zg/zg.controller';
 
 @Module({
   imports: [WalletRecModule, AuthModule],
   controllers: [
     AbController,
+    ZgController,
     OgController,
     OgCbController,
     AviaController,
@@ -39,6 +43,8 @@ import { PlatformsBridgeController } from './platforms-bridge/platforms-bridge.c
   providers: [
     AbService,
     AbTaskService,
+    ZgService,
+    ZgTaskService,
     OgService,
     OgCbService,
     OgTaskService,

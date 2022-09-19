@@ -370,6 +370,7 @@ export class AbService {
               valid_amount: t.validAmount,
               win_lose_amount: t.winOrLossAmount,
               bet_at: new Date(t.betTime),
+              result_at: new Date(t.finish_at),
               player_id: player.id,
               platform_code: this.platformCode,
               category_code: game.category_code,

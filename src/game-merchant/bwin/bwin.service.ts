@@ -306,6 +306,7 @@ export class BwinService {
               valid_amount: t.validBet,
               win_lose_amount: t.win,
               bet_at: new Date(t.createdAt),
+              result_at: new Date(t.endAt),
               player_id: player.id,
               platform_code: this.platformCode,
               category_code: game.category_code,
