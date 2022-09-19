@@ -210,9 +210,11 @@ export class AviaService {
             category_code: game.category_code,
             ratios: {
               createMany: {
-                data: ratios.map((t) => ({
-                  agent_id: t.agent_id,
-                  ratio: t.ratio,
+                data: ratios.map((r) => ({
+                  agent_id: r.agent_id,
+                  ratio: r.ratio,
+                  water: r.water,
+                  water_duty: r.water_duty,
                 })),
                 skipDuplicates: true,
               },

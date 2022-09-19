@@ -343,6 +343,8 @@ export class GrService {
                     data: ratios.map((r) => ({
                       agent_id: r.agent_id,
                       ratio: r.ratio,
+                      water: r.water,
+                      water_duty: r.water_duty,
                     })),
                     skipDuplicates: true,
                   },

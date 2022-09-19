@@ -61,14 +61,22 @@ export class GameRatioService {
       max.water_duty = setting.water_duty;
       max.water = setting.water;
     }
+    console.log(data);
+    console.log(max);
     if (ratio > max.ratio) {
-      throw new BadRequestException(`輸贏佔成不可超過${max.ratio}`);
+      throw new BadRequestException(
+        `(${game_code})輸贏佔成不可超過${max.ratio}`,
+      );
     }
     if (water_duty > max.water_duty) {
-      throw new BadRequestException(`退水負擔不可超過${max.water_duty}`);
+      throw new BadRequestException(
+        `(${game_code})退水負擔不可超過${max.water_duty}`,
+      );
     }
     if (water > max.water) {
-      throw new BadRequestException(`退水紅利不可超過${max.water}`);
+      throw new BadRequestException(
+        `(${game_code})退水紅利不可超過${max.water}`,
+      );
     }
 
     // 設置的ratio不能高於上層agent
