@@ -62,10 +62,12 @@ export class ZgService {
     };
     try {
       const res = await axios.request<T>(axiosConfig);
-      console.log(res.data);
-      // if (res.data.status === 'N') {
-      //   throw new BadRequestException(`${res.data.message}(${res.data.code})`);
-      // }
+      // console.log(res.data);
+      if (res.data.result.code !== 1) {
+        throw new BadRequestException(
+          `${res.data.result.msg}(${res.data.result.code})`,
+        );
+      }
       return res.data;
     } catch (err) {
       await this.prisma.merchantLog.create({
