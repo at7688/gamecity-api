@@ -105,21 +105,37 @@ export class BwinService {
     };
 
     const res = await this.request<BwinGameListRes>(reqConfig);
-
-    await this.prisma.game.createMany({
-      data: res.data.map((t, i) => ({
-        name: t.name,
-        sort: i,
-        code: t.productId,
-        platform_code: this.platformCode,
-        category_code: {
-          fish: GameCategory.FISH,
-          slot: GameCategory.SLOT,
-          coc: GameCategory.STREET,
-        }[t.type],
-      })),
-      skipDuplicates: true,
-    });
+    await Promise.all(
+      res.data.map((t, i) => {
+        return this.prisma.game.upsert({
+          where: {
+            code_platform_code: {
+              code: t.productId,
+              platform_code: this.platformCode,
+            },
+          },
+          create: {
+            name: t.name,
+            sort: i,
+            code: t.productId,
+            platform_code: this.platformCode,
+            category_code: {
+              fish: GameCategory.FISH,
+              slot: GameCategory.SLOT,
+              coc: GameCategory.STREET,
+            }[t.type],
+          },
+          update: {
+            name: t.name,
+            category_code: {
+              fish: GameCategory.FISH,
+              slot: GameCategory.SLOT,
+              coc: GameCategory.STREET,
+            }[t.type],
+          },
+        });
+      }),
+    );
 
     return res;
   }

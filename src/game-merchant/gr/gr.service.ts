@@ -107,21 +107,39 @@ export class GrService {
 
     const res = await this.request<GrGameListRes>(reqConfig);
 
-    await this.prisma.game.createMany({
-      data: res.data.game_list.map((t, i) => ({
-        name: t.game_name,
-        sort: i,
-        code: t.game_type.toString(),
-        platform_code: this.platformCode,
-        category_code: {
-          1: GameCategory.HUNDRED,
-          2: GameCategory.STREET,
-          3: GameCategory.SLOT,
-          4: GameCategory.FISH,
-        }[t.game_module_type],
-      })),
-      skipDuplicates: true,
-    });
+    await Promise.all(
+      res.data.game_list.map((t, i) => {
+        return this.prisma.game.upsert({
+          where: {
+            code_platform_code: {
+              code: t.game_type.toString(),
+              platform_code: this.platformCode,
+            },
+          },
+          create: {
+            name: t.game_name,
+            sort: i,
+            code: t.game_type.toString(),
+            platform_code: this.platformCode,
+            category_code: {
+              1: GameCategory.HUNDRED,
+              2: GameCategory.STREET,
+              3: GameCategory.SLOT,
+              4: GameCategory.FISH,
+            }[t.game_module_type],
+          },
+          update: {
+            name: t.game_name,
+            category_code: {
+              1: GameCategory.HUNDRED,
+              2: GameCategory.STREET,
+              3: GameCategory.SLOT,
+              4: GameCategory.FISH,
+            }[t.game_module_type],
+          },
+        });
+      }),
+    );
 
     return res;
   }
