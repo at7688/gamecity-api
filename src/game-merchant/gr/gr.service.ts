@@ -135,7 +135,7 @@ export class GrService {
   }
 
   async transferTo(player: Player) {
-    const trans_id = uuidv4().substring(0, 13);
+    const trans_id = uuidv4();
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.TRANSFER_TO_GAME,
@@ -172,17 +172,11 @@ export class GrService {
     }
 
     // 紀錄轉入
-    await this.prisma.gameAccount.update({
-      where: {
-        platform_code_player_id: {
-          player_id: player.id,
-          platform_code: this.platformCode,
-        },
-      },
-      data: {
-        has_credit: true,
-      },
-    });
+    await this.gameMerchantService.transferRecord(
+      player,
+      this.platformCode,
+      true,
+    );
 
     return res.data;
   }
@@ -190,7 +184,7 @@ export class GrService {
   async transferBack(player: Player) {
     const { balance, account } = await this.getBalance(player);
 
-    const trans_id = uuidv4().substring(0, 13);
+    const trans_id = uuidv4();
 
     if (balance > 0) {
       await this.prisma.$transaction([
@@ -216,17 +210,11 @@ export class GrService {
     }
 
     // 紀錄轉回
-    await this.prisma.gameAccount.update({
-      where: {
-        platform_code_player_id: {
-          player_id: player.id,
-          platform_code: this.platformCode,
-        },
-      },
-      data: {
-        has_credit: false,
-      },
-    });
+    await this.gameMerchantService.transferRecord(
+      player,
+      this.platformCode,
+      false,
+    );
 
     return {
       balance, // 轉回的餘額

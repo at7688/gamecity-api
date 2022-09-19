@@ -228,17 +228,11 @@ export class AbService {
     }
 
     // 紀錄轉入
-    await this.prisma.gameAccount.update({
-      where: {
-        platform_code_player_id: {
-          player_id: player.id,
-          platform_code: this.platformCode,
-        },
-      },
-      data: {
-        has_credit: true,
-      },
-    });
+    await this.gameMerchantService.transferRecord(
+      player,
+      this.platformCode,
+      true,
+    );
 
     return res.data;
   }
@@ -275,17 +269,11 @@ export class AbService {
     }
 
     // 紀錄轉回
-    await this.prisma.gameAccount.update({
-      where: {
-        platform_code_player_id: {
-          player_id: player.id,
-          platform_code: this.platformCode,
-        },
-      },
-      data: {
-        has_credit: false,
-      },
-    });
+    await this.gameMerchantService.transferRecord(
+      player,
+      this.platformCode,
+      false,
+    );
 
     return {
       balance, // 轉回的餘額

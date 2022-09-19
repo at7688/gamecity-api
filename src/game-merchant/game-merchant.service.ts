@@ -3,9 +3,6 @@ import { Player } from '@prisma/client';
 import { compact } from 'lodash';
 import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AbService } from './ab/ab.service';
-import { BwinService } from './bwin/bwin.service';
-import { GrService } from './gr/gr.service';
 
 @Injectable()
 export class GameMerchantService {
@@ -60,5 +57,19 @@ export class GameMerchantService {
       this.validateGame(platform_code, game_code),
       this.getBetRatios(player, platform_code, game_code),
     ]);
+  }
+
+  transferRecord(player: Player, platform_code: string, isTransTo: boolean) {
+    return this.prisma.gameAccount.update({
+      where: {
+        platform_code_player_id: {
+          player_id: player.id,
+          platform_code,
+        },
+      },
+      data: {
+        has_credit: isTransTo,
+      },
+    });
   }
 }
