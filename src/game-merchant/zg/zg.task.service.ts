@@ -8,12 +8,12 @@ export class ZgTaskService {
   constructor(private readonly zgService: ZgService) {}
   private readonly Logger = new Logger(ZgTaskService.name);
 
-  // @Cron(CronExpression.EVERY_10_MINUTES)
-  // async fetchGameList() {
-  //   await this.zgService.fetchBetRecords(
-  //     subMinutes(new Date(), 20),
-  //     subMinutes(new Date(), 10),
-  //   );
-  //   this.Logger.debug('GR_FETCH_BET_RECORDS(EVERY_10_MINUTES)');
-  // }
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async fetchGameList() {
+    await this.zgService.fetchBetRecords(
+      subMinutes(new Date(), 20),
+      subMinutes(new Date(), 10),
+    );
+    this.Logger.debug('ZG_FETCH_BET_RECORDS(EVERY_5_MINUTES)');
+  }
 }

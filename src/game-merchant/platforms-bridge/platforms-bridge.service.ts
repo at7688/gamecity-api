@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { AbService } from '../ab/ab.service';
 import { BwinService } from '../bwin/bwin.service';
 import { GrService } from '../gr/gr.service';
+import { ZgService } from '../zg/zg.service';
 
 @Injectable()
 export class PlatformsBridgeService {
@@ -12,6 +13,7 @@ export class PlatformsBridgeService {
     private readonly abService: AbService,
     private readonly bwinService: BwinService,
     private readonly grService: GrService,
+    private readonly zgService: ZgService,
   ) {}
 
   async transferBack(player: Player, platform?: string) {
@@ -19,6 +21,7 @@ export class PlatformsBridgeService {
       ab: this.abService.transferBack(player),
       bwin: this.bwinService.transferBack(player),
       gr: this.grService.transferBack(player),
+      zg: this.zgService.transferBack(player),
     };
 
     if (platform) {
