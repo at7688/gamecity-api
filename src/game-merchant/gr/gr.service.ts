@@ -46,7 +46,7 @@ export class GrService {
     };
     try {
       const res = await axios.request<T>(axiosConfig);
-      console.log(res.data);
+      // console.log(res.data);
       if (res.data.status === 'N') {
         throw new BadRequestException(`${res.data.message}(${res.data.code})`);
       }

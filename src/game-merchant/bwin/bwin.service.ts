@@ -47,7 +47,7 @@ export class BwinService {
     };
     try {
       const res = await axios.request<T>(axiosConfig);
-      console.log(res.data);
+      // console.log(res.data);
       if (res.data.error) {
         throw new Error(res.data.error.message);
       }
