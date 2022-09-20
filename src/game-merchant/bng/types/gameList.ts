@@ -1,18 +1,22 @@
 import { BngResBase } from './base';
 
-export interface BngGameListRes extends BngResBase {
-  game_info_state_list: GameInfoStateList[];
-}
-export interface GameInfoStateList {
-  id: string;
-  type: string;
-  active: boolean;
-  names: BngGameNames;
+export type BngGameType = 'fish' | 'table' | 'slot' | 'arcade' | 'p2p';
+
+export interface BngGameListReq {
+  account_id: number;
 }
 
-export interface BngGameNames {
-  en_us: string;
-  th_th: string;
-  vi_vn: string;
-  zh_cn: string;
+export type BngGameListRes = BngResBase<Record<BngGameType, BngGame[]>>;
+
+export interface BngGame {
+  game_vendor_name: string;
+  game_code: string;
+  en: string;
+  tw: string;
+  cn: string;
+  vi?: string;
+  th?: string;
+  ja?: string;
+  my?: string;
+  maintain: boolean;
 }

@@ -1,25 +1,32 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import { addHours, format, subMinutes } from 'date-fns';
+import * as CryptoJS from 'crypto-js';
+import { formatRFC3339 } from 'date-fns';
+import * as numeral from 'numeral';
+import { BetRecordStatus } from 'src/bet-record/enums';
+import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
 import { BngReqBase, BngResBase } from './types/base';
 import { BngCreatePlayerReq, BngCreatePlayerRes } from './types/createPlayer';
 import { BngBetRecordsReq, BngBetRecordsRes } from './types/fetchBetRecords';
-import { BngGameListRes } from './types/gameList';
-import * as qs from 'query-string';
-import { BngTransferToReq, BngTransferToRes } from './types/transferTo';
-import { WalletRecType } from 'src/wallet-rec/enums';
+import { BngGameListReq, BngGameListRes } from './types/gameList';
 import { BngGetBalanceReq, BngGetBalanceRes } from './types/getBalance';
-import { BngTransferBackReq, BngTransferBackRes } from './types/transferBack';
-import { BetRecordStatus } from 'src/bet-record/enums';
-import { v4 as uuidv4 } from 'uuid';
-import { GameCategory } from 'src/game/enums';
-import * as CryptoJS from 'crypto-js';
 import { BngGetGameLinkReq, BngGetGameLinkRes } from './types/getGameLink';
-import * as numeral from 'numeral';
+import { BngTransferBackReq, BngTransferBackRes } from './types/transferBack';
+import {
+  BngTransferCheckReq,
+  BngTransferCheckRes,
+} from './types/transferCheck';
+import { BngTransferToReq, BngTransferToRes } from './types/transferTo';
 
 @Injectable()
 export class BngService {
@@ -29,43 +36,39 @@ export class BngService {
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'bng';
-  apiUrl = 'https://api.sandsys.pw';
-  channel = '34937514';
-  aesKey = '6vEG7IFphbkM59eOPdyofBQSgXYUzZlJ';
-  signKey = 'SxzIAbNGWfnqmHKL7tY8dFCuX6VR1wjP';
 
-  agentAcc = 'ASG0001UAT';
+  apiUrl = 'http://game.stgkg.btgame777.com/v2';
+  accountId = 535297412469653;
+  securityCode = 'fbf5cad36c142ea8a0626c31240c7426';
 
-  suffix = 'asg';
+  usernamePrefix = 'Asg168_';
 
   async request<T extends BngResBase>(reqConfig: BngReqBase) {
     const { method, path, data } = reqConfig;
 
-    const encrypted = CryptoJS.AES.encrypt(
-      JSON.stringify(data),
-      this.aesKey,
-    ).toString();
+    let str = `security_code=${this.securityCode}`;
 
-    const sign = CryptoJS.MD5(encrypted + this.signKey).toString();
+    Object.keys(data).forEach((key) => {
+      str += `&${key}=${data[key]}`;
+    });
 
-    const encrptedData = {
-      channel: this.channel,
-      data: encrypted,
-      sign,
+    const postData = {
+      ...data,
+      check_code: CryptoJS.MD5(str).toString(),
     };
 
     const axiosConfig: AxiosRequestConfig<any> = {
       method,
       baseURL: this.apiUrl,
       url: path,
-      data: encrptedData,
+      data: postData,
     };
     try {
       const res = await axios.request<T>(axiosConfig);
       // console.log(res.data);
-      if (res.data.result.code !== 1) {
+      if (res.data.status.code !== 1000) {
         throw new BadRequestException(
-          `${res.data.result.msg}(${res.data.result.code})`,
+          `${res.data.status.message}(${res.data.status.code})`,
         );
       }
       return res.data;
@@ -76,7 +79,7 @@ export class BngService {
           action: 'ERROR',
           path,
           method,
-          sendData: data,
+          sendData: postData,
           resData: err.response.data,
         },
       });
@@ -88,52 +91,62 @@ export class BngService {
   async createPlayer(player: Player) {
     const reqConfig: BngReqBase<BngCreatePlayerReq> = {
       method: 'POST',
-      path: '/v1/member/create',
+      path: '/agent/create_user',
       data: {
-        agent: this.agentAcc,
-        account: player.username,
+        account_id: this.accountId,
+        username: player.username,
         password: CryptoJS.MD5(player.username).toString(),
       },
     };
 
-    await this.request<BngCreatePlayerRes>(reqConfig);
+    try {
+      await this.request<BngCreatePlayerRes>(reqConfig);
 
-    // 新增廠商對應遊戲帳號
-    await this.prisma.gameAccount.create({
-      data: {
-        platform_code: this.platformCode,
-        player_id: player.id,
-        account: `${player.username}@${this.suffix}`,
-      },
-    });
+      // 新增廠商對應遊戲帳號
+      await this.prisma.gameAccount.create({
+        data: {
+          platform_code: this.platformCode,
+          player_id: player.id,
+          account: player.username,
+        },
+      });
 
-    return {
-      success: true,
-    };
+      return {
+        success: true,
+      };
+    } catch (err) {
+      throw new BadRequestException(err);
+    }
   }
 
   async getGameList() {
-    const reqConfig: BngReqBase = {
+    const reqConfig: BngReqBase<BngGameListReq> = {
       method: 'POST',
-      path: '/v1/config/get_game_info_state_list',
-      data: {},
+      path: '/agent/get_gamelist',
+      data: {
+        account_id: this.accountId,
+      },
     };
 
     const res = await this.request<BngGameListRes>(reqConfig);
 
-    await this.prisma.game.createMany({
-      data: res.game_info_state_list.map((t, i) => ({
-        name: t.names.zh_cn,
-        sort: i,
-        code: t.id,
-        platform_code: this.platformCode,
-        category_code: {
-          1: GameCategory.FISH,
-          3: GameCategory.SLOT,
-          4: GameCategory.STREET,
-        }[t.type],
-      })),
-      skipDuplicates: true,
+    Object.entries(res.data).forEach(async ([key, list]) => {
+      await this.prisma.game.createMany({
+        data: list.map((t, i) => ({
+          name: t.tw,
+          sort: i,
+          code: t.game_code,
+          platform_code: this.platformCode,
+          category_code: {
+            fish: GameCategory.FISH,
+            table: GameCategory.CHESS,
+            p2p: GameCategory.CHESS,
+            slot: GameCategory.SLOT,
+            arcade: GameCategory.STREET,
+          }[key],
+        })),
+        skipDuplicates: true,
+      });
     });
 
     return res;
@@ -142,18 +155,23 @@ export class BngService {
   async getGameLink(game_id: string, player: Player) {
     const reqConfig: BngReqBase<BngGetGameLinkReq> = {
       method: 'POST',
-      path: '/v1/member/login_game',
+      path: '/agent/user_login',
       data: {
-        account: player.username,
-        game_id,
-        lang: 'zh_cn',
-        agent: this.agentAcc,
+        account_id: this.accountId,
+        username: player.username,
+        password: CryptoJS.MD5(player.username).toString(),
+        game_code: game_id,
+        lang: 'zh-tw',
       },
     };
 
-    const res = await this.request<BngGetGameLinkRes>(reqConfig);
+    try {
+      const res = await this.request<BngGetGameLinkRes>(reqConfig);
 
-    return res.url;
+      return res.data.game_url;
+    } catch (err) {
+      throw new BadRequestException(err);
+    }
   }
 
   async transferTo(player: Player) {
@@ -170,19 +188,18 @@ export class BngService {
 
     const reqConfig: BngReqBase<BngTransferToReq> = {
       method: 'POST',
-      path: '/v1/trans/transfer',
+      path: '/user/deposit_amount',
       data: {
-        serial: trans_id,
-        agent: this.agentAcc,
-        account: player.username,
-        amount: player.balance.toString(),
-        oper_type: 1,
+        account_id: this.accountId,
+        username: player.username,
+        deposit_amount: player.balance,
+        external_order_id: trans_id,
       },
     };
 
     const res = await this.request<BngTransferToRes>(reqConfig);
 
-    if (res.result.code !== 1) {
+    if (res.status.code !== 1000) {
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
           type: WalletRecType.TRANSFER_FROM_GAME,
@@ -222,18 +239,23 @@ export class BngService {
       ]);
       const reqConfig: BngReqBase<BngTransferBackReq> = {
         method: 'POST',
-        path: '/v1/trans/transfer',
+        path: '/user/withdraw_amount',
         data: {
-          serial: trans_id,
-          agent: this.agentAcc,
-          account: player.username,
-          amount: balance.toString(),
-          oper_type: 0,
+          account_id: this.accountId,
+          username: player.username,
+          take_all: true,
+          external_order_id: trans_id,
         },
       };
 
       await this.request<BngTransferBackRes>(reqConfig);
     }
+
+    // const amount = +(await this.transferCheck(trans_id)).amount;
+
+    // if(amount !== balance) {
+    //   throw
+    // }
 
     // 紀錄轉回
     await this.gameMerchantService.transferRecord(
@@ -279,37 +301,50 @@ export class BngService {
   async getBalance(player: Player) {
     const reqConfig: BngReqBase<BngGetBalanceReq> = {
       method: 'POST',
-      path: '/v1/trans/check_balance',
+      path: '/user/get_balance',
       data: {
-        account: player.username,
-        agent: this.agentAcc,
+        account_id: this.accountId,
+        username: player.username,
       },
     };
     const res = await this.request<BngGetBalanceRes>(reqConfig);
-    return +res.balance;
+    return +res.data.balance;
+  }
+  async transferCheck(trans_id: string) {
+    const reqConfig: BngReqBase<BngTransferCheckReq> = {
+      method: 'POST',
+      path: '/user/get_transaction_status',
+      data: {
+        account_id: this.accountId,
+        external_order_id: trans_id,
+      },
+    };
+    const res = await this.request<BngTransferCheckRes>(reqConfig);
+    return res.data;
   }
 
   async fetchBetRecords(start: Date, end: Date) {
     const reqConfig: BngReqBase<BngBetRecordsReq> = {
       method: 'POST',
-      path: '/v1/record/get_bet_records',
+      path: '/record/get_game_histories',
       data: {
-        finish_time: {
-          start_time: start,
-          end_time: end,
-        },
-        index: 0,
-        limit: 5000,
+        account_id: this.accountId,
+        datetime_from: formatRFC3339(start),
+        datetime_to: formatRFC3339(end),
+        page: 1,
+        page_count: 200,
+        game_type: 'ALL',
+        lang: 'zh-tw',
       },
     };
 
     const res = await this.request<BngBetRecordsRes>(reqConfig);
-    if (res.rows?.length) {
+    if (res.data.histories?.length) {
       await Promise.all(
-        res.rows.map(async (t) => {
+        res.data.histories.map(async (t) => {
           try {
             const player = await this.prisma.player.findUnique({
-              where: { username: t.member },
+              where: { username: t.username.replace(this.usernamePrefix, '') },
             });
             if (!player) {
               // 略過RAW測試帳號
@@ -319,35 +354,27 @@ export class BngService {
             const [game, ratios] = await this.gameMerchantService.getBetInfo(
               player,
               this.platformCode,
-              t.game_id.toString(),
+              t.game_code,
             );
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
-                  bet_no: t.id,
+                  bet_no: t.order_id,
                   platform_code: this.platformCode,
                 },
               },
               create: {
-                bet_no: t.id,
-                amount: t.bet_amount,
-                valid_amount: t.valid_amount,
-                win_lose_amount: numeral(t.payout_amount)
-                  .subtract(t.bet_amount)
-                  .value(),
-                bet_at: new Date(t.bet_at),
-                result_at: new Date(t.finish_at),
+                bet_no: t.order_id,
+                amount: t.bet,
+                valid_amount: t.valid_bet,
+                win_lose_amount: t.diff,
+                bet_at: new Date(t.bet_time),
+                result_at: new Date(t.result_time),
                 player_id: player.id,
                 platform_code: this.platformCode,
                 category_code: game.category_code,
-                game_code: t.game_id,
-                status: {
-                  1: BetRecordStatus.DONE,
-                  2: BetRecordStatus.REFUND,
-                  3: BetRecordStatus.REFUND,
-                  4: BetRecordStatus.REFUND,
-                  5: BetRecordStatus.REFUND,
-                }[t.status],
+                game_code: t.game_code,
+                status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 ratios: {
                   createMany: {
@@ -362,10 +389,8 @@ export class BngService {
                 },
               },
               update: {
-                valid_amount: t.valid_amount,
-                win_lose_amount: numeral(t.payout_amount)
-                  .subtract(t.bet_amount)
-                  .value(),
+                valid_amount: t.valid_bet,
+                win_lose_amount: t.diff,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
               },
             });

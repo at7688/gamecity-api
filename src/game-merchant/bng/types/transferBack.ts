@@ -1,15 +1,15 @@
 import { BngResBase } from './base';
 
 export interface BngTransferBackReq {
-  serial: string;
-  agent: string;
-  account: string;
-  amount: string;
-  oper_type: 0;
+  account_id: number;
+  username: string;
+  take_all: true;
+  external_order_id: string;
 }
 
-export interface BngTransferBackRes extends BngResBase {
-  trans_id: string;
-  serial: string;
+export type BngTransferBackRes = BngResBase<{
   balance: string;
-}
+  currency: string;
+  order_id: string;
+  external_order_id: string;
+}>;

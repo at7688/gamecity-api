@@ -1,15 +1,12 @@
+import { type } from 'os';
 import { BngResBase } from './base';
 
 export interface BngGetGameLinkReq {
-  game_id: string;
+  account_id: number;
+  username: string;
+  password: string;
+  game_code: string;
   lang: string;
-  agent: string;
-  account: string;
 }
 
-export interface BngGetGameLinkRes extends BngResBase {
-  static: string;
-  dynamic: string;
-  token: string;
-  url: string;
-}
+export type BngGetGameLinkRes = BngResBase<{ game_url: string }>;

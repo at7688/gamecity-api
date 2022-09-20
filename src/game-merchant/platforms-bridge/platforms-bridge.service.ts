@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Player } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbService } from '../ab/ab.service';
+import { BngService } from '../bng/bng.service';
 import { BwinService } from '../bwin/bwin.service';
 import { GrService } from '../gr/gr.service';
 import { ZgService } from '../zg/zg.service';
@@ -14,6 +15,7 @@ export class PlatformsBridgeService {
     private readonly bwinService: BwinService,
     private readonly grService: GrService,
     private readonly zgService: ZgService,
+    private readonly bngService: BngService,
   ) {}
 
   async transferBack(player: Player, platform?: string) {
@@ -22,6 +24,7 @@ export class PlatformsBridgeService {
       bwin: this.bwinService.transferBack(player),
       gr: this.grService.transferBack(player),
       zg: this.zgService.transferBack(player),
+      bng: this.bngService.transferBack(player),
     };
 
     if (platform) {

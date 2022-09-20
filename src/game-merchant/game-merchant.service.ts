@@ -49,7 +49,7 @@ export class GameMerchantService {
     const vipWater = await this.prisma.gameWater.findFirst({
       where: { vip_id: player.vip_id, platform_code, game_code },
     });
-    return vipWater.water;
+    return vipWater?.water || 0;
   }
 
   getBetInfo(player: Player, platform_code: string, game_code: string) {

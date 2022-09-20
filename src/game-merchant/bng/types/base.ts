@@ -1,9 +1,10 @@
-export interface BngResBase {
-  result: {
+export interface BngResBase<T = any> {
+  status: {
     code: number;
-    msg: string;
-    timestamp?: string;
+    message: string;
+    time: string;
   };
+  data?: T;
 }
 
 export interface BngReqBase<R = any> {

@@ -1,8 +1,8 @@
 import { BngResBase } from './base';
 
 export interface BngCreatePlayerReq {
-  agent: string;
-  account: string;
+  account_id: number;
+  username: string;
   password: string;
 }
 

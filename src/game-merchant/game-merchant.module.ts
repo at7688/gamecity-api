@@ -1,3 +1,4 @@
+import { BngController } from './bng/bng.controller';
 import { Module } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
 import { WalletRecModule } from 'src/wallet-rec/wallet-rec.module';
@@ -26,11 +27,14 @@ import { PlatformsBridgeController } from './platforms-bridge/platforms-bridge.c
 import { ZgService } from './zg/zg.service';
 import { ZgTaskService } from './zg/zg.task.service';
 import { ZgController } from './zg/zg.controller';
+import { BngService } from './bng/bng.service';
+import { BngTaskService } from './bng/bng.task.service';
 
 @Module({
   imports: [WalletRecModule, AuthModule],
   controllers: [
     AbController,
+    BngController,
     ZgController,
     OgController,
     OgCbController,
@@ -43,6 +47,8 @@ import { ZgController } from './zg/zg.controller';
   providers: [
     AbService,
     AbTaskService,
+    BngService,
+    BngTaskService,
     ZgService,
     ZgTaskService,
     OgService,

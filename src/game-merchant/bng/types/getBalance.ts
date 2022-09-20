@@ -1,10 +1,11 @@
 import { BngResBase } from './base';
 
 export interface BngGetBalanceReq {
-  agent: string;
-  account: string;
+  account_id: number;
+  username: string;
 }
 
-export interface BngGetBalanceRes extends BngResBase {
+export type BngGetBalanceRes = BngResBase<{
   balance: string;
-}
+  currency: string;
+}>;
