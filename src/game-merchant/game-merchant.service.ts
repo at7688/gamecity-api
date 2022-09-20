@@ -45,10 +45,18 @@ export class GameMerchantService {
     return compact(ratios);
   }
 
+  async getVipWater(player: Player, platform_code: string, game_code: string) {
+    const vipWater = await this.prisma.gameWater.findFirst({
+      where: { vip_id: player.vip_id, platform_code, game_code },
+    });
+    return vipWater.water;
+  }
+
   getBetInfo(player: Player, platform_code: string, game_code: string) {
     return Promise.all([
       this.validateGame(platform_code, game_code),
       this.getBetRatios(player, platform_code, game_code),
+      this.getVipWater(player, platform_code, game_code),
     ]);
   }
 

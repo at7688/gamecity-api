@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "BetRecord" ADD COLUMN     "vip_water" DOUBLE PRECISION NOT NULL DEFAULT 0;

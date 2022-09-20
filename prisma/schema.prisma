@@ -711,6 +711,7 @@ model BetRecord {
   bet_target String? // 下注目標 (莊,閒,和,..)
   bet_detail Json?
   ratios BetRatioRec[]
+  vip_water Float @default(0)
 
   @@unique([bet_no, platform_code])
 }
@@ -726,6 +727,7 @@ model BetRatioRec {
 
   @@unique([agent_id, bet_id])
 }
+
 
 model GameAccount {
   id Int @id @default(autoincrement())
