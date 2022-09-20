@@ -9,9 +9,9 @@ import { UpdateGameRatioDto } from './dto/update-game-ratio.dto';
 export class GameRatioService {
   constructor(private readonly prisma: PrismaService) {}
   async batchSet(data: BatchSetGameRatioDtos) {
-    const { platform_code, agent_id, ratios } = data;
+    const { agent_id, setting } = data;
     await Promise.all(
-      ratios.map(({ game_code, ratio, water, water_duty }) =>
+      setting.map(({ platform_code, game_code, ratio, water, water_duty }) =>
         this.set({
           platform_code,
           game_code,

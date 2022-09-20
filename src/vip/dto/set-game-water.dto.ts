@@ -6,7 +6,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-class GameSetting {
+export class GameWater {
   @IsString()
   @IsNotEmpty()
   platform_code: string;
@@ -17,24 +17,16 @@ class GameSetting {
 
   @IsNumber()
   @IsNotEmpty()
-  ratio: number;
-
-  @IsNumber()
-  @IsNotEmpty()
   water: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  water_duty: number;
 }
 
-export class BatchSetGameRatioDtos {
+export class SetGameWaterDto {
   @IsString()
   @IsNotEmpty()
-  agent_id: string;
+  vip_id: string;
 
   @ValidateNested({ each: true })
-  @Type(() => GameSetting)
+  @Type(() => GameWater)
   @IsNotEmpty()
-  setting: GameSetting[];
+  setting: GameWater[];
 }

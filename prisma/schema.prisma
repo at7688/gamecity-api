@@ -721,6 +721,8 @@ model BetRatioRec {
   bet BetRecord @relation(fields: [bet_id], references: [id])
   bet_id String
   ratio Float
+  water Float
+  water_duty Float
 
   @@unique([agent_id, bet_id])
 }

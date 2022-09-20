@@ -10,6 +10,7 @@ import {
 import { VipService } from './vip.service';
 import { CreateVipDto } from './dto/create-vip.dto';
 import { UpdateVipDto } from './dto/update-vip.dto';
+import { SetGameWaterDto } from './dto/set-game-water.dto';
 
 @Controller('vips')
 export class VipController {
@@ -38,6 +39,11 @@ export class VipController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateVipDto: UpdateVipDto) {
     return this.vipService.update(id, updateVipDto);
+  }
+
+  @Post('water')
+  gameWater(@Body() setGameWaterDto: SetGameWaterDto) {
+    return this.vipService.gameWater(setGameWaterDto);
   }
 
   @Delete(':id')

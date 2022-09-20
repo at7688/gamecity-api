@@ -18,7 +18,9 @@ export class CreateGamesDto {
   @IsString()
   @IsNotEmpty()
   platform_code: string;
+
   @ValidateNested({ each: true })
   @Type(() => GameDto)
+  @IsNotEmpty()
   games: GameDto[];
 }

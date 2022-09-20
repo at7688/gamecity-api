@@ -116,7 +116,6 @@ export class AbService {
       });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
-      return err.response.data;
     }
   }
 
@@ -370,7 +369,7 @@ export class AbService {
               valid_amount: t.validAmount,
               win_lose_amount: t.winOrLossAmount,
               bet_at: new Date(t.betTime),
-              result_at: new Date(t.finish_at),
+              result_at: new Date(t.gameRoundEndTime),
               player_id: player.id,
               platform_code: this.platformCode,
               category_code: game.category_code,

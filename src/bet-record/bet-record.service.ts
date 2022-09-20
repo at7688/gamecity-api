@@ -114,6 +114,8 @@ export class BetRecordService {
         ratios: {
           select: {
             ratio: true,
+            water: true,
+            water_duty: true,
             agent: {
               select: {
                 id: true,

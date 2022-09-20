@@ -1,4 +1,5 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { SetGameWaterDto } from './set-game-water.dto';
 
 export class CreateVipDto {
   @IsString()
