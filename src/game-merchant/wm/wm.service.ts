@@ -5,50 +5,68 @@ import { addHours, format, subMinutes } from 'date-fns';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { GameMerchantService } from '../game-merchant.service';
-import { GrReqBase, GrResBase } from './types/base';
-import { GrCreatePlayerReq, GrCreatePlayerRes } from './types/createPlayer';
-import { GrBetRecordsReq, GrBetRecordsRes } from './types/fetchBetRecords';
-import { GrGameListReq, GrGameListRes } from './types/gameList';
-import { GrGetPlayerSidReq, GrGetPlayerSidRes } from './types/getPlayerSid';
+import { WmReqBase, WmResBase } from './types/base';
+import { WmCreatePlayerReq, WmCreatePlayerRes } from './types/createPlayer';
+import { WmBetRecordsReq, WmBetRecordsRes } from './types/fetchBetRecords';
+import { WmGameListRes } from './types/gameList';
 import * as qs from 'query-string';
-import { GrTransferToReq, GrTransferToRes } from './types/transferTo';
+import { WmTransferToReq, WmTransferToRes } from './types/transferTo';
 import { WalletRecType } from 'src/wallet-rec/enums';
-import { GrGetBalanceReq, GrGetBalanceRes } from './types/getBalance';
-import { GrTransferBackReq, GrTransferBackRes } from './types/transferBack';
+import { WmGetBalanceReq, WmGetBalanceRes } from './types/getBalance';
+import { WmTransferBackReq, WmTransferBackRes } from './types/transferBack';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { v4 as uuidv4 } from 'uuid';
 import { GameCategory } from 'src/game/enums';
+import * as CryptoJS from 'crypto-js';
+import { WmGetGameLinkReq, WmGetGameLinkRes } from './types/getGameLink';
+import * as numeral from 'numeral';
 
 @Injectable()
-export class GrService {
+export class WmService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
   ) {}
-  platformCode = 'gr';
-  apiUrl = 'https://grtestbackend.richgaming.net';
-  secretKey = 'b6723b61301bc1e51b9d627ee687646b';
+  platformCode = 'wm';
+  apiUrl = 'https://api.sandsys.pw';
+  channel = '34937514';
+  aesKey = '6vEG7IFphbkM59eOPdyofBQSgXYUzZlJ';
+  signKey = 'SxzIAbNGWfnqmHKL7tY8dFCuX6VR1wjP';
+
+  agentAcc = 'ASG0001UAT';
 
   suffix = 'asg';
 
-  async request<T extends GrResBase>(reqConfig: GrReqBase) {
+  async request<T extends WmResBase>(reqConfig: WmReqBase) {
     const { method, path, data } = reqConfig;
+
+    const encrypted = CryptoJS.AES.encrypt(
+      JSON.stringify(data),
+      this.aesKey,
+    ).toString();
+
+    const sign = CryptoJS.MD5(encrypted + this.signKey).toString();
+
+    const encrptedData = {
+      channel: this.channel,
+      data: encrypted,
+      sign,
+    };
 
     const axiosConfig: AxiosRequestConfig<any> = {
       method,
       baseURL: this.apiUrl,
       url: path,
-      headers: {
-        Cookie: `secret_key=${this.secretKey};`,
-      },
-      data,
+      data: encrptedData,
     };
     try {
       const res = await axios.request<T>(axiosConfig);
       // console.log(res.data);
-      if (res.data.status === 'N') {
-        throw new BadRequestException(`${res.data.message}(${res.data.code})`);
+      if (res.data.result.code !== 1) {
+        throw new BadRequestException(
+          `${res.data.result.msg}(${res.data.result.code})`,
+        );
       }
       return res.data;
     } catch (err) {
@@ -68,17 +86,17 @@ export class GrService {
   }
 
   async createPlayer(player: Player) {
-    const reqConfig: GrReqBase<GrCreatePlayerReq> = {
+    const reqConfig: WmReqBase<WmCreatePlayerReq> = {
       method: 'POST',
-      path: '/api/platform/reg_user_info',
+      path: '/v1/member/create',
       data: {
+        agent: this.agentAcc,
         account: player.username,
-        display_name: player.nickname,
-        site_code: this.suffix,
+        password: CryptoJS.MD5(player.username).toString(),
       },
     };
 
-    await this.request<GrCreatePlayerRes>(reqConfig);
+    await this.request<WmCreatePlayerRes>(reqConfig);
 
     // 新增廠商對應遊戲帳號
     await this.prisma.gameAccount.create({
@@ -95,67 +113,47 @@ export class GrService {
   }
 
   async getGameList() {
-    const reqConfig: GrReqBase<GrGameListReq> = {
+    const reqConfig: WmReqBase = {
       method: 'POST',
-      path: '/api/platform/get_agent_game_list',
-      data: {
-        page_index: 1,
-        page_size: 100,
-        language_type: 'zh_TW',
-      },
+      path: '/v1/config/get_game_info_state_list',
+      data: {},
     };
 
-    const res = await this.request<GrGameListRes>(reqConfig);
+    const res = await this.request<WmGameListRes>(reqConfig);
 
-    await Promise.all(
-      res.data.game_list.map((t, i) => {
-        return this.prisma.game.upsert({
-          where: {
-            code_platform_code: {
-              code: t.game_type.toString(),
-              platform_code: this.platformCode,
-            },
-          },
-          create: {
-            name: t.game_name,
-            sort: i,
-            code: t.game_type.toString(),
-            platform_code: this.platformCode,
-            category_code: {
-              1: GameCategory.HUNDRED,
-              2: GameCategory.STREET,
-              3: GameCategory.SLOT,
-              4: GameCategory.FISH,
-            }[t.game_module_type],
-          },
-          update: {
-            name: t.game_name,
-            category_code: {
-              1: GameCategory.HUNDRED,
-              2: GameCategory.STREET,
-              3: GameCategory.SLOT,
-              4: GameCategory.FISH,
-            }[t.game_module_type],
-          },
-        });
-      }),
-    );
+    await this.prisma.game.createMany({
+      data: res.game_info_state_list.map((t, i) => ({
+        name: t.names.zh_cn,
+        sort: i,
+        code: t.id,
+        platform_code: this.platformCode,
+        category_code: {
+          1: GameCategory.FISH,
+          3: GameCategory.SLOT,
+          4: GameCategory.STREET,
+        }[t.type],
+      })),
+      skipDuplicates: true,
+    });
 
     return res;
   }
 
-  async getPlayerSid(account: string) {
-    const reqConfig: GrReqBase<GrGetPlayerSidReq> = {
+  async getGameLink(game_id: string, player: Player) {
+    const reqConfig: WmReqBase<WmGetGameLinkReq> = {
       method: 'POST',
-      path: '/api/platform/get_sid_by_account',
+      path: '/v1/member/login_game',
       data: {
-        account,
+        account: player.username,
+        game_id,
+        lang: 'zh_cn',
+        agent: this.agentAcc,
       },
     };
 
-    const res = await this.request<GrGetPlayerSidRes>(reqConfig);
+    const res = await this.request<WmGetGameLinkRes>(reqConfig);
 
-    return res.data;
+    return res.url;
   }
 
   async transferTo(player: Player) {
@@ -170,19 +168,21 @@ export class GrService {
       })),
     ]);
 
-    const reqConfig: GrReqBase<GrTransferToReq> = {
+    const reqConfig: WmReqBase<WmTransferToReq> = {
       method: 'POST',
-      path: '/api/platform/credit_balance_v3',
+      path: '/v1/trans/transfer',
       data: {
-        account: `${player.username}@${this.suffix}`,
-        credit_amount: player.balance,
-        order_id: trans_id,
+        serial: trans_id,
+        agent: this.agentAcc,
+        account: player.username,
+        amount: player.balance.toString(),
+        oper_type: 1,
       },
     };
 
-    const res = await this.request<GrTransferToRes>(reqConfig);
+    const res = await this.request<WmTransferToRes>(reqConfig);
 
-    if (res.status === 'N') {
+    if (res.result.code !== 1) {
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
           type: WalletRecType.TRANSFER_FROM_GAME,
@@ -202,11 +202,11 @@ export class GrService {
       true,
     );
 
-    return res.data;
+    return res;
   }
 
   async transferBack(player: Player) {
-    const { balance, account } = await this.getBalance(player);
+    const balance = await this.getBalance(player);
 
     const trans_id = uuidv4();
 
@@ -220,17 +220,19 @@ export class GrService {
           relative_id: trans_id,
         })),
       ]);
-      const reqConfig: GrReqBase<GrTransferBackReq> = {
+      const reqConfig: WmReqBase<WmTransferBackReq> = {
         method: 'POST',
-        path: '/api/platform/debit_balance_v3',
+        path: '/v1/trans/transfer',
         data: {
-          account,
-          debit_amount: balance,
-          order_id: trans_id,
+          serial: trans_id,
+          agent: this.agentAcc,
+          account: player.username,
+          amount: balance.toString(),
+          oper_type: 0,
         },
       };
 
-      await this.request<GrTransferBackRes>(reqConfig);
+      await this.request<WmTransferBackRes>(reqConfig);
     }
 
     // 紀錄轉回
@@ -259,10 +261,7 @@ export class GrService {
       await this.createPlayer(player);
     }
 
-    const account = `${player.username}@${this.suffix}`;
-    const { game_url, sid } = await this.getPlayerSid(account);
-
-    const query = qs.stringify({ sid, game_type: game_id });
+    const gameUrl = await this.getGameLink(game_id, player);
 
     const currentPlayer = await this.prisma.player.findUnique({
       where: { id: player.id },
@@ -273,41 +272,44 @@ export class GrService {
     }
 
     return {
-      path: `${game_url}?${query}`,
+      path: gameUrl,
     };
   }
 
   async getBalance(player: Player) {
-    const reqConfig: GrReqBase<GrGetBalanceReq> = {
+    const reqConfig: WmReqBase<WmGetBalanceReq> = {
       method: 'POST',
-      path: '/api/platform/get_balance',
+      path: '/v1/trans/check_balance',
       data: {
-        account: `${player.username}@${this.suffix}`,
+        account: player.username,
+        agent: this.agentAcc,
       },
     };
-    const res = await this.request<GrGetBalanceRes>(reqConfig);
-    return res.data;
+    const res = await this.request<WmGetBalanceRes>(reqConfig);
+    return +res.balance;
   }
 
   async fetchBetRecords(start: Date, end: Date) {
-    const reqConfig: GrReqBase<GrBetRecordsReq> = {
+    const reqConfig: WmReqBase<WmBetRecordsReq> = {
       method: 'POST',
-      path: '/api/platform/get_all_bet_details',
+      path: '/v1/record/get_bet_records',
       data: {
-        start_time: format(start, 'yyyy-MM-dd HH:mm:ss'),
-        end_time: format(end, 'yyyy-MM-dd HH:mm:ss'),
-        page_index: 1,
-        page_size: 1000,
+        finish_time: {
+          start_time: start,
+          end_time: end,
+        },
+        index: 0,
+        limit: 5000,
       },
     };
 
-    const res = await this.request<GrBetRecordsRes>(reqConfig);
-    if (res.data.bet_details?.length) {
+    const res = await this.request<WmBetRecordsRes>(reqConfig);
+    if (res.rows?.length) {
       await Promise.all(
-        res.data.bet_details.map(async (t) => {
+        res.rows.map(async (t) => {
           try {
             const player = await this.prisma.player.findUnique({
-              where: { username: t.account.replace(`@${this.suffix}`, '') },
+              where: { username: t.member },
             });
             if (!player) {
               // 略過RAW測試帳號
@@ -317,26 +319,35 @@ export class GrService {
             const [game, ratios] = await this.gameMerchantService.getBetInfo(
               player,
               this.platformCode,
-              t.game_type.toString(),
+              t.game_id.toString(),
             );
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
-                  bet_no: t.id_str.toString(),
+                  bet_no: t.id,
                   platform_code: this.platformCode,
                 },
               },
               create: {
-                bet_no: t.id_str.toString(),
-                amount: t.bet,
-                valid_amount: t.valid_bet,
-                win_lose_amount: t.profit,
-                bet_at: new Date(t.create_time),
+                bet_no: t.id,
+                amount: t.bet_amount,
+                valid_amount: t.valid_amount,
+                win_lose_amount: numeral(t.payout_amount)
+                  .subtract(t.bet_amount)
+                  .value(),
+                bet_at: new Date(t.bet_at),
+                result_at: new Date(t.finish_at),
                 player_id: player.id,
                 platform_code: this.platformCode,
                 category_code: game.category_code,
-                game_code: t.game_type.toString(),
-                status: BetRecordStatus.DONE,
+                game_code: t.game_id,
+                status: {
+                  1: BetRecordStatus.DONE,
+                  2: BetRecordStatus.REFUND,
+                  3: BetRecordStatus.REFUND,
+                  4: BetRecordStatus.REFUND,
+                  5: BetRecordStatus.REFUND,
+                }[t.status],
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 ratios: {
                   createMany: {
@@ -351,8 +362,10 @@ export class GrService {
                 },
               },
               update: {
-                valid_amount: t.valid_bet,
-                win_lose_amount: t.profit,
+                valid_amount: t.valid_amount,
+                win_lose_amount: numeral(t.payout_amount)
+                  .subtract(t.bet_amount)
+                  .value(),
                 bet_detail: t as unknown as Prisma.InputJsonObject,
               },
             });
@@ -364,16 +377,5 @@ export class GrService {
     }
 
     return res;
-  }
-  async fetchBetRecord(bet_no: string) {
-    const reqConfig: GrReqBase = {
-      method: 'POST',
-      path: '/QueryBetRecordByBetNum',
-      data: {
-        betNum: bet_no,
-      },
-    };
-
-    return this.request(reqConfig);
   }
 }
