@@ -1,9 +1,11 @@
 import { WmResBase } from './base';
 
 export interface WmCreatePlayerReq {
-  agent: string;
-  account: string;
+  cmd: 'MemberRegister';
+  user: string;
+  username: string;
   password: string;
+  syslang: 0 | 1;
 }
 
-export type WmCreatePlayerRes = WmResBase;
+export type WmCreatePlayerRes = WmResBase<string>;

@@ -1,3 +1,4 @@
+import { WmController } from './wm/wm.controller';
 import { BngController } from './bng/bng.controller';
 import { Module } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
@@ -29,12 +30,15 @@ import { ZgTaskService } from './zg/zg.task.service';
 import { ZgController } from './zg/zg.controller';
 import { BngService } from './bng/bng.service';
 import { BngTaskService } from './bng/bng.task.service';
+import { WmService } from './wm/wm.service';
+import { WmTaskService } from './wm/wm.task.service';
 
 @Module({
   imports: [WalletRecModule, AuthModule],
   controllers: [
     AbController,
     BngController,
+    WmController,
     ZgController,
     OgController,
     OgCbController,
@@ -49,6 +53,8 @@ import { BngTaskService } from './bng/bng.task.service';
     AbTaskService,
     BngService,
     BngTaskService,
+    WmService,
+    WmTaskService,
     ZgService,
     ZgTaskService,
     OgService,

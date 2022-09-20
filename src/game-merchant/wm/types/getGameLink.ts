@@ -1,15 +1,12 @@
 import { WmResBase } from './base';
 
 export interface WmGetGameLinkReq {
-  game_id: string;
-  lang: string;
-  agent: string;
-  account: string;
+  cmd: 'SigninGame';
+  user: string;
+  password: string;
+  lang: number;
+  syslang: 0 | 1;
+  voice: string;
 }
 
-export interface WmGetGameLinkRes extends WmResBase {
-  static: string;
-  dynamic: string;
-  token: string;
-  url: string;
-}
+export type WmGetGameLinkRes = WmResBase<string>;

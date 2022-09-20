@@ -1,9 +1,7 @@
-export interface WmResBase {
-  result: {
-    code: number;
-    msg: string;
-    timestamp?: string;
-  };
+export interface WmResBase<T = any> {
+  errorCode: number;
+  errorMessage: string;
+  result: T;
 }
 
 export interface WmReqBase<R = any> {

@@ -5,6 +5,7 @@ import { AbService } from '../ab/ab.service';
 import { BngService } from '../bng/bng.service';
 import { BwinService } from '../bwin/bwin.service';
 import { GrService } from '../gr/gr.service';
+import { WmService } from '../wm/wm.service';
 import { ZgService } from '../zg/zg.service';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class PlatformsBridgeService {
     private readonly grService: GrService,
     private readonly zgService: ZgService,
     private readonly bngService: BngService,
+    private readonly wmService: WmService,
   ) {}
 
   async transferBack(player: Player, platform?: string) {
@@ -25,6 +27,7 @@ export class PlatformsBridgeService {
       gr: this.grService.transferBack(player),
       zg: this.zgService.transferBack(player),
       bng: this.bngService.transferBack(player),
+      wm: this.wmService.transferBack(player),
     };
 
     if (platform) {

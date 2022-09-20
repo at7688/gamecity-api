@@ -1,15 +1,14 @@
 import { WmResBase } from './base';
 
 export interface WmTransferBackReq {
-  serial: string;
-  agent: string;
-  account: string;
-  amount: string;
-  oper_type: 0;
+  cmd: 'ChangeBalance';
+  user: string;
+  money: number;
+  order: string;
 }
 
 export interface WmTransferBackRes extends WmResBase {
-  trans_id: string;
-  serial: string;
-  balance: string;
+  yourOrderNum: string;
+  orderId: string;
+  cash: string;
 }

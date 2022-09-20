@@ -1,12 +1,21 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
 import { Player } from '@prisma/client';
 import { compact } from 'lodash';
 import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 
 @Injectable()
 export class GameMerchantService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly walletRecService: WalletRecService,
+  ) {}
 
   async validateGame(platform_code: string, game_code: string) {
     const game = await this.prisma.game.findUnique({
@@ -43,6 +52,39 @@ export class GameMerchantService {
       ),
     );
     return compact(ratios);
+  }
+
+  async requestErrorHandle(
+    platform_code: string,
+    path: string,
+    method: string,
+    sendData,
+    resData: any,
+  ) {
+    await this.prisma.merchantLog.create({
+      data: {
+        merchant_code: platform_code,
+        action: 'ERROR',
+        path,
+        method,
+        sendData,
+        resData,
+      },
+    });
+  }
+
+  async transferToErrorHandle(trans_id, platform_code: string, player: Player) {
+    await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.TRANSFER_FROM_GAME,
+        player_id: player.id,
+        amount: player.balance,
+        source: platform_code,
+        relative_id: trans_id,
+        note: '轉入遊戲失敗',
+      })),
+    ]);
+    throw new BadGatewayException('轉入遊戲失敗');
   }
 
   async getVipWater(player: Player, platform_code: string, game_code: string) {

@@ -182,17 +182,12 @@ export class ZgService {
 
     const res = await this.request<ZgTransferToRes>(reqConfig);
 
-    if (res.result.code !== 1) {
-      await this.prisma.$transaction([
-        ...(await this.walletRecService.playerCreate({
-          type: WalletRecType.TRANSFER_FROM_GAME,
-          player_id: player.id,
-          amount: player.balance,
-          source: this.platformCode,
-          relative_id: trans_id,
-          note: '轉入遊戲失敗',
-        })),
-      ]);
+    if (!res) {
+      await this.gameMerchantService.transferToErrorHandle(
+        trans_id,
+        this.platformCode,
+        player,
+      );
     }
 
     // 紀錄轉入

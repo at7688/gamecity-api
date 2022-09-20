@@ -1,25 +1,29 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { format } from 'date-fns';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import { addHours, format, subMinutes } from 'date-fns';
+import * as CryptoJS from 'crypto-js';
+import * as numeral from 'numeral';
+import { BetRecordStatus } from 'src/bet-record/enums';
+import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
 import { WmReqBase, WmResBase } from './types/base';
 import { WmCreatePlayerReq, WmCreatePlayerRes } from './types/createPlayer';
 import { WmBetRecordsReq, WmBetRecordsRes } from './types/fetchBetRecords';
 import { WmGameListRes } from './types/gameList';
-import * as qs from 'query-string';
-import { WmTransferToReq, WmTransferToRes } from './types/transferTo';
-import { WalletRecType } from 'src/wallet-rec/enums';
 import { WmGetBalanceReq, WmGetBalanceRes } from './types/getBalance';
-import { WmTransferBackReq, WmTransferBackRes } from './types/transferBack';
-import { BetRecordStatus } from 'src/bet-record/enums';
-import { v4 as uuidv4 } from 'uuid';
-import { GameCategory } from 'src/game/enums';
-import * as CryptoJS from 'crypto-js';
 import { WmGetGameLinkReq, WmGetGameLinkRes } from './types/getGameLink';
-import * as numeral from 'numeral';
+import { WmTransferBackReq, WmTransferBackRes } from './types/transferBack';
+import { WmTransferToReq, WmTransferToRes } from './types/transferTo';
+import * as qs from 'query-string';
 
 @Injectable()
 export class WmService {
@@ -29,43 +33,36 @@ export class WmService {
     private readonly walletRecService: WalletRecService,
   ) {}
   platformCode = 'wm';
-  apiUrl = 'https://api.sandsys.pw';
-  channel = '34937514';
-  aesKey = '6vEG7IFphbkM59eOPdyofBQSgXYUzZlJ';
-  signKey = 'SxzIAbNGWfnqmHKL7tY8dFCuX6VR1wjP';
-
-  agentAcc = 'ASG0001UAT';
-
-  suffix = 'asg';
+  apiUrl = 'https://api.a45.me/api/public/Gateway.php';
+  vendorId = 'asgtwapi';
+  signature = '4457b39b166cf29dc6ee390e1e3783be';
 
   async request<T extends WmResBase>(reqConfig: WmReqBase) {
     const { method, path, data } = reqConfig;
 
-    const encrypted = CryptoJS.AES.encrypt(
-      JSON.stringify(data),
-      this.aesKey,
-    ).toString();
-
-    const sign = CryptoJS.MD5(encrypted + this.signKey).toString();
-
-    const encrptedData = {
-      channel: this.channel,
-      data: encrypted,
-      sign,
-    };
+    // const query = qs.stringify(data)
 
     const axiosConfig: AxiosRequestConfig<any> = {
       method,
       baseURL: this.apiUrl,
       url: path,
-      data: encrptedData,
+      params: {
+        vendorId: this.vendorId,
+        signature: this.signature,
+        ...data,
+      },
     };
+    console.log(axiosConfig);
     try {
       const res = await axios.request<T>(axiosConfig);
-      // console.log(res.data);
-      if (res.data.result.code !== 1) {
-        throw new BadRequestException(
-          `${res.data.result.msg}(${res.data.result.code})`,
+      console.log(res.data);
+      if (![0, 107].includes(res.data.errorCode)) {
+        await this.gameMerchantService.requestErrorHandle(
+          this.platformCode,
+          path,
+          method,
+          data,
+          res.data,
         );
       }
       return res.data;
@@ -77,33 +74,42 @@ export class WmService {
           path,
           method,
           sendData: data,
-          resData: err.response.data,
+          resData: err.response?.data,
         },
       });
       console.log('Error :' + err.message);
-      console.log('Error Info:' + JSON.stringify(err.response.data));
+      console.log('Error Info:' + JSON.stringify(err.response?.data));
     }
   }
 
   async createPlayer(player: Player) {
+    const username = player.username;
+    const password = CryptoJS.MD5(player.username).toString();
     const reqConfig: WmReqBase<WmCreatePlayerReq> = {
       method: 'POST',
-      path: '/v1/member/create',
+      path: '',
       data: {
-        agent: this.agentAcc,
-        account: player.username,
-        password: CryptoJS.MD5(player.username).toString(),
+        cmd: 'MemberRegister',
+        user: username,
+        username,
+        password,
+        syslang: 0,
       },
     };
 
-    await this.request<WmCreatePlayerRes>(reqConfig);
+    const res = await this.request<WmCreatePlayerRes>(reqConfig);
+
+    if (!res) {
+      throw new BadGatewayException('新增帳號失敗');
+    }
 
     // 新增廠商對應遊戲帳號
     await this.prisma.gameAccount.create({
       data: {
         platform_code: this.platformCode,
         player_id: player.id,
-        account: `${player.username}@${this.suffix}`,
+        account: username,
+        password,
       },
     });
 
@@ -113,47 +119,49 @@ export class WmService {
   }
 
   async getGameList() {
-    const reqConfig: WmReqBase = {
-      method: 'POST',
-      path: '/v1/config/get_game_info_state_list',
-      data: {},
+    const gameMap = {
+      101: '百家樂',
+      102: '龍虎',
+      103: '輪盤',
+      104: '骰寶',
+      105: '牛牛',
+      107: '番攤',
+      108: '色碟',
+      110: '魚蝦蟹',
+      128: '安達巴哈',
     };
 
-    const res = await this.request<WmGameListRes>(reqConfig);
-
     await this.prisma.game.createMany({
-      data: res.game_info_state_list.map((t, i) => ({
-        name: t.names.zh_cn,
+      data: Object.entries(gameMap).map(([code, name], i) => ({
+        name,
         sort: i,
-        code: t.id,
+        code,
         platform_code: this.platformCode,
-        category_code: {
-          1: GameCategory.FISH,
-          3: GameCategory.SLOT,
-          4: GameCategory.STREET,
-        }[t.type],
+        category_code: GameCategory.LIVE,
       })),
       skipDuplicates: true,
     });
 
-    return res;
+    return { success: true };
   }
 
   async getGameLink(game_id: string, player: Player) {
     const reqConfig: WmReqBase<WmGetGameLinkReq> = {
       method: 'POST',
-      path: '/v1/member/login_game',
+      path: '',
       data: {
-        account: player.username,
-        game_id,
-        lang: 'zh_cn',
-        agent: this.agentAcc,
+        cmd: 'SigninGame',
+        user: player.username,
+        password: CryptoJS.MD5(player.username).toString(),
+        lang: 9,
+        syslang: 0,
+        voice: 'cn',
       },
     };
 
     const res = await this.request<WmGetGameLinkRes>(reqConfig);
 
-    return res.url;
+    return res.result;
   }
 
   async transferTo(player: Player) {
@@ -170,29 +178,23 @@ export class WmService {
 
     const reqConfig: WmReqBase<WmTransferToReq> = {
       method: 'POST',
-      path: '/v1/trans/transfer',
+      path: '',
       data: {
-        serial: trans_id,
-        agent: this.agentAcc,
-        account: player.username,
-        amount: player.balance.toString(),
-        oper_type: 1,
+        cmd: 'ChangeBalance',
+        user: player.username,
+        money: player.balance,
+        order: trans_id,
       },
     };
 
     const res = await this.request<WmTransferToRes>(reqConfig);
 
-    if (res.result.code !== 1) {
-      await this.prisma.$transaction([
-        ...(await this.walletRecService.playerCreate({
-          type: WalletRecType.TRANSFER_FROM_GAME,
-          player_id: player.id,
-          amount: player.balance,
-          source: this.platformCode,
-          relative_id: trans_id,
-          note: '轉入遊戲失敗',
-        })),
-      ]);
+    if (!res) {
+      await this.gameMerchantService.transferToErrorHandle(
+        trans_id,
+        this.platformCode,
+        player,
+      );
     }
 
     // 紀錄轉入
@@ -222,13 +224,12 @@ export class WmService {
       ]);
       const reqConfig: WmReqBase<WmTransferBackReq> = {
         method: 'POST',
-        path: '/v1/trans/transfer',
+        path: '',
         data: {
-          serial: trans_id,
-          agent: this.agentAcc,
-          account: player.username,
-          amount: balance.toString(),
-          oper_type: 0,
+          cmd: 'ChangeBalance',
+          user: player.username,
+          money: balance,
+          order: trans_id,
         },
       };
 
@@ -279,37 +280,34 @@ export class WmService {
   async getBalance(player: Player) {
     const reqConfig: WmReqBase<WmGetBalanceReq> = {
       method: 'POST',
-      path: '/v1/trans/check_balance',
+      path: '',
       data: {
-        account: player.username,
-        agent: this.agentAcc,
+        cmd: 'GetBalance',
+        user: player.username,
       },
     };
     const res = await this.request<WmGetBalanceRes>(reqConfig);
-    return +res.balance;
+    return res.result;
   }
 
   async fetchBetRecords(start: Date, end: Date) {
     const reqConfig: WmReqBase<WmBetRecordsReq> = {
       method: 'POST',
-      path: '/v1/record/get_bet_records',
+      path: '',
       data: {
-        finish_time: {
-          start_time: start,
-          end_time: end,
-        },
-        index: 0,
-        limit: 5000,
+        cmd: 'GetDateTimeReport',
+        startTime: format(start, 'yyyyMMddHHmmss'),
+        endTime: format(end, 'yyyyMMddHHmmss'),
       },
     };
 
     const res = await this.request<WmBetRecordsRes>(reqConfig);
-    if (res.rows?.length) {
+    if (res.result?.length) {
       await Promise.all(
-        res.rows.map(async (t) => {
+        res.result.map(async (t) => {
           try {
             const player = await this.prisma.player.findUnique({
-              where: { username: t.member },
+              where: { username: t.user },
             });
             if (!player) {
               // 略過RAW測試帳號
@@ -319,35 +317,27 @@ export class WmService {
             const [game, ratios] = await this.gameMerchantService.getBetInfo(
               player,
               this.platformCode,
-              t.game_id.toString(),
+              t.gid.toString(),
             );
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
-                  bet_no: t.id,
+                  bet_no: t.betId,
                   platform_code: this.platformCode,
                 },
               },
               create: {
-                bet_no: t.id,
-                amount: t.bet_amount,
-                valid_amount: t.valid_amount,
-                win_lose_amount: numeral(t.payout_amount)
-                  .subtract(t.bet_amount)
-                  .value(),
-                bet_at: new Date(t.bet_at),
-                result_at: new Date(t.finish_at),
+                bet_no: t.betId,
+                amount: +t.bet,
+                valid_amount: +t.validbet,
+                win_lose_amount: +t.winLoss,
+                bet_at: new Date(t.betTime),
+                result_at: new Date(t.settime),
                 player_id: player.id,
                 platform_code: this.platformCode,
                 category_code: game.category_code,
-                game_code: t.game_id,
-                status: {
-                  1: BetRecordStatus.DONE,
-                  2: BetRecordStatus.REFUND,
-                  3: BetRecordStatus.REFUND,
-                  4: BetRecordStatus.REFUND,
-                  5: BetRecordStatus.REFUND,
-                }[t.status],
+                game_code: t.gid,
+                status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 ratios: {
                   createMany: {
@@ -362,10 +352,8 @@ export class WmService {
                 },
               },
               update: {
-                valid_amount: t.valid_amount,
-                win_lose_amount: numeral(t.payout_amount)
-                  .subtract(t.bet_amount)
-                  .value(),
+                valid_amount: +t.validbet,
+                win_lose_amount: +t.winLoss,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
               },
             });
