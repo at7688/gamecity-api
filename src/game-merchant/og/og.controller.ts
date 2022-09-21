@@ -9,46 +9,34 @@ import { OgService } from './og.service';
 export class OgController {
   constructor(private readonly ogService: OgService) {}
 
-  @Post('handicaps')
-  getAgentHandicaps() {
-    return this.ogService.getAgentHandicaps();
-  }
-  @Post('create')
-  createPlayer(@User() player: Player) {
-    return this.ogService.createPlayer(player);
-  }
-  @Post('login')
-  login(@User() player: Player) {
-    return this.ogService.login(player);
-  }
-  @Post('logout')
-  logout(@User() player: Player) {
-    return this.ogService.logout(player);
+  // @Post('create')
+  // createPlayer(@User() player: Player) {
+  //   return this.ogService.createPlayer(player);
+  // }
+
+  @Get('games')
+  getGameList() {
+    return this.ogService.getGameList();
   }
 
-  @Post('info')
+  @Get('login')
+  login(@Query('game_id') game_id: string, @User() player: Player) {
+    return this.ogService.login(game_id, player);
+  }
+
+  @Get('balance')
   getPlayer(@User() player: Player) {
-    return this.ogService.getPlayer(player);
+    return this.ogService.getBalance(player);
   }
 
-  @Post('togles')
-  getTogles() {
-    return this.ogService.getTogles();
-  }
-
-  @Get('maintenance')
-  getMaintenance() {
-    return this.ogService.getMaintenance();
-  }
-
-  @Post('maintenance')
-  setMaintenance(@Body('state') state) {
-    return this.ogService.setMaintenance(state);
+  @Get('back')
+  transferBack(@User() player: Player) {
+    return this.ogService.transferBack(player);
   }
 
   @Post('records')
-  fetchBetRecords(@Body('start') start) {
-    return this.ogService.fetchBetRecords(new Date(start));
+  fetchBetRecords(@Body('start') start, @Body('end') end) {
+    return this.ogService.fetchBetRecords(new Date(start), new Date(end));
   }
   @Get('record/:id')
   fetchBetRecord(@Param('id') id) {

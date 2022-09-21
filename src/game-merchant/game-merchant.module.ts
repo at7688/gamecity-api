@@ -18,8 +18,6 @@ import { GameMerchantService } from './game-merchant.service';
 import { GrController } from './gr/gr.controller';
 import { GrService } from './gr/gr.service';
 import { GrTaskService } from './gr/gr.task.service';
-import { OgCbController } from './og/og.cb.controller';
-import { OgCbService } from './og/og.cb.service';
 import { OgController } from './og/og.controller';
 import { OgService } from './og/og.service';
 import { OgTaskService } from './og/og.task.service';
@@ -41,7 +39,6 @@ import { WmTaskService } from './wm/wm.task.service';
     WmController,
     ZgController,
     OgController,
-    OgCbController,
     AviaController,
     AviaCbController,
     BwinController,
@@ -58,7 +55,6 @@ import { WmTaskService } from './wm/wm.task.service';
     ZgService,
     ZgTaskService,
     OgService,
-    OgCbService,
     OgTaskService,
     AviaService,
     AviaCbService,

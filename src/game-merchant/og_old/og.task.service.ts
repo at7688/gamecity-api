@@ -6,11 +6,11 @@ import { OgService } from './og.service';
 @Injectable()
 export class OgTaskService {
   constructor(private readonly ogService: OgService) {}
-  private readonly Logger = new Logger(OgTaskService.name);
+  private readonly logger = new Logger(OgTaskService.name);
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
-  async fetchGameList() {
-    await this.ogService.fetchBetRecords(subMinutes(new Date(), 7), new Date());
-    this.Logger.debug('OG_FETCH_BET_RECORDS(EVERY_5_MINUTES)');
-  }
+  // @Cron(CronExpression.EVERY_30_SECONDS)
+  // async fetchQuickBetRecords() {
+  //   await this.ogService.fetchBetRecords(subMinutes(new Date(), 1));
+  //   this.logger.debug('OG_FETCH_BET_RECORDS(EVERY_MINUTE)');
+  // }
 }

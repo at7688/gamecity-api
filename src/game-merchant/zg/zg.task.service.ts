@@ -10,10 +10,7 @@ export class ZgTaskService {
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async fetchGameList() {
-    await this.zgService.fetchBetRecords(
-      subMinutes(new Date(), 20),
-      subMinutes(new Date(), 10),
-    );
+    await this.zgService.fetchBetRecords(subMinutes(new Date(), 7), new Date());
     this.Logger.debug('ZG_FETCH_BET_RECORDS(EVERY_5_MINUTES)');
   }
 }

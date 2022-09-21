@@ -11,8 +11,8 @@ export class BngTaskService {
   @Cron(CronExpression.EVERY_5_MINUTES)
   async fetchGameList() {
     await this.bngService.fetchBetRecords(
-      subMinutes(new Date(), 20),
-      subMinutes(new Date(), 10),
+      subMinutes(new Date(), 7),
+      new Date(),
     );
     this.Logger.debug('BNG_FETCH_BET_RECORDS(EVERY_5_MINUTES)');
   }

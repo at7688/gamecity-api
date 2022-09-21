@@ -1,20 +1,17 @@
 import { OgResBase } from './base';
 
-export interface OgGetBalanceReq {
-  account: string;
+export interface OgCreatePlayerReq {
+  username: string;
+  nickname?: string;
 }
 
-export type OgGetBalanceRes = OgResBase<OgPlayerInfo[]>;
-
-export interface OgPlayerInfo {
+export type OgCreatePlayerRes = OgResBase<{
   id: number;
   username: string;
   nickname: string;
   status: string;
   balance: number;
-  promo: number;
   parent: string;
   parentId: number;
   createdAt: Date;
-  wallets: any[];
-}
+}>;

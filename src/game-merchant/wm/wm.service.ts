@@ -1,4 +1,3 @@
-import { format } from 'date-fns';
 import {
   BadGatewayException,
   BadRequestException,
@@ -7,7 +6,7 @@ import {
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
-import * as numeral from 'numeral';
+import { format } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -18,12 +17,10 @@ import { GameMerchantService } from '../game-merchant.service';
 import { WmReqBase, WmResBase } from './types/base';
 import { WmCreatePlayerReq, WmCreatePlayerRes } from './types/createPlayer';
 import { WmBetRecordsReq, WmBetRecordsRes } from './types/fetchBetRecords';
-import { WmGameListRes } from './types/gameList';
 import { WmGetBalanceReq, WmGetBalanceRes } from './types/getBalance';
 import { WmGetGameLinkReq, WmGetGameLinkRes } from './types/getGameLink';
 import { WmTransferBackReq, WmTransferBackRes } from './types/transferBack';
 import { WmTransferToReq, WmTransferToRes } from './types/transferTo';
-import * as qs from 'query-string';
 
 @Injectable()
 export class WmService {
@@ -160,6 +157,10 @@ export class WmService {
     };
 
     const res = await this.request<WmGetGameLinkRes>(reqConfig);
+
+    if (!res) {
+      throw new BadRequestException('產生遊戲連結錯誤');
+    }
 
     return res.result;
   }
