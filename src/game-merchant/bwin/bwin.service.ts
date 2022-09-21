@@ -316,9 +316,13 @@ export class BwinService {
               },
               create: {
                 bet_no: t.id.toString(),
-                amount: t.bet,
-                valid_amount: t.validBet,
-                win_lose_amount: t.win,
+                amount: numeral(t.bet).divide(this.creditMultiple).value(),
+                valid_amount: numeral(t.validBet)
+                  .divide(this.creditMultiple)
+                  .value(),
+                win_lose_amount: numeral(t.result)
+                  .divide(this.creditMultiple)
+                  .value(),
                 bet_at: new Date(t.createdAt),
                 result_at: new Date(t.endAt),
                 player_id: player.id,
@@ -350,8 +354,12 @@ export class BwinService {
                   finish: BetRecordStatus.DONE,
                   cancel: BetRecordStatus.REFUND,
                 }[t.status],
-                valid_amount: t.validBet,
-                win_lose_amount: t.result,
+                valid_amount: numeral(t.validBet)
+                  .divide(this.creditMultiple)
+                  .value(),
+                win_lose_amount: numeral(t.result)
+                  .divide(this.creditMultiple)
+                  .value(),
               },
             });
           } catch (err) {
