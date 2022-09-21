@@ -1,45 +1,43 @@
 import { OgResBase } from './base';
 
 export interface OgGameListReq {
-  type: string; // all: 全部, fish: 漁機, slot: 老虎機, coc: 街機,
-  lang: string; // zh en th vi id
+  provider: number;
+  rows: number;
 }
 
-export type OgGameListRes = OgResBase<OgGame[]>;
+export interface OgGameListRes {
+  status: string;
+  data: Data;
+  meta: Meta;
+}
 
-export interface OgGame {
+export interface Data {
+  games: Game[];
+}
+
+export interface Game {
   id: number;
-  productId: string;
-  type: string;
   name: string;
-  description: string;
-  src: OgGameSrc;
-  RTP: string;
-  href: string;
-  info: OgGameInfo;
+  category: Category;
+  code: string;
+  url: string;
+  type: Type;
+  provider_id: number;
 }
 
-export interface OgGameInfo {
-  line: number;
-  ways: number;
-  reels: string;
-  autoplay: boolean;
-  freegame: number;
-  wildSymbol: boolean;
-  bonusSymbol: boolean;
-  scatterSymbol: boolean;
-  multiplierSymbol: boolean;
-  freeSpinTriggerSymbol: boolean;
+export enum Category {
+  Live = 'live',
+  Table = 'table',
 }
 
-export interface OgGameSrc {
-  image_l: string;
-  image_m: string;
-  image_s: string;
-  background_l: string;
-  background_m: string;
-  background_s: string;
-  icon_l: string;
-  icon_m: string;
-  icon_s: string;
+export enum Type {
+  Desktop = 'desktop',
+  Empty = '*',
+  Mobile = 'mobile',
+}
+
+export interface Meta {
+  totalRecords: number;
+  currentPage: number;
+  totalPages: number;
 }

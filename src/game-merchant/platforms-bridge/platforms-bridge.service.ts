@@ -5,6 +5,7 @@ import { AbService } from '../ab/ab.service';
 import { BngService } from '../bng/bng.service';
 import { BwinService } from '../bwin/bwin.service';
 import { GrService } from '../gr/gr.service';
+import { OgService } from '../og/og.service';
 import { WmService } from '../wm/wm.service';
 import { ZgService } from '../zg/zg.service';
 
@@ -18,6 +19,7 @@ export class PlatformsBridgeService {
     private readonly zgService: ZgService,
     private readonly bngService: BngService,
     private readonly wmService: WmService,
+    private readonly ogService: OgService,
   ) {}
 
   async transferBack(player: Player, platform?: string) {
@@ -28,6 +30,7 @@ export class PlatformsBridgeService {
       zg: this.zgService.transferBack(player),
       bng: this.bngService.transferBack(player),
       wm: this.wmService.transferBack(player),
+      og: this.ogService.transferBack(player),
     };
 
     if (platform) {

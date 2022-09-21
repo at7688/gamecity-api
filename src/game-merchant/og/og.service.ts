@@ -1,56 +1,80 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  CACHE_MANAGER,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import { getUnixTime } from 'date-fns';
-import * as numeral from 'numeral';
+import { format } from 'date-fns';
+import * as FormData from 'form-data';
 import * as qs from 'query-string';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
-import { OgReqBase, OgResBase } from './types/base';
+import { OgReqBase, OgResBase, OG_API_TOKEN } from './types/base';
 import { OgCreatePlayerReq, OgCreatePlayerRes } from './types/createPlayer';
 import { OgBetRecordsReq, OgBetRecordsRes } from './types/fetchBetRecords';
 import { OgGameListReq, OgGameListRes } from './types/gameList';
+import { OgGetApiTokenRes } from './types/getApiToken';
 import { OgGetBalanceReq, OgGetBalanceRes } from './types/getBalance';
+import { OgGetGameKeyReq, OgGetGameKeyRes } from './types/getGameKey';
 import { OgGetGameLinkReq, OgGetGameLinkRes } from './types/getGameLink';
 import { OgTransferBackReq, OgTransferBackRes } from './types/transferBack';
 import { OgTransferToReq, OgTransferToRes } from './types/transferTo';
-import { v4 as uuidv4 } from 'uuid';
-import { GameCategory } from 'src/game/enums';
+import { Cache } from 'cache-manager';
 @Injectable()
 export class OgService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   platformCode = 'og';
-  apiUrl = 'https://api-stage.at888888.com/service';
-  apiKey = '0f12914a-4714-4ed8-8248-2b2cfb473578';
-  apiToken =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTU2NywidXNlcklkIjoxNDk5LCJwYXNzd29yZCI6IiQyYiQwNSRtTUNlWEdRWi5US1R6UVFLcEFLY0ouVHNleVhYc2ltN05qdkFYNnVLc3hJT3ZmVlIzZUtFbSIsInVzZXJuYW1lIjoia2lkdWx0Iiwic3ViIjowLCJjdXJyZW5jeSI6IlRXRCIsInBhcmVudElkIjoxLCJpYXQiOjE2NjI5ODU1MzksImV4cCI6OTAwNzIwMDkxNzcyNjUzMH0.ky-Eh9E7giLMFGArXFK11Yis2-qqa8Y0rOMvIoBXelg';
-  creditMultiple = 100;
+  apiUrl = 'https://marsapi-test.haa477.com:8443';
+  dataFetchUrl = 'https://tigerapi.pwqr820.com:38888';
+  operator = 'mog713test';
+  key = 'WnnTv4bN7mK8nws7';
+  providerId = 30;
+  gameCode = 'ogplus';
+  usernamePrefix = 'towj_';
 
   async request<T extends OgResBase>(reqConfig: OgReqBase) {
-    const { method, path, data } = reqConfig;
+    const { method, path, data, headers, params } = reqConfig;
 
     const axiosConfig: AxiosRequestConfig<any> = {
       method,
       baseURL: this.apiUrl,
       url: path,
-      headers: {
-        Authorization: 'Bearer ' + this.apiToken,
+      headers: headers || {
+        'X-Token': await this.cacheManager.get(OG_API_TOKEN),
       },
       data,
+      params,
     };
+    console.log(axiosConfig);
     try {
       const res = await axios.request<T>(axiosConfig);
-      // console.log(res.data);
-      if (res.data.error) {
-        throw new Error(res.data.error.message);
+      console.log(res.data);
+      if (res.data.status !== 'success') {
+        throw new Error(JSON.stringify(res.data.data));
       }
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'SUCCESS',
+          path,
+          method,
+          sendData: data,
+          resData: res.data as unknown as Prisma.InputJsonObject,
+        },
+      });
       return res.data;
     } catch (err) {
       await this.prisma.merchantLog.create({
@@ -60,7 +84,54 @@ export class OgService {
           path,
           method,
           sendData: data,
-          resData: err.response.data,
+          resData: err.response?.data || err.message,
+        },
+      });
+      console.log('Error :' + err.message);
+      console.log('Error Info:' + JSON.stringify(err.response.data));
+    }
+  }
+  async recordRequest<T>(reqConfig: OgReqBase) {
+    const { method, path, data, headers, params } = reqConfig;
+
+    const formData = new FormData();
+    Object.keys(data).forEach((key) => {
+      formData.append(key, data[key]);
+    });
+
+    const axiosConfig: AxiosRequestConfig<any> = {
+      method,
+      baseURL: this.dataFetchUrl,
+      url: path,
+      headers: headers || {
+        'X-Token': await this.cacheManager.get(OG_API_TOKEN),
+      },
+      data: formData,
+      params,
+    };
+
+    try {
+      const res = await axios.request<T>(axiosConfig);
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'SUCCESS',
+          path,
+          method,
+          sendData: data,
+          resData: res.data as unknown as Prisma.InputJsonObject,
+        },
+      });
+      return res.data;
+    } catch (err) {
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'ERROR',
+          path,
+          method,
+          sendData: data,
+          resData: err.response?.data || err.message,
         },
       });
       console.log('Error :' + err.message);
@@ -68,17 +139,43 @@ export class OgService {
     }
   }
 
-  async createPlayer(player: Player) {
-    const reqConfig: OgReqBase<OgCreatePlayerReq> = {
-      method: 'POST',
-      path: '/api/v1/players',
-      data: {
-        username: player.username,
-        nickname: player.nickname,
+  async getApiToken() {
+    const reqConfig: OgReqBase = {
+      method: 'GET',
+      path: '/token',
+      headers: {
+        'X-Operator': this.operator,
+        'X-Key': this.key,
       },
     };
 
-    await this.request<OgCreatePlayerRes>(reqConfig);
+    const res = await this.request<OgGetApiTokenRes>(reqConfig);
+    if (!res) {
+      throw new BadGatewayException('取得API TOKEN失敗');
+    }
+    await this.cacheManager.set(OG_API_TOKEN, res.data.token);
+    return res.data;
+  }
+
+  async createPlayer(player: Player) {
+    const reqConfig: OgReqBase<OgCreatePlayerReq> = {
+      method: 'POST',
+      path: '/register',
+      data: {
+        username: player.username,
+        country: 'Taiwan',
+        language: 'cn',
+        fullname: `${player.nickname}(ASG)`,
+        email: `${player.username}@asg.com`,
+        birthdate: '1900-01-01',
+      },
+    };
+
+    const res = await this.request<OgCreatePlayerRes>(reqConfig);
+
+    if (!res) {
+      throw new BadRequestException('帳號新增失敗');
+    }
 
     // 新增廠商對應遊戲帳號
     await this.prisma.gameAccount.create({
@@ -95,43 +192,73 @@ export class OgService {
   }
 
   async getGameList() {
-    const query = qs.stringify({
-      type: 'all',
-      lang: 'zh',
-    });
-    const reqConfig: OgReqBase<OgGameListReq> = {
-      method: 'GET',
-      path: `/api/v1/games?${query}`,
+    const gameMap = {
+      'SPEED BACCARAT': '极速百家乐',
+      BACCARAT: '百家乐',
+      'NO COMMISSION BACCARAT': '免佣百家乐',
+      'NEW DT': '新式龙虎',
+      'CLASSIC DT': '经典龙虎',
+      MONEYWHEEL: '幸运转盘',
+      ROULETTE: '轮盘',
+      NIUNIU: '牛牛',
+      'GOLDEN FLOWER': '炸金花',
+      'THREE CARDS': '幸运金花',
+      SICBO: '骰宝',
     };
-
-    const res = await this.request<OgGameListRes>(reqConfig);
     await Promise.all(
-      res.data.map((t, i) => {
+      Object.entries(gameMap).map(([code, name], i) => {
         return this.prisma.game.upsert({
           where: {
             code_platform_code: {
-              code: t.productId,
+              code,
+              platform_code: this.platformCode,
+            },
+          },
+          create: {
+            name,
+            sort: i,
+            code,
+            platform_code: this.platformCode,
+            category_code: GameCategory.LIVE,
+          },
+          update: {
+            name,
+            category_code: GameCategory.LIVE,
+          },
+        });
+      }),
+    );
+  }
+
+  async getGameList_temp() {
+    const reqConfig: OgReqBase<OgGameListReq> = {
+      method: 'GET',
+      path: '/games',
+    };
+
+    const res = await this.request<OgGameListRes>(reqConfig);
+    if (!res) {
+      throw new BadGatewayException('遊戲列表撈取失敗');
+    }
+    await Promise.all(
+      res.data.games.map((t, i) => {
+        return this.prisma.game.upsert({
+          where: {
+            code_platform_code: {
+              code: t.id.toString(),
               platform_code: this.platformCode,
             },
           },
           create: {
             name: t.name,
             sort: i,
-            code: t.productId,
+            code: t.id.toString(),
             platform_code: this.platformCode,
-            category_code: {
-              fish: GameCategory.FISH,
-              slot: GameCategory.SLOT,
-              coc: GameCategory.STREET,
-            }[t.type],
+            category_code: GameCategory.LIVE,
           },
           update: {
             name: t.name,
-            category_code: {
-              fish: GameCategory.FISH,
-              slot: GameCategory.SLOT,
-              coc: GameCategory.STREET,
-            }[t.type],
+            category_code: GameCategory.LIVE,
           },
         });
       }),
@@ -140,18 +267,38 @@ export class OgService {
     return res;
   }
 
-  async getGameLink(productId: string, player: Player) {
-    const query = qs.stringify({
-      productId,
-      player: player.username,
-    });
+  async getGameKey(player: Player) {
+    const reqConfig: OgReqBase<OgGetGameKeyReq> = {
+      method: 'GET',
+      path: `/game-providers/${this.providerId}/games/${this.gameCode}/key`,
+      params: {
+        username: player.username,
+      },
+    };
 
+    const res = await this.request<OgGetGameKeyRes>(reqConfig);
+
+    if (!res) {
+      throw new BadRequestException('獲取遊戲金鑰失敗');
+    }
+
+    return res.data.key;
+  }
+  async getGameLink(game_key: string) {
     const reqConfig: OgReqBase<OgGetGameLinkReq> = {
       method: 'GET',
-      path: `/api/v1/games/gamelink?${query}`,
+      path: `/game-providers/${this.providerId}/play`,
+      params: {
+        key: game_key,
+        // type: 'desktop'
+      },
     };
 
     const res = await this.request<OgGetGameLinkRes>(reqConfig);
+
+    if (!res) {
+      throw new BadRequestException('獲取遊戲連結失敗');
+    }
 
     return res.data.url;
   }
@@ -170,11 +317,12 @@ export class OgService {
 
     const reqConfig: OgReqBase<OgTransferToReq> = {
       method: 'POST',
-      path: '/api/v1/players/deposit',
+      path: `/game-providers/${this.providerId}/balance`,
       data: {
-        transactionId: trans_id,
-        amount: numeral(player.balance).multiply(this.creditMultiple).value(),
-        player: player.username,
+        username: player.username,
+        balance: player.balance,
+        action: 'IN',
+        transferId: trans_id,
       },
     };
 
@@ -214,11 +362,12 @@ export class OgService {
       ]);
       const reqConfig: OgReqBase<OgTransferBackReq> = {
         method: 'POST',
-        path: '/api/v1/players/withdraw',
+        path: `/game-providers/${this.providerId}/balance`,
         data: {
-          transactionId: trans_id,
-          amount: numeral(balance).multiply(this.creditMultiple).value(),
-          player: player.username,
+          username: player.username,
+          balance,
+          action: 'OUT',
+          transferId: trans_id,
         },
       };
 
@@ -237,7 +386,7 @@ export class OgService {
     };
   }
 
-  async login(game_id: string, player: Player) {
+  async login(player: Player) {
     const gameAcc = await this.prisma.gameAccount.findUnique({
       where: {
         platform_code_player_id: {
@@ -251,7 +400,9 @@ export class OgService {
       await this.createPlayer(player);
     }
 
-    const gameUrl = await this.getGameLink(game_id, player);
+    const gameKey = await this.getGameKey(player);
+
+    const gameUrl = await this.getGameLink(gameKey);
 
     const currentPlayer = await this.prisma.player.findUnique({
       where: { id: player.id },
@@ -269,105 +420,98 @@ export class OgService {
   async getBalance(player: Player) {
     const reqConfig: OgReqBase<OgGetBalanceReq> = {
       method: 'GET',
-      path: `/api/v1/players?player=${player.username}`,
+      path: `/game-providers/${this.providerId}/balance`,
+      params: {
+        username: player.username,
+      },
     };
     const res = await this.request<OgGetBalanceRes>(reqConfig);
-    return numeral(res.data[0].balance).divide(this.creditMultiple).value();
+    if (!res) {
+      throw new BadRequestException('獲取餘額失敗');
+    }
+    return +res.data.balance;
   }
 
   async fetchBetRecords(start: Date, end: Date) {
-    const query = qs.stringify({
-      start: getUnixTime(start) * 1000,
-      end: getUnixTime(end) * 1000,
-      pageSize: 10000,
-    });
     const reqConfig: OgReqBase<OgBetRecordsReq> = {
-      method: 'GET',
-      path: `/api/v1/profile/rounds?${query}`,
-    };
-
-    const res = await this.request<OgBetRecordsRes>(reqConfig);
-
-    await Promise.all(
-      res.data.map(async (t) => {
-        try {
-          const player = await this.prisma.player.findUnique({
-            where: { username: t.player },
-          });
-          if (!player) {
-            // 略過RAW測試帳號
-            return;
-          }
-          // 上層佔成資訊
-          const [game, ratios] = await this.gameMerchantService.getBetInfo(
-            player,
-            this.platformCode,
-            t.productId.toString(),
-          );
-          await this.prisma.betRecord.upsert({
-            where: {
-              bet_no_platform_code: {
-                bet_no: t.id.toString(),
-                platform_code: this.platformCode,
-              },
-            },
-            create: {
-              bet_no: t.id.toString(),
-              amount: t.bet,
-              valid_amount: t.validBet,
-              win_lose_amount: t.win,
-              bet_at: new Date(t.createdAt),
-              result_at: new Date(t.endAt),
-              player_id: player.id,
-              platform_code: this.platformCode,
-              category_code: game.category_code,
-              game_code: t.productId,
-              status: {
-                playing: BetRecordStatus.BETTING,
-                finish: BetRecordStatus.DONE,
-                cancel: BetRecordStatus.REFUND,
-              }[t.status],
-              bet_detail: t as unknown as Prisma.InputJsonObject,
-              ratios: {
-                createMany: {
-                  data: ratios.map((r) => ({
-                    agent_id: r.agent_id,
-                    ratio: r.ratio,
-                    water: r.water,
-                    water_duty: r.water_duty,
-                  })),
-                  skipDuplicates: true,
-                },
-              },
-            },
-            update: {
-              bet_detail: t as unknown as Prisma.InputJsonObject,
-              status: {
-                playing: BetRecordStatus.BETTING,
-                finish: BetRecordStatus.DONE,
-                cancel: BetRecordStatus.REFUND,
-              }[t.status],
-              valid_amount: t.validBet,
-              win_lose_amount: t.result,
-            },
-          });
-        } catch (err) {
-          console.log(t, err);
-        }
-      }),
-    );
-
-    return res;
-  }
-  async fetchBetRecord(bet_no: string) {
-    const reqConfig: OgReqBase = {
       method: 'POST',
-      path: '/QueryBetRecordByBetNum',
+      path: 'transaction',
       data: {
-        betNum: bet_no,
+        Operator: this.operator,
+        Key: this.key,
+        SDate: format(start, 'yyyy-MM-dd HH:mm:ss'),
+        EDate: format(end, 'yyyy-MM-dd HH:mm:ss'),
+        Provider: 'ogplus',
       },
     };
 
-    return this.request(reqConfig);
+    const list = await this.recordRequest<OgBetRecordsRes>(reqConfig);
+
+    if (list?.length) {
+      await Promise.all(
+        list.map(async (t) => {
+          try {
+            const player = await this.prisma.player.findUnique({
+              where: {
+                username: t.membername.replace(this.usernamePrefix, ''),
+              },
+            });
+            if (!player) {
+              // 略過RAW測試帳號
+              return;
+            }
+            // 上層佔成資訊
+            const [game, ratios] = await this.gameMerchantService.getBetInfo(
+              player,
+              this.platformCode,
+              t.gamename,
+            );
+            await this.prisma.betRecord.upsert({
+              where: {
+                bet_no_platform_code: {
+                  bet_no: t.id.toString(),
+                  platform_code: this.platformCode,
+                },
+              },
+              create: {
+                bet_no: t.id.toString(),
+                amount: +t.bettingamount,
+                valid_amount: +t.validbet,
+                win_lose_amount: +t.winloseamount,
+                bet_at: new Date(t.bettingdate),
+                // result_at: new Date(t.endAt),
+                player_id: player.id,
+                platform_code: this.platformCode,
+                category_code: game.category_code,
+                game_code: t.gamename,
+                status: BetRecordStatus.DONE,
+                bet_detail: t as unknown as Prisma.InputJsonObject,
+                ratios: {
+                  createMany: {
+                    data: ratios.map((r) => ({
+                      agent_id: r.agent_id,
+                      ratio: r.ratio,
+                      water: r.water,
+                      water_duty: r.water_duty,
+                    })),
+                    skipDuplicates: true,
+                  },
+                },
+              },
+              update: {
+                bet_detail: t as unknown as Prisma.InputJsonObject,
+                status: BetRecordStatus.DONE,
+                valid_amount: +t.validbet,
+                win_lose_amount: +t.winloseamount,
+              },
+            });
+          } catch (err) {
+            console.log(t, err);
+          }
+        }),
+      );
+    }
+
+    return list;
   }
 }

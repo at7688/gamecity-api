@@ -1,35 +1,38 @@
-import { OgResBase } from './base';
-
 export interface OgBetRecordsReq {
-  player?: string;
-  pageSize?: number;
-  start?: number;
-  end?: number;
+  Operator: string;
+  Key: string;
+  SDate: string;
+  EDate: string;
+  Provider: string;
 }
-export type OgBetRecordsRes = OgResBase<OgBetRecord[]>;
+export type OgBetRecordsRes = OgBetRecord[];
 
 export interface OgBetRecord {
-  id: number;
-  createdAt: Date;
-  updatedAt: Date;
-  win: number;
-  bet: number;
-  status: string;
-  parentId: number;
-  parent: string;
-  playerId: number;
-  player: string;
-  gameId: number;
-  game: string;
-  gameType: string;
-  productId: string;
+  id: string;
+  membername: string;
+  gamename: string;
+  bettingcode: string;
+  bettingdate: Date;
+  gameid: string;
+  roundno: string;
+  game_information: GameInformation;
+  result: string;
+  bet: string;
+  winloseresult: string;
+  bettingamount: string;
+  validbet: string;
+  winloseamount: string;
+  balance: string;
   currency: string;
-  setId: number;
-  prefix: string;
-  txnId: string;
-  supplier: string;
-  supplierPrefix: string;
-  endAt: Date;
-  validBet: number;
-  result: number;
+  handicap: string;
+  status: string;
+  gamecategory: string;
+  settledate: string;
+  remark: string;
+  vendor_id: string;
+}
+
+export interface GameInformation {
+  playerCards: string;
+  bankerCards: string;
 }

@@ -159,7 +159,7 @@ export class WmService {
     const res = await this.request<WmGetGameLinkRes>(reqConfig);
 
     if (!res) {
-      throw new BadRequestException('產生遊戲連結錯誤');
+      throw new BadRequestException('獲取遊戲連結失敗');
     }
 
     return res.result;

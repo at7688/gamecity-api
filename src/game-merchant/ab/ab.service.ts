@@ -158,7 +158,7 @@ export class AbService {
     const res = await this.request<AbGameListRes>(reqConfig);
 
     await this.prisma.game.createMany({
-      data: res.data.map((t, i) => ({
+      data: res.data?.map((t, i) => ({
         name: t.name,
         sort: i,
         code: t.productId,

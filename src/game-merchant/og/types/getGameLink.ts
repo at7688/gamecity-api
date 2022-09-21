@@ -1,8 +1,8 @@
 import { OgResBase } from './base';
 
 export interface OgGetGameLinkReq {
-  productId: string;
-  player: string;
+  key: string;
+  type?: 'desktop' | 'mobile';
 }
 
 export type OgGetGameLinkRes = OgResBase<{

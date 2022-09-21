@@ -105,37 +105,39 @@ export class BwinService {
     };
 
     const res = await this.request<BwinGameListRes>(reqConfig);
-    await Promise.all(
-      res.data.map((t, i) => {
-        return this.prisma.game.upsert({
-          where: {
-            code_platform_code: {
+    if (res.data.length) {
+      await Promise.all(
+        res.data.map((t, i) => {
+          return this.prisma.game.upsert({
+            where: {
+              code_platform_code: {
+                code: t.productId,
+                platform_code: this.platformCode,
+              },
+            },
+            create: {
+              name: t.name,
+              sort: i,
               code: t.productId,
               platform_code: this.platformCode,
+              category_code: {
+                fish: GameCategory.FISH,
+                slot: GameCategory.SLOT,
+                coc: GameCategory.STREET,
+              }[t.type],
             },
-          },
-          create: {
-            name: t.name,
-            sort: i,
-            code: t.productId,
-            platform_code: this.platformCode,
-            category_code: {
-              fish: GameCategory.FISH,
-              slot: GameCategory.SLOT,
-              coc: GameCategory.STREET,
-            }[t.type],
-          },
-          update: {
-            name: t.name,
-            category_code: {
-              fish: GameCategory.FISH,
-              slot: GameCategory.SLOT,
-              coc: GameCategory.STREET,
-            }[t.type],
-          },
-        });
-      }),
-    );
+            update: {
+              name: t.name,
+              category_code: {
+                fish: GameCategory.FISH,
+                slot: GameCategory.SLOT,
+                coc: GameCategory.STREET,
+              }[t.type],
+            },
+          });
+        }),
+      );
+    }
 
     return res;
   }
@@ -288,74 +290,76 @@ export class BwinService {
 
     const res = await this.request<BwinBetRecordsRes>(reqConfig);
 
-    await Promise.all(
-      res.data.map(async (t) => {
-        try {
-          const player = await this.prisma.player.findUnique({
-            where: { username: t.player },
-          });
-          if (!player) {
-            // 略過RAW測試帳號
-            return;
-          }
-          // 上層佔成資訊
-          const [game, ratios] = await this.gameMerchantService.getBetInfo(
-            player,
-            this.platformCode,
-            t.productId.toString(),
-          );
-          await this.prisma.betRecord.upsert({
-            where: {
-              bet_no_platform_code: {
-                bet_no: t.id.toString(),
-                platform_code: this.platformCode,
-              },
-            },
-            create: {
-              bet_no: t.id.toString(),
-              amount: t.bet,
-              valid_amount: t.validBet,
-              win_lose_amount: t.win,
-              bet_at: new Date(t.createdAt),
-              result_at: new Date(t.endAt),
-              player_id: player.id,
-              platform_code: this.platformCode,
-              category_code: game.category_code,
-              game_code: t.productId,
-              status: {
-                playing: BetRecordStatus.BETTING,
-                finish: BetRecordStatus.DONE,
-                cancel: BetRecordStatus.REFUND,
-              }[t.status],
-              bet_detail: t as unknown as Prisma.InputJsonObject,
-              ratios: {
-                createMany: {
-                  data: ratios.map((r) => ({
-                    agent_id: r.agent_id,
-                    ratio: r.ratio,
-                    water: r.water,
-                    water_duty: r.water_duty,
-                  })),
-                  skipDuplicates: true,
+    if (res.data.length) {
+      await Promise.all(
+        res.data.map(async (t) => {
+          try {
+            const player = await this.prisma.player.findUnique({
+              where: { username: t.player },
+            });
+            if (!player) {
+              // 略過RAW測試帳號
+              return;
+            }
+            // 上層佔成資訊
+            const [game, ratios] = await this.gameMerchantService.getBetInfo(
+              player,
+              this.platformCode,
+              t.productId.toString(),
+            );
+            await this.prisma.betRecord.upsert({
+              where: {
+                bet_no_platform_code: {
+                  bet_no: t.id.toString(),
+                  platform_code: this.platformCode,
                 },
               },
-            },
-            update: {
-              bet_detail: t as unknown as Prisma.InputJsonObject,
-              status: {
-                playing: BetRecordStatus.BETTING,
-                finish: BetRecordStatus.DONE,
-                cancel: BetRecordStatus.REFUND,
-              }[t.status],
-              valid_amount: t.validBet,
-              win_lose_amount: t.result,
-            },
-          });
-        } catch (err) {
-          console.log(t, err);
-        }
-      }),
-    );
+              create: {
+                bet_no: t.id.toString(),
+                amount: t.bet,
+                valid_amount: t.validBet,
+                win_lose_amount: t.win,
+                bet_at: new Date(t.createdAt),
+                result_at: new Date(t.endAt),
+                player_id: player.id,
+                platform_code: this.platformCode,
+                category_code: game.category_code,
+                game_code: t.productId,
+                status: {
+                  playing: BetRecordStatus.BETTING,
+                  finish: BetRecordStatus.DONE,
+                  cancel: BetRecordStatus.REFUND,
+                }[t.status],
+                bet_detail: t as unknown as Prisma.InputJsonObject,
+                ratios: {
+                  createMany: {
+                    data: ratios.map((r) => ({
+                      agent_id: r.agent_id,
+                      ratio: r.ratio,
+                      water: r.water,
+                      water_duty: r.water_duty,
+                    })),
+                    skipDuplicates: true,
+                  },
+                },
+              },
+              update: {
+                bet_detail: t as unknown as Prisma.InputJsonObject,
+                status: {
+                  playing: BetRecordStatus.BETTING,
+                  finish: BetRecordStatus.DONE,
+                  cancel: BetRecordStatus.REFUND,
+                }[t.status],
+                valid_amount: t.validBet,
+                win_lose_amount: t.result,
+              },
+            });
+          } catch (err) {
+            console.log(t, err);
+          }
+        }),
+      );
+    }
 
     return res;
   }

@@ -1,17 +1,16 @@
 export interface OgResBase<T = any> {
-  error?: OgError;
+  status: string;
   data?: T;
-  totalSize?: number;
+  meta?: any;
 }
-
-export interface OgError {
-  status: number;
-  message: string;
-  ip: string;
-}
+// export type OgRecordRes<T> = T[];
 
 export interface OgReqBase<R = any> {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   path: string;
   data?: R;
+  headers?: any;
+  params?: R;
 }
+
+export const OG_API_TOKEN = 'OG_API_TOKEN';

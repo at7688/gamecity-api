@@ -1,12 +1,8 @@
 import { OgResBase } from './base';
 
 export interface OgTransferCheckReq {
-  account: string;
-  order_id: string;
+  username: string;
+  transferId: string;
 }
 
-export type OgTransferCheckRes = OgResBase<{
-  account: string;
-  order_id: string;
-  order_state: number;
-}>;
+export type OgTransferCheckRes = OgResBase;

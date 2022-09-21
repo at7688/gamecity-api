@@ -20,10 +20,14 @@ export class OgController {
   }
 
   @Get('login')
-  login(@Query('game_id') game_id: string, @User() player: Player) {
-    return this.ogService.login(game_id, player);
+  login(@User() player: Player) {
+    return this.ogService.login(player);
   }
 
+  @Get('token')
+  getApiToken() {
+    return this.ogService.getApiToken();
+  }
   @Get('balance')
   getPlayer(@User() player: Player) {
     return this.ogService.getBalance(player);
@@ -37,9 +41,5 @@ export class OgController {
   @Post('records')
   fetchBetRecords(@Body('start') start, @Body('end') end) {
     return this.ogService.fetchBetRecords(new Date(start), new Date(end));
-  }
-  @Get('record/:id')
-  fetchBetRecord(@Param('id') id) {
-    return this.ogService.fetchBetRecord(id);
   }
 }
