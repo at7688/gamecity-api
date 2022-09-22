@@ -1,6 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { PlatformType } from '@prisma/client';
 import { Platforms } from 'src/metas/platforms.meta';
+import { SearchAgentReportDto } from './dto/search-agent-report.dto';
 import { SearchGameReportsDto } from './dto/search-game-reports.dto';
 import { GameReportService } from './game-report.service';
 
@@ -20,7 +21,7 @@ export class GameReportController {
   }
 
   @Post('winlose')
-  winLoseReport(@Body() body: SearchGameReportsDto) {
+  winLoseReport(@Body() body: SearchAgentReportDto) {
     return this.gameReportService.winLoseReport(body);
   }
 }

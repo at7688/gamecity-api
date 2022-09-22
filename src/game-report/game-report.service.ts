@@ -2,7 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SearchAgentReportDto } from './dto/search-agent-report.dto';
 import { SearchGameReportsDto } from './dto/search-game-reports.dto';
+import { agentReport } from './raw/agentReport';
 
 @Injectable()
 export class GameReportService {
@@ -87,7 +89,80 @@ export class GameReportService {
     }));
   }
 
-  winLoseReport(search: SearchGameReportsDto) {
-    //
+  async winLoseReport(search: SearchAgentReportDto) {
+    const {
+      category_codes,
+      game_ids,
+      bet_start_at,
+      bet_end_at,
+      username,
+      agent_username,
+      layers,
+    } = search;
+
+    let playersByAgent = null;
+
+    if (agent_username) {
+      const agent = await this.prisma.member.findUnique({
+        where: { username: agent_username },
+      });
+      if (!agent) {
+        throw new BadRequestException('無此代理');
+      }
+      playersByAgent = await this.prisma.$queryRaw<SubPlayer[]>(
+        subPlayers(agent.id),
+      );
+    }
+    const betRecords = await this.prisma.betRecord.findMany({
+      select: { id: true },
+      where: {
+        status: BetRecordStatus.DONE,
+        bet_at: {
+          gte: bet_start_at,
+          lte: bet_end_at,
+        },
+
+        player: {
+          AND: [
+            {
+              username: {
+                contains: username,
+              },
+            },
+            {
+              id: {
+                in: playersByAgent
+                  ? playersByAgent.map((t) => t.id)
+                  : undefined,
+              },
+            },
+          ],
+        },
+        game: {
+          id: {
+            in: game_ids,
+          },
+          category: {
+            code: {
+              in: category_codes,
+            },
+          },
+        },
+      },
+    });
+    // console.log(betRecords.map((t) => t.id));
+    const agents = await this.prisma.member.findMany({
+      where: {
+        username: { contains: agent_username },
+        layer: {
+          in: layers,
+        },
+      },
+    });
+    const agent_ids = agents.map((t) => t.id);
+    const bet_ids = betRecords.map((t) => t.id);
+    return bet_ids.length
+      ? this.prisma.$queryRaw(agentReport(agent_ids, bet_ids))
+      : [];
   }
 }
