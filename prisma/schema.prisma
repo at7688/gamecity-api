@@ -297,6 +297,12 @@ model Member {
   game_ratios GameRatio[]
   bet_ratio_rec BetRatioRec[]
 
+  duty AgentDuty?
+}
+
+model AgentDuty {
+  agent Member @relation(fields: [agent_id], references: [id])
+  agent_id String @unique
   promotion_duty Float @default(0)
   fee_duty Float @default(0)
 }

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateAgentDto {
   @IsString()
@@ -20,4 +20,12 @@ export class CreateAgentDto {
   @IsString()
   @IsOptional()
   parent_id?: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  fee_duty: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  promotion_duty: number;
 }

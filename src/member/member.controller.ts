@@ -17,6 +17,7 @@ import { MemberDto } from './dto/member.dto';
 import { SearchAgentsDto } from './dto/search-agents.dto';
 import { User } from 'src/decorators/user.decorator';
 import { LoginUser } from 'src/types';
+import { SetAgentDutyDto } from './dto/set-agent-duty.dto';
 
 @Controller('agents')
 @Serilizer(MemberDto)
@@ -45,6 +46,11 @@ export class MemberController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMemberDto: UpdateMemberDto) {
     return this.memberService.update(id, updateMemberDto);
+  }
+
+  @Post(':id/duty')
+  setDuty(@Param('id') id: string, @Body() data: SetAgentDutyDto) {
+    return this.memberService.setDuty(id, data);
   }
 
   @Delete(':id')

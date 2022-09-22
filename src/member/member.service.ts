@@ -7,6 +7,7 @@ import { LoginUser } from 'src/types';
 import { numToBooleanSearch } from 'src/utils';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { SearchAgentsDto } from './dto/search-agents.dto';
+import { SetAgentDutyDto } from './dto/set-agent-duty.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { agentWithSubNums } from './raw/agentWithSubNums';
 import { getAllParents } from './raw/getAllParents';
@@ -129,7 +130,10 @@ export class MemberService {
   }
 
   findOne(id: string) {
-    return this.prisma.member.findUnique({ where: { id } });
+    return this.prisma.member.findUnique({
+      where: { id },
+      include: { duty: { select: { fee_duty: true, promotion_duty: true } } },
+    });
   }
 
   async update(id: string, { password, ...data }: UpdateMemberDto) {
@@ -143,6 +147,49 @@ export class MemberService {
     return this.prisma.member.update({
       where: { id },
       data,
+    });
+  }
+
+  async setDuty(agent_id: string, data: SetAgentDutyDto) {
+    const { fee_duty, promotion_duty } = data;
+    const agent = await this.prisma.member.findUnique({
+      where: { id: agent_id },
+    });
+    const maxDuty = {
+      fee: 100,
+      promotion: 100,
+    };
+    if (agent.parent_id !== null) {
+      const parentDuty = await this.prisma.agentDuty.findUnique({
+        where: {
+          agent_id: agent.parent_id,
+        },
+      });
+      if (!parentDuty) {
+        throw new BadRequestException('請先設定上層負擔');
+      }
+      maxDuty.fee = parentDuty.fee_duty;
+      maxDuty.promotion = parentDuty.promotion_duty;
+    }
+
+    if (fee_duty > maxDuty.fee) {
+      throw new BadRequestException(`手續費負擔不可超過${maxDuty.fee}`);
+    }
+    if (promotion_duty > maxDuty.promotion) {
+      throw new BadRequestException(`優惠負擔不可超過${maxDuty.promotion}`);
+    }
+
+    return this.prisma.agentDuty.upsert({
+      where: { agent_id },
+      create: {
+        agent_id,
+        fee_duty,
+        promotion_duty,
+      },
+      update: {
+        fee_duty,
+        promotion_duty,
+      },
     });
   }
 
