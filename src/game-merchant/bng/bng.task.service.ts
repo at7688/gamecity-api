@@ -8,12 +8,12 @@ export class BngTaskService {
   constructor(private readonly bngService: BngService) {}
   private readonly Logger = new Logger(BngTaskService.name);
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async fetchGameList() {
     await this.bngService.fetchBetRecords(
-      subMinutes(new Date(), 7),
+      subMinutes(new Date(), 2),
       new Date(),
     );
-    this.Logger.debug('BNG_FETCH_BET_RECORDS(EVERY_5_MINUTES)');
+    this.Logger.debug('BNG_FETCH_BET_RECORDS(EVERY_MINUTE)');
   }
 }

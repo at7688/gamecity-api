@@ -13,24 +13,24 @@ import { ZgService } from '../zg/zg.service';
 export class PlatformsBridgeService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly abService: AbService,
-    private readonly bwinService: BwinService,
-    private readonly grService: GrService,
-    private readonly zgService: ZgService,
-    private readonly bngService: BngService,
-    private readonly wmService: WmService,
-    private readonly ogService: OgService,
+    private readonly ab: AbService,
+    private readonly bwin: BwinService,
+    private readonly gr: GrService,
+    private readonly zg: ZgService,
+    private readonly bng: BngService,
+    private readonly wm: WmService,
+    private readonly og: OgService,
   ) {}
 
   async transferBack(player: Player, platform?: string) {
     const _map = {
-      ab: this.abService.transferBack(player),
-      bwin: this.bwinService.transferBack(player),
-      gr: this.grService.transferBack(player),
-      zg: this.zgService.transferBack(player),
-      bng: this.bngService.transferBack(player),
-      wm: this.wmService.transferBack(player),
-      og: this.ogService.transferBack(player),
+      ab: () => this.ab.transferBack(player),
+      bwin: () => this.bwin.transferBack(player),
+      gr: () => this.gr.transferBack(player),
+      zg: () => this.zg.transferBack(player),
+      bng: () => this.bng.transferBack(player),
+      wm: () => this.wm.transferBack(player),
+      og: () => this.og.transferBack(player),
     };
 
     if (platform) {
@@ -43,7 +43,7 @@ export class PlatformsBridgeService {
       },
     });
     const result = await Promise.all(
-      platforms.map((t) => _map[t.platform_code]),
+      platforms.map((t) => _map[t.platform_code]()),
     );
 
     return {

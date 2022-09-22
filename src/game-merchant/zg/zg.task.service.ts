@@ -8,9 +8,9 @@ export class ZgTaskService {
   constructor(private readonly zgService: ZgService) {}
   private readonly Logger = new Logger(ZgTaskService.name);
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async fetchGameList() {
-    await this.zgService.fetchBetRecords(subMinutes(new Date(), 7), new Date());
-    this.Logger.debug('ZG_FETCH_BET_RECORDS(EVERY_5_MINUTES)');
+    await this.zgService.fetchBetRecords(subMinutes(new Date(), 2), new Date());
+    this.Logger.debug('ZG_FETCH_BET_RECORDS(EVERY_MINUTE)');
   }
 }

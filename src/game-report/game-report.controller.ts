@@ -18,4 +18,9 @@ export class GameReportController {
   findAllByCategory(@Body() body: SearchGameReportsDto) {
     return this.gameReportService.findAll('category_code', body);
   }
+
+  @Post('winlose')
+  winLoseReport(@Body() body: SearchGameReportsDto) {
+    return this.gameReportService.winLoseReport(body);
+  }
 }

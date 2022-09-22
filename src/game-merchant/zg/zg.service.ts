@@ -281,6 +281,10 @@ export class ZgService {
       },
     };
     const res = await this.request<ZgGetBalanceRes>(reqConfig);
+    if (!res) {
+      throw new BadRequestException('轉回餘額失敗');
+    }
+
     return +res.balance;
   }
 

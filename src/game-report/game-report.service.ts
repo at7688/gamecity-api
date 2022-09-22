@@ -86,4 +86,8 @@ export class GameReportService {
       win_lose_amount: +t._sum.win_lose_amount?.toFixed(2) || 0,
     }));
   }
+
+  winLoseReport(search: SearchGameReportsDto) {
+    //
+  }
 }

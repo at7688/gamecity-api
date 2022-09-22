@@ -397,7 +397,11 @@ export class OgService {
     });
 
     if (!gameAcc) {
-      await this.createPlayer(player);
+      try {
+        await this.createPlayer(player);
+      } catch (err) {
+        throw err;
+      }
     }
 
     const gameKey = await this.getGameKey(player);
