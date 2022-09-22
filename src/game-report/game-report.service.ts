@@ -98,6 +98,7 @@ export class GameReportService {
       username,
       agent_username,
       layers,
+      parent_id,
     } = search;
 
     let playersByAgent = null;
@@ -157,11 +158,13 @@ export class GameReportService {
         layer: {
           in: layers,
         },
+        parent_id,
       },
     });
     const agent_ids = agents.map((t) => t.id);
+    console.log(agents.map((t) => t.username));
     const bet_ids = betRecords.map((t) => t.id);
-    return bet_ids.length
+    return bet_ids.length && agent_ids.length
       ? this.prisma.$queryRaw(agentReport(agent_ids, bet_ids))
       : [];
   }

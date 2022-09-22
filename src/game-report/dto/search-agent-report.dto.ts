@@ -32,4 +32,8 @@ export class SearchAgentReportDto {
   @IsInt({ each: true })
   @IsOptional()
   layers?: number[];
+
+  @IsString()
+  @IsOptional()
+  parent_id?: string;
 }

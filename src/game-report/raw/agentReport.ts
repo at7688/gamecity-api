@@ -7,16 +7,52 @@ export const agentReport = (agent_ids: string[], bet_ids: string[]) => {
     WHERE id IN (${Prisma.join(bet_ids)})
   )
   SELECT
+    m.id,
     m.username,
-    a.*,
+    m.parent_id,
+    (SELECT json_build_object(
+      'ratio_result', p.ratio_result,
+      'agent_water_comm', p.agent_water_comm,
+      'water_duty_result', p.water_duty_result
+    ) FROM (
+      SELECT
+        SUM(ratio_result) ratio_result,
+        ROUND(SUM(agent_water_comm)::decimal, 2) agent_water_comm,
+        ROUND(SUM(water_duty_result)::decimal, 2) water_duty_result
+
+      FROM (
+        SELECT
+          b.id bet_id,
+          b.valid_amount,
+          b.win_lose_amount,
+          r.*,
+          (r.ratio * b.win_lose_amount / 100) ratio_result,
+          (r.water * b.valid_amount / 100) agent_water_comm,
+          (w.water * b.valid_amount / 100) player_water_comm,
+          (r.water_duty * (w.water * b.valid_amount / 100) / 100) water_duty_result
+        FROM filterBets b
+        JOIN "BetRatioRec" r ON r.bet_id = b.id
+        JOIN "Player" p ON p.id = b.player_id
+        JOIN "GameWater" w ON w.vip_id = p.vip_id
+          AND w.platform_code = b.platform_code
+          AND w.game_code = b.game_code
+      ) r
+      WHERE agent_id = m.parent_id
+    ) p) parent_info,
+    json_build_object(
+      'ratio_result', a.ratio_result,
+      'agent_water_comm', a.agent_water_comm,
+      'water_duty_result', a.water_duty_result
+    ) agent_info,
     (SELECT
-       json_build_object(
+      json_build_object(
         'amount', COALESCE(SUM(amount), 0),
         'valid_amount', COALESCE(SUM(valid_amount), 0),
         'player_water_comm', COALESCE(ROUND(SUM(player_water_comm)::decimal, 2), 0),
-        'win_lose_amount', COALESCE(SUM(win_lose_amount), 0)
+        'win_lose_amount', COALESCE(SUM(win_lose_amount), 0),
+            'player_count', COALESCE(COUNT(DISTINCT player_id), 0)
       )
-     FROM (
+    FROM (
       SELECT
         b.*,
         agents.id agent_id,
@@ -41,16 +77,29 @@ export const agentReport = (agent_ids: string[], bet_ids: string[]) => {
   FROM "Member" m
   JOIN (
     SELECT
-      agent_id,
-      SUM(ratio_result) ratio_result,
-      ROUND(SUM(water_commission)::decimal, 2) agent_water_comm
-    FROM (
-      SELECT
-        r.agent_id,
+    agent_id,
+    SUM(valid_amount) valid_amount,
+    SUM(win_lose_amount) win_lose_amount,
+    SUM(ratio_result) ratio_result,
+    ROUND(SUM(agent_water_comm)::decimal, 2) agent_water_comm,
+    ROUND(SUM(player_water_comm)::decimal, 2) player_water_comm,
+    ROUND(SUM(water_duty_result)::decimal, 2) water_duty_result
+  FROM (
+    SELECT
+        b.id bet_id,
+        b.valid_amount,
+        b.win_lose_amount,
+        r.*,
         (r.ratio * b.win_lose_amount / 100) ratio_result,
-        (r.water * b.valid_amount / 100) water_commission
+        (r.water * b.valid_amount / 100) agent_water_comm,
+        (w.water * b.valid_amount / 100) player_water_comm,
+        (r.water_duty * (w.water * b.valid_amount / 100) / 100) water_duty_result
       FROM filterBets b
       JOIN "BetRatioRec" r ON r.bet_id = b.id
+      JOIN "Player" p ON p.id = b.player_id
+      JOIN "GameWater" w ON w.vip_id = p.vip_id
+        AND w.platform_code = b.platform_code
+        AND w.game_code = b.game_code
     ) r
     GROUP BY agent_id
   ) a ON a.agent_id = m.id
