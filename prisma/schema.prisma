@@ -267,6 +267,8 @@ model Player {
 
   identity IdentityVerify?
 
+  tags PlayerTag[]
+
 }
 
 model Member {
@@ -744,6 +746,16 @@ model GameRatio {
   water Float @default(0) // 0.1 (0.1%)
 
   @@unique([platform_code, game_code, agent_id])
+}
+
+model PlayerTag {
+  player Player @relation(fields: [player_id], references: [id])
+  player_id String
+  type Int // 儲值過, 提領過, 實名認證, 手機認證
+
+  @@unique([player_id, type])
+
+
 }
 
 enum PlatformType {
