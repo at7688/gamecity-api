@@ -11,16 +11,4 @@ export class AppController {
   root() {
     return 'PPAP';
   }
-
-  @Get('foo')
-  @Public()
-  foo() {
-    return this.appService.getConfigVar();
-  }
-
-  @Get('notify')
-  @Public()
-  paymentNotify(@Query() query) {
-    return query;
-  }
 }

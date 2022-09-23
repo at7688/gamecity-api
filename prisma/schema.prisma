@@ -521,7 +521,6 @@ model PaymentMerchant {
   paymentTools PaymentTool[]
 
   records PaymentDepositRec[]
-  orders  MerchantOrder[]
 
 }
 
@@ -566,36 +565,21 @@ model PaymentDepositRec {
   merchant      PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id   String
 
-  order  MerchantOrder?
   status Int            @default(1) // 尚未付款 已付款 等待入點 已過期 拒絕退回
+  // merchant_status Int             @default(1) // 等待付款 已繳費 已過期 拒絕退回
 
   fee_info  Json?
-}
 
-// 金流商回傳資料紀錄
-model MerchantOrder {
-  trade_no   String            @id
-  record     PaymentDepositRec @relation(fields: [record_id], references: [id])
-  record_id  String            @unique
-  created_at DateTime          @default(now()) @db.Timestamptz()
-  expired_at DateTime?         @db.Timestamptz()
-  paid_at    DateTime?         @db.Timestamptz()
-  price      Float
-  status     Int               @default(1) // 等待付款 已繳費 已過期 拒絕退回
-
-  merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
-  merchant_id String
-
-  channel String
+  trans_id   String?            @unique
 
   pay_code     String? // 超商付款代碼
   bank_code    String? // 銀行代碼
   bank_account String? // ATM付款帳號
-
-  extra Json?
-
-  notify Json?
+  order_info Json?
+  notify_info Json?
 }
+
+
 
 model MerchantLog {
   id            Int      @id @default(autoincrement())

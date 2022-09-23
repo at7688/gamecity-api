@@ -198,20 +198,14 @@ export class ClientPayService {
       });
     }
 
-    // try {
-    //   switch (currentTool.merchant_code) {
-    //     case MerchantCode.QIYU:
-    //       return await this.orderService.createOrder_QIYU({
-    //         config: currentTool.merchant_config,
-    //         amount,
-    //         payway_code: payway.code,
-    //         player: this.player,
-    //         record,
-    //       });
-    //   }
-    // } catch (err) {
-    //   throw new BadRequestException('金流支付失敗');
-    // }
+    try {
+      return await this.orderService.createOrder(
+        currentTool.merchant_code,
+        record.id,
+      );
+    } catch (err) {
+      throw new BadRequestException('金流建單失敗');
+    }
   }
 
   payways() {
