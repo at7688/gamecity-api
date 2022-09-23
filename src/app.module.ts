@@ -52,6 +52,7 @@ import { VipModule } from './vip/vip.module';
 import { WalletRecModule } from './wallet-rec/wallet-rec.module';
 import { WithdrawModule } from './withdraw/withdraw.module';
 import { PromotionModule } from './promotion/promotion.module';
+import { FeeReportModule } from './fee-report/fee-report.module';
 
 @Module({
   imports: [
@@ -113,6 +114,7 @@ import { PromotionModule } from './promotion/promotion.module';
     GameRatioModule,
     GameReportModule,
     PromotionModule,
+    FeeReportModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

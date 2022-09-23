@@ -12,6 +12,8 @@ import { MerchantOrderService } from './../merchant-order/merchant-order.service
 import { CreatePaymentOrderDto } from './dto/create-payment-order.dto';
 import { getCurrentPayways } from './raw/getCurrentPayways';
 import { CreateBankOrderDto } from './dto/create-bank-order.dto';
+import { BetRecordStatus } from 'src/bet-record/enums';
+import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ClientPayService {
@@ -98,7 +100,7 @@ export class ClientPayService {
   }
 
   async createPaymentOrder(data: CreatePaymentOrderDto) {
-    const { amount, payway_id } = data;
+    const { amount, payway_id, is_test } = data;
 
     const vip = await this.prisma.vip.findUnique({
       where: { id: this.player.vip_id },
@@ -199,11 +201,21 @@ export class ClientPayService {
     }
 
     try {
-      return await this.orderService.createOrder(
-        currentTool.merchant_code,
-        record.id,
-      );
+      if (!is_test) {
+        return await this.orderService.createOrder(
+          currentTool.merchant_code,
+          record.id,
+        );
+      }
+      return { test: 'OK' };
     } catch (err) {
+      await this.prisma.paymentDepositRec.update({
+        where: { id: record.id },
+        data: {
+          canceled_at: new Date(),
+          status: PaymentDepositStatus.REJECTED,
+        },
+      });
       throw new BadRequestException('金流建單失敗');
     }
   }

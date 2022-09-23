@@ -1,16 +1,16 @@
 import { Transform } from 'class-transformer';
 import { IsDate, IsInt, IsOptional, IsString } from 'class-validator';
 
-export class SearchAgentReportDto {
+export class SearchFeeReportDto {
   @IsOptional()
   @Transform(({ value }) => new Date(value))
   @IsDate()
-  bet_start_at?: string; //下注時間
+  start_at?: string; //下注時間
 
   @IsOptional()
   @Transform(({ value }) => new Date(value))
   @IsDate()
-  bet_end_at?: string;
+  end_at?: string;
 
   @IsString()
   @IsOptional()
@@ -19,14 +19,6 @@ export class SearchAgentReportDto {
   @IsString()
   @IsOptional()
   agent_username?: string;
-
-  @IsString({ each: true })
-  @IsOptional()
-  category_codes?: string[];
-
-  @IsString({ each: true })
-  @IsOptional()
-  game_ids?: string[];
 
   @IsInt({ each: true })
   @IsOptional()

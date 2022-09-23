@@ -151,7 +151,6 @@ export class GameReportService {
         },
       },
     });
-    // console.log(betRecords.map((t) => t.id));
     const agents = await this.prisma.member.findMany({
       where: {
         username: { contains: agent_username },
@@ -162,7 +161,6 @@ export class GameReportService {
       },
     });
     const agent_ids = agents.map((t) => t.id);
-    console.log(agents.map((t) => t.username));
     const bet_ids = betRecords.map((t) => t.id);
     return bet_ids.length && agent_ids.length
       ? this.prisma.$queryRaw(agentReport(agent_ids, bet_ids))
