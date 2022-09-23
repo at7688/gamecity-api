@@ -74,6 +74,7 @@ export class ClientPayService {
 
     // 若儲值後超出限額，則關閉當前卡片
     if (amount + card.current_sum > card.deposit_max) {
+      console.log(`超出限額，關閉當前銀行卡`);
       await this.prisma.companyCard.update({
         where: { id: card.card_id },
         data: { is_current: false },
@@ -112,10 +113,13 @@ export class ClientPayService {
       throw new BadRequestException('無可用支付');
     }
 
+    console.log(tools);
+
     let currentTool = tools.find((t) => t.is_current);
 
     // 若無當前輪替，則使用備用工具
     if (!currentTool) {
+      console.log(`無當前輪替，使用備用工具`);
       await this.prisma.$transaction([
         this.prisma.paymentTool.updateMany({
           where: { rotation_id: vip.payment_rotate_id },
@@ -148,9 +152,10 @@ export class ClientPayService {
     // 計算手續費負擔
     let fee = 0;
     let fee_on_player = 0;
-    fee += payway.fee_amount += amount * payway.fee_percent;
-    fee_on_player += payway.player_fee_amount +=
-      amount * payway.player_fee_percent;
+    fee += payway.fee_amount;
+    fee += (amount * payway.fee_percent) / 100;
+    fee_on_player += payway.player_fee_amount;
+    fee_on_player += (amount * payway.player_fee_percent) / 100;
 
     // 手續費若超過限額，則吃限額數值
     if (fee > payway.fee_max) {
@@ -175,31 +180,38 @@ export class ClientPayService {
         fee,
         fee_on_player,
         expired_at: add(new Date(), { days: 1 }), // 預設截止時間為1天
+        fee_info: {
+          fee_amount: payway.fee_amount,
+          fee_percent: payway.fee_percent,
+          player_fee_amount: payway.player_fee_amount,
+          player_fee_percent: payway.player_fee_percent,
+        },
       },
     });
 
     // 若儲值總量已過上限則關閉此通道
     if (currentTool.recharge_max <= currentTool.current_amount + amount) {
+      console.log(`儲值總量已過上限，關閉通道`);
       this.prisma.paymentTool.update({
         where: { id: currentTool.id },
         data: { is_current: false },
       });
     }
 
-    try {
-      switch (currentTool.merchant_code) {
-        case MerchantCode.QIYU:
-          return await this.orderService.createOrder_QIYU({
-            config: currentTool.merchant_config,
-            amount,
-            payway_code: payway.code,
-            player: this.player,
-            record,
-          });
-      }
-    } catch (err) {
-      throw new BadRequestException('金流支付失敗');
-    }
+    // try {
+    //   switch (currentTool.merchant_code) {
+    //     case MerchantCode.QIYU:
+    //       return await this.orderService.createOrder_QIYU({
+    //         config: currentTool.merchant_config,
+    //         amount,
+    //         payway_code: payway.code,
+    //         player: this.player,
+    //         record,
+    //       });
+    //   }
+    // } catch (err) {
+    //   throw new BadRequestException('金流支付失敗');
+    // }
   }
 
   payways() {

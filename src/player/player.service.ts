@@ -29,7 +29,7 @@ export class PlayerService {
 
     // 如果有初始化VIP, 則同時綁定
     const vip = await this.prisma.vip.findFirst({
-      where: { ebet_min: 0, deposite_min: 0 },
+      where: { valid_bet: 0, deposite_min: 0 },
       orderBy: { name: 'asc' },
     });
 

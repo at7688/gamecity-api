@@ -259,8 +259,8 @@ model Player {
   bankcard         PlayerCard[]
   wallet_rec       WalletRec[]
   transfer_rec     TransferRec[]
-  bet_records     BetRecord[]
-  game_accounts     GameAccount[]
+  bet_records      BetRecord[]
+  game_accounts    GameAccount[]
 
   withdraw_nums Int   @default(0)
   balance       Float @default(0)
@@ -294,17 +294,17 @@ model Member {
   transfer_recieves TransferRec[] @relation("target_agent")
   wallet_rec        WalletRec[]
 
-  game_ratios GameRatio[]
+  game_ratios   GameRatio[]
   bet_ratio_rec BetRatioRec[]
 
   duty AgentDuty?
 }
 
 model AgentDuty {
-  agent Member @relation(fields: [agent_id], references: [id])
-  agent_id String @unique
-  promotion_duty Float @default(0)
-  fee_duty Float @default(0)
+  agent          Member @relation(fields: [agent_id], references: [id])
+  agent_id       String @unique
+  promotion_duty Float  @default(0)
+  fee_duty       Float  @default(0)
 }
 
 model IdentityVerify {
@@ -338,7 +338,7 @@ model Vip {
   id                String        @id @default(cuid())
   name              String
   icon              String?
-  ebet_min          Int
+  valid_bet         Int           @default(0)
   deposite_min      Int
   withdraw_min      Int
   withdraw_max      Int
@@ -399,19 +399,19 @@ model PageContent {
 }
 
 model GameCategory {
-  code      String         @id
-  name      String
-  sort      Int            @default(0)
+  code String @id
+  name String
+  sort Int    @default(0)
   game Game[]
 }
 
 model Maintenance {
-  id Int @id @default(autoincrement())
-  target_type Int // 主站 遊戲商
-  platform GamePlatform? @relation(fields: [platform_code], references: [code])
+  id            Int           @id @default(autoincrement())
+  target_type   Int // 主站 遊戲商
+  platform      GamePlatform? @relation(fields: [platform_code], references: [code])
   platform_code String?
-  start_at   DateTime? @db.Timestamptz()
-  end_at     DateTime? @db.Timestamptz()
+  start_at      DateTime?     @db.Timestamptz()
+  end_at        DateTime?     @db.Timestamptz()
 }
 
 // model GamePlatformRec {
@@ -422,32 +422,32 @@ model Maintenance {
 // }
 
 model GamePlatform {
-  code          String       @id
-  name          String
-  status        Int          @default(1) // 啟用 停用 維護中
-  sort          Int          @default(0)
-  games         Game[]
+  code   String @id
+  name   String
+  status Int    @default(1) // 啟用 停用 維護中
+  sort   Int    @default(0)
+  games  Game[]
 
-  exchange_rate Float @default(1) // 兌換台幣匯率
-  bet_records BetRecord[]
-  accounts GameAccount[]
-  currency Int @default(1) // 新台幣 人民幣...
-  maintenance Maintenance[]
+  exchange_rate Float         @default(1) // 兌換台幣匯率
+  bet_records   BetRecord[]
+  accounts      GameAccount[]
+  currency      Int           @default(1) // 新台幣 人民幣...
+  maintenance   Maintenance[]
 
   record_check_at DateTime? @db.Timestamptz()
 
 }
 
 model Game {
-  id            String       @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String
-  code String
-  sort          Int          @default(0)
-  platform      GamePlatform @relation(fields: [platform_code], references: [code])
+  code          String
+  sort          Int           @default(0)
+  platform      GamePlatform  @relation(fields: [platform_code], references: [code])
   platform_code String
-  bet_records BetRecord[]
-  ratio GameRatio[]
-  water GameWater[]
+  bet_records   BetRecord[]
+  ratio         GameRatio[]
+  water         GameWater[]
   category      GameCategory? @relation(fields: [category_code], references: [code])
   category_code String?
 
@@ -568,6 +568,8 @@ model PaymentDepositRec {
 
   order  MerchantOrder?
   status Int            @default(1) // 尚未付款 已付款 等待入點 已過期 拒絕退回
+
+  fee_info  Json?
 }
 
 // 金流商回傳資料紀錄
@@ -596,14 +598,14 @@ model MerchantOrder {
 }
 
 model MerchantLog {
-  id            Int          @id @default(autoincrement())
-  created_at    DateTime     @default(now()) @db.Timestamptz()
-  action  String?
+  id            Int      @id @default(autoincrement())
+  created_at    DateTime @default(now()) @db.Timestamptz()
+  action        String?
   merchant_code String
-  sendData          Json?
-  resData          Json?
-  path String?
-  method String?
+  sendData      Json?
+  resData       Json?
+  path          String?
+  method        String?
 }
 
 model Image {
@@ -631,28 +633,28 @@ model Bank {
 }
 
 model GameWater {
-  id Int @id @default(autoincrement())
-  game_code String
+  id            Int        @id @default(autoincrement())
+  game_code     String
   platform_code String
-  game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
-  promotion Promotion? @relation(fields: [promotion_id], references: [id])
-  promotion_id String?
-  vip Vip? @relation(fields: [vip_id], references: [id])
-  vip_id String?
-  water Float // 0.1 (0.1%)
+  game          Game       @relation(fields: [game_code, platform_code], references: [code, platform_code])
+  promotion     Promotion? @relation(fields: [promotion_id], references: [id])
+  promotion_id  String?
+  vip           Vip?       @relation(fields: [vip_id], references: [id])
+  vip_id        String?
+  water         Float // 0.1 (0.1%)
 
-  @@unique([platform_code, game_code , promotion_id])
-  @@unique([platform_code, game_code , vip_id])
+  @@unique([platform_code, game_code, promotion_id])
+  @@unique([platform_code, game_code, vip_id])
 }
 
 model RechargeReward {
-  promotion Promotion @relation(fields: [promotion_id], references: [id])
-  promotion_id String @unique
+  promotion    Promotion @relation(fields: [promotion_id], references: [id])
+  promotion_id String    @unique
 
   recharge_amount Int
 
-  reward_type Int // 比例, 固定
-  reward_amount Int?
+  reward_type    Int // 比例, 固定
+  reward_amount  Int?
   reward_percent Float?
 
   rolling_type Int @default(1) // 洗碼倍數是否含儲值金計算(不含/含)
@@ -660,20 +662,19 @@ model RechargeReward {
   @@unique([promotion_id, recharge_amount])
 }
 
-
 model Promotion {
-  id String @id @default(cuid())
-  type Int // 首儲獎勵 續儲獎勵 遊戲返水
+  id    String @id @default(cuid())
+  type  Int // 首儲獎勵 續儲獎勵 遊戲返水
   title String
 
-  schedule_type Int @default(1) // (活動期間) 無限期 僅一次 月延續 周延續 日延續
-  start_at   DateTime? @db.Timestamptz() // 無限期則留空
-  end_at     DateTime? @db.Timestamptz() // 無限期則留空
-  settlement_type  Int @default(1) // 活動結束時結算 立即結算
+  schedule_type   Int       @default(1) // (活動期間) 無限期 僅一次 月延續 周延續 日延續
+  start_at        DateTime? @db.Timestamptz() // 無限期則留空
+  end_at          DateTime? @db.Timestamptz() // 無限期則留空
+  settlement_type Int       @default(1) // 活動結束時結算 立即結算
 
-  is_active Boolean @default(false) // 關閉則佔不開放申請
-  apply_approval_type Int @default(1) // 人工審核 自動審核
-  pay_approval_type Int @default(1) // (檔期結束時)審核派發 免審派發
+  is_active           Boolean @default(false) // 關閉則佔不開放申請
+  apply_approval_type Int     @default(1) // 人工審核 自動審核
+  pay_approval_type   Int     @default(1) // (檔期結束時)審核派發 免審派發
 
   vips Vip[]
 
@@ -694,56 +695,51 @@ model Promotion {
   recharge_reward RechargeReward?
 }
 
-
-
-
-
 model BetRecord {
-  id String @id @default(cuid())
-  bet_no String
-  player Player @relation(fields: [player_id], references: [id])
-  player_id String
-  status Int @default(1) // 投注中 已派彩 已退款
-  amount Float
-  valid_amount Float?
+  id              String        @id @default(cuid())
+  bet_no          String
+  player          Player        @relation(fields: [player_id], references: [id])
+  player_id       String
+  status          Int           @default(1) // 投注中 已派彩 已退款
+  amount          Float
+  valid_amount    Float?
   win_lose_amount Float?
-  bet_at DateTime @db.Timestamptz()
-  result_at DateTime? @db.Timestamptz()
-  platform GamePlatform @relation(fields: [platform_code], references: [code])
-  category_code String
-  platform_code String
-  game Game? @relation(fields: [game_code, platform_code], references: [code, platform_code])
-  game_code String? // 遊戲類型 (普通百家乐,..)
-  bet_target String? // 下注目標 (莊,閒,和,..)
-  bet_detail Json?
-  ratios BetRatioRec[]
-  vip_water Float @default(0)
+  bet_at          DateTime      @db.Timestamptz()
+  result_at       DateTime?     @db.Timestamptz()
+  platform        GamePlatform  @relation(fields: [platform_code], references: [code])
+  category_code   String
+  platform_code   String
+  game            Game?         @relation(fields: [game_code, platform_code], references: [code, platform_code])
+  game_code       String? // 遊戲類型 (普通百家乐,..)
+  bet_target      String? // 下注目標 (莊,閒,和,..)
+  bet_detail      Json?
+  ratios          BetRatioRec[]
+  vip_water       Float         @default(0)
 
   @@unique([bet_no, platform_code])
 }
 
 model BetRatioRec {
-  agent Member @relation(fields: [agent_id], references: [id])
-  agent_id String
-  bet BetRecord @relation(fields: [bet_id], references: [id])
-  bet_id String
-  ratio Float
-  water Float
+  agent      Member    @relation(fields: [agent_id], references: [id])
+  agent_id   String
+  bet        BetRecord @relation(fields: [bet_id], references: [id])
+  bet_id     String
+  ratio      Float
+  water      Float
   water_duty Float
 
   @@unique([agent_id, bet_id])
 }
 
-
 model GameAccount {
-  id Int @id @default(autoincrement())
-  platform GamePlatform @relation(fields: [platform_code], references: [code])
+  id            Int          @id @default(autoincrement())
+  platform      GamePlatform @relation(fields: [platform_code], references: [code])
   platform_code String
-  account String
-  password String?
-  player Player @relation(fields: [player_id], references: [id])
-  player_id String
-  created_at DateTime @default(now()) @db.Timestamptz()
+  account       String
+  password      String?
+  player        Player       @relation(fields: [player_id], references: [id])
+  player_id     String
+  created_at    DateTime     @default(now()) @db.Timestamptz()
 
   has_credit Boolean @default(false)
 
@@ -752,21 +748,19 @@ model GameAccount {
 }
 
 model GameRatio {
-  game_code String
+  game_code     String
   platform_code String
-  game Game @relation(fields: [game_code, platform_code], references: [code, platform_code])
-  agent Member @relation(fields: [agent_id], references: [id])
-  agent_id String
+  game          Game   @relation(fields: [game_code, platform_code], references: [code, platform_code])
+  agent         Member @relation(fields: [agent_id], references: [id])
+  agent_id      String
 
-  ratio Float // 89 (89%)
+  ratio      Float // 89 (89%)
   water_duty Float @default(0) // 80 (80%)
 
   water Float @default(0) // 0.1 (0.1%)
 
   @@unique([platform_code, game_code, agent_id])
 }
-
-
 
 enum PlatformType {
   ADMIN

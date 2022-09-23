@@ -12,7 +12,7 @@ export class CreateVipDto {
 
   @IsInt()
   @IsNotEmpty()
-  ebet_min: number;
+  valid_bet: number;
 
   @IsInt()
   @IsNotEmpty()

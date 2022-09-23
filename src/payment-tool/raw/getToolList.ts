@@ -20,11 +20,11 @@ SELECT * FROM (
 		t.is_current,
 		w.payways,
 		t.recharge_max,
-		total_amount,
+		COALESCE(total_amount, 0),
 		total_count,
-		current_amount,
-		total_fee,
-		total_player_fee,
+		COALESCE(current_amount, 0),
+		COALESCE(total_fee, 0),
+		COALESCE(total_player_fee, 0),
 		lastest_record
 	FROM "PaymentTool" t
 	JOIN "PaymentMerchant" m ON m.id = t.merchant_id

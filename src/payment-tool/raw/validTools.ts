@@ -23,7 +23,7 @@ SELECT * FROM
 		m.code merchant_code,
 		COALESCE(r.sum, 0) current_amount
 	FROM "PaymentTool" t
-	JOIN (
+	LEFT JOIN (
 		SELECT
 			tool_id,
 			SUM(amount)

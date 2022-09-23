@@ -132,6 +132,16 @@ export class AuthService {
   async playerLogin({ username, password }: LoginDto) {
     const user = await this.prisma.player.findUnique({
       where: { username },
+      include: {
+        vip: {
+          select: {
+            name: true,
+            deposite_min: true,
+            withdraw_min: true,
+            withdraw_max: true,
+          },
+        },
+      },
     });
     return await this.loginErrHandler({
       platform: 'PLAYER',
