@@ -13,6 +13,7 @@ import { PaymentToolService } from './payment-tool.service';
 import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
 import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
 import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
+import { ActivePaymentToolDto } from './dto/active-payment-tool.dto';
 
 @Controller('payment-tools')
 export class PaymentToolController {
@@ -44,6 +45,11 @@ export class PaymentToolController {
   @Patch(':id/current')
   current(@Param('id') id: string) {
     return this.paymentToolService.current(id);
+  }
+
+  @Patch(':id/active')
+  active(@Param('id') id: string, @Body() data: ActivePaymentToolDto) {
+    return this.paymentToolService.active(id, data);
   }
 
   @Delete(':id')

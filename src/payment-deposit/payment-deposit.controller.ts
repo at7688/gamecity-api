@@ -11,7 +11,7 @@ import { PaymentDepositService } from './payment-deposit.service';
 import { CreatePaymentDepositDto } from './dto/create-payment-deposit.dto';
 import { UpdatePaymentDepositDto } from './dto/update-payment-deposit.dto';
 
-@Controller('payment-deposit')
+@Controller('payment-deposits')
 export class PaymentDepositController {
   constructor(private readonly paymentDepositService: PaymentDepositService) {}
 

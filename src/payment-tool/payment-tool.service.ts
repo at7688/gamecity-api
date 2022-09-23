@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { pagerList } from 'src/sql/pagerList';
+import { ActivePaymentToolDto } from './dto/active-payment-tool.dto';
 import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
 import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
 import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
@@ -55,9 +56,10 @@ export class PaymentToolService {
       perpage,
     } = search;
 
-    const records = this.prisma.$queryRaw(
+    const records = await this.prisma.$queryRaw(
       pagerList(getToolList(search), page, perpage),
     );
+    console.log(records);
 
     return this.prisma.listFormat({ ...records[0], search });
   }
@@ -66,6 +68,15 @@ export class PaymentToolService {
     return this.prisma.paymentTool.findUnique({
       where: { id },
       include: { payways: true },
+    });
+  }
+
+  active(id: string, { is_active }: ActivePaymentToolDto) {
+    return this.prisma.paymentTool.update({
+      where: { id },
+      data: {
+        is_active,
+      },
     });
   }
 
@@ -92,8 +103,8 @@ export class PaymentToolService {
         merchant_id,
         sort,
         payways: {
-          updateMany: payways.map(({ id, ...data }) => ({
-            where: { id },
+          updateMany: payways.map(({ code, ...data }) => ({
+            where: { code },
             data,
           })),
         },

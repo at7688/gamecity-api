@@ -32,7 +32,7 @@ export class PaymentDepositService {
   }
 
   findAll() {
-    return `This action returns all paymentDeposit`;
+    return this.prisma.paymentDepositRec.findMany();
   }
 
   findOne(id: number) {

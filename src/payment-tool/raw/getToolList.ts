@@ -13,8 +13,7 @@ ${toolRecordSql()}
 
 SELECT * FROM (
 		SELECT
-		t.tool_name,
-		t.is_active,
+		t.*,
 		(merchant_config ::json->> 'merchant_no') merchant_no,
 		m.name,
 		m.code,
@@ -64,7 +63,15 @@ SELECT * FROM (
 		) k
 	) r ON r.tool_id = t.id
 ) m
-WHERE
-${Prisma.sql`merchant_no LIKE '%' || ${merchant_no} || '%'`} AND
-${Prisma.sql`tool_name LIKE '%' || ${tool_name} || '%'`}
+WHERE code IS NOT NULL
+${
+  merchant_no
+    ? Prisma.sql`AND merchant_no LIKE '%' || ${merchant_no} || '%'`
+    : Prisma.empty
+}
+${
+  tool_name
+    ? Prisma.sql`AND tool_name LIKE '%' || ${tool_name} || '%'`
+    : Prisma.empty
+}
 `;
