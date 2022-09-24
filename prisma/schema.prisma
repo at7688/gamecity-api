@@ -668,11 +668,12 @@ model Promotion {
   schedule_type   Int       @default(1) // (活動期間) 無限期 僅一次 月延續 周延續 日延續
   start_at        DateTime? @db.Timestamptz() // 無限期則留空
   end_at          DateTime? @db.Timestamptz() // 無限期則留空
-  settlement_type Int       @default(1) // 活動結束時結算 立即結算
 
   is_active           Boolean @default(false) // 關閉則佔不開放申請
   apply_approval_type Int     @default(1) // 人工審核 自動審核
-  pay_approval_type   Int     @default(1) // (檔期結束時)審核派發 免審派發
+
+  settlement_type Int       @default(1) // (生成禮包時間點) 立即結算 活動結束時結算(排程查看)
+  pay_approval_type   Int     @default(1) // (禮包是否直接派發) 審核派發 免審派發
 
   vips Vip[]
 
@@ -727,6 +728,10 @@ model Gift {
   promotion_id String
 
   status Int @default(1) // 未派發, 已派發, 已接收
+
+  amount Float // 禮包金額 ex: 500
+
+  rolling_amount Float // 洗碼金額 ex: 2,000 (4倍流水)
 
   created_at  DateTime @default(now()) @db.Timestamptz(6)
   send_at     DateTime? @db.Timestamptz(6)

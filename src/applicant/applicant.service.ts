@@ -3,12 +3,21 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player } from '@prisma/client';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ApprovalType, PromotionType } from 'src/promotion/enums';
+import {
+  ApprovalType,
+  PromotionType,
+  RollingType,
+  SettlementType,
+} from 'src/promotion/enums';
 import { ApplicantStatus } from './enums';
+import { GiftService } from 'src/gift/gift.service';
 
 @Injectable()
 export class ApplicantService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly giftService: GiftService,
+  ) {}
 
   async create(promotion_id: string, player: Player) {
     const promotion = await this.prisma.promotion.findFirst({
@@ -27,10 +36,10 @@ export class ApplicantService {
     }
 
     // 驗證是否於活動時間內申請
-    if (promotion.start_at > new Date()) {
+    if (promotion.start_at !== null && promotion.start_at > new Date()) {
       throw new BadRequestException('活動尚未開始');
     }
-    if (promotion.end_at < new Date()) {
+    if (promotion.end_at !== null && promotion.end_at < new Date()) {
       throw new BadRequestException('活動已結束');
     }
 
@@ -71,15 +80,27 @@ export class ApplicantService {
     }
 
     // 確認是否此活動已有該玩家未審核的申請單
-    const applicantCount = await this.prisma.applicant.count({
+    const applyingCount = await this.prisma.applicant.count({
       where: {
         promotion_id,
         player_id: player.id,
         status: ApplicantStatus.APPLIED,
       },
     });
-    if (applicantCount) {
+    if (applyingCount) {
       throw new BadRequestException('已申請待審核');
+    }
+
+    // 確認是否此活動已有該玩家已拒絕的申請單
+    const rejectedCount = await this.prisma.applicant.count({
+      where: {
+        promotion_id,
+        player_id: player.id,
+        status: ApplicantStatus.REJECTED,
+      },
+    });
+    if (rejectedCount) {
+      throw new BadRequestException('申請未通過');
     }
 
     // 生成申請單(未審核)
@@ -90,65 +111,78 @@ export class ApplicantService {
       },
     });
 
-    // 判斷是否為自動審核, 審核通過則直接生成待發禮包
-    if (promotion.apply_approval_type === ApprovalType.AUTO) {
-      const isValid = await this.autoVerify(promotion_id, applicant.id);
-      if (isValid) {
-        // 通過驗證則生成禮包
-        // 判斷是否自動派發禮包
-        await this.prisma.$transaction([
-          this.prisma.applicant.update({
-            where: { id: applicant.id },
-            data: {
-              status: ApplicantStatus.APPROVED,
-            },
-          }),
-          this.prisma.gift.create({
-            data: {
-              promotion_id,
-              player_id: applicant.player_id,
-              status:
-                promotion.pay_approval_type === ApprovalType.AUTO
-                  ? SendStatus.SENT
-                  : SendStatus.UNPROCESSED,
-            },
-          }),
-        ]);
-      } else {
-        // 未通過
-        await this.prisma.applicant.update({
-          where: { id: applicant.id },
-          data: {
-            status: ApplicantStatus.REJECTED,
-          },
-        });
-      }
+    // 判斷是否為立即結算且自動審核, 審核通過則直接生成待發禮包
+    if (
+      promotion.apply_approval_type === ApprovalType.AUTO &&
+      promotion.settlement_type === SettlementType.IMMEDIATELY
+    ) {
+      await this.autoVerify(promotion_id, applicant.id);
     }
     return { success: true };
   }
   async autoVerify(promotion_id: string, applicant_id: string) {
     const promotion = await this.prisma.promotion.findUnique({
       where: { id: promotion_id },
+      include: { recharge_reward: true },
     });
+
+    const { recharge_amount } = promotion.recharge_reward;
+
     const applicant = await this.prisma.applicant.findUnique({
       where: { id: applicant_id },
     });
-    if (promotion.type === PromotionType.FIRST_RECHARGE) {
-      // 查詢在活動時間區間內 該玩家是否已有符合首儲的紀錄
+    if (
+      [PromotionType.FIRST_RECHARGE, PromotionType.NORMAL_RECHARGE].includes(
+        promotion.type,
+      )
+    ) {
+      // 查詢在活動時間區間內 該玩家是否已有符合首儲/續儲的紀錄
       const record = await this.prisma.paymentDepositRec.findFirst({
         where: {
           player_id: applicant.player_id,
           created_at: {
-            gte: promotion.start_at,
+            gte: promotion.start_at ? promotion.start_at : undefined,
             lte: new Date(),
           },
           status: PaymentDepositStatus.PAID,
-          is_first: true,
+          amount: {
+            gte: recharge_amount,
+          },
+          is_first: promotion.type === PromotionType.FIRST_RECHARGE,
           promotion_id: null,
         },
       });
 
-      if (!record) return false;
+      if (!record) {
+        await this.prisma.applicant.update({
+          where: { id: applicant.id },
+          data: {
+            status: ApplicantStatus.REJECTED,
+            note: '未有符合條件的儲值單',
+          },
+        });
+      }
+
+      const { reward_amount, reward_percent, reward_type, rolling_type } =
+        promotion.recharge_reward;
+
+      // 禮包金額計算
+      let rewardAmount = reward_amount || 0;
+
+      rewardAmount += (record.amount * reward_percent) / 100;
+
+      // 若禮包金額計算結果超過上限，則以上限數值為主
+      if (rewardAmount >= promotion.reward_max) {
+        rewardAmount = promotion.reward_max;
+      }
+
+      // 流水金額計算
+      let rollingAmount = rewardAmount * promotion.rolling_demand;
+
+      if (rolling_type === RollingType.INCLUDE_RECHARGE) {
+        rollingAmount =
+          (rewardAmount + record.amount) * promotion.rolling_demand;
+      }
 
       // 將該儲值紀錄綁定活動ID (下次報名不可使用此紀錄)
       await this.prisma.paymentDepositRec.update({
@@ -160,36 +194,27 @@ export class ApplicantService {
         },
       });
 
-      return true;
-    } else if (promotion.type === PromotionType.NORMAL_RECHARGE) {
-      const record = await this.prisma.paymentDepositRec.findFirst({
-        where: {
-          player_id: applicant.player_id,
-          created_at: {
-            gte: promotion.start_at,
-            lte: new Date(),
-          },
-          status: PaymentDepositStatus.PAID,
-          promotion_id: null,
+      // 更新申請單狀態為「核准」
+      await this.prisma.applicant.update({
+        where: { id: applicant.id },
+        data: {
+          status: ApplicantStatus.APPROVED,
         },
       });
 
-      if (!record) return false;
-
-      // 將該儲值紀錄綁定活動ID (下次報名不可使用此紀錄)
-      await this.prisma.paymentDepositRec.update({
-        where: {
-          id: record.id,
-        },
+      // 生成禮包(手動/自動派發)
+      await this.prisma.gift.create({
         data: {
           promotion_id,
+          player_id: applicant.player_id,
+          amount: rewardAmount,
+          rolling_amount: rollingAmount,
+          status:
+            promotion.pay_approval_type === ApprovalType.AUTO
+              ? SendStatus.SENT
+              : SendStatus.UNPROCESSED,
         },
       });
-
-      return true;
-    } else if (promotion.type === PromotionType.WATER) {
-      // 代定
-      return true;
     }
   }
 }

@@ -20,8 +20,10 @@ export enum ScheduleType {
 
 // 結算時間
 export enum SettlementType {
-  NORMAL = 1, // 活動結束時結算
-  IMMEDIATELY = 2, // 立即結算
+  IMMEDIATELY = 10, // 立即結算
+  DAILY = 20, // 每日結算(午夜整點)
+  WEEKLY = 21, // 每週結算(週日午夜整點)
+  ENDING = 30, // 活動結束時結算
 }
 
 export enum RollingType {

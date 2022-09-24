@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ApplicantService } from './applicant.service';
+import { GiftModule } from 'src/gift/gift.module';
 import { ApplicantController } from './applicant.controller';
+import { ApplicantService } from './applicant.service';
 
 @Module({
+  imports: [GiftModule],
   controllers: [ApplicantController],
-  providers: [ApplicantService]
+  providers: [ApplicantService],
 })
 export class ApplicantModule {}
