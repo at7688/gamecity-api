@@ -683,20 +683,17 @@ model Promotion {
 
   apply_times Int @default(0) // 可申請次數 (0為無限制)
 
-  // 返水活動(遊戲退水%)
-  game_water GameWater[]
-
   rolling_demand Int @default(1) // 洗碼倍數
 
-  // 儲值活動公式
-  recharge_reward RechargeReward?
+  game_water GameWater[] // 返水活動(遊戲退水%)
+  valid_bet Int? // 有效投注達標值
+
+  recharge_reward RechargeReward? // 儲值活動公式
 
   applicants Applicant[] // 活動報名單
-
   gifts Gift[] // 活動禮包
 
   bank_deposits BankDepositRec[] // 綁定活動的銀行卡儲值紀錄
-
   payment_deposits PaymentDepositRec[] // 綁定活動的支付工具儲值紀錄
 }
 

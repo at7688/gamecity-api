@@ -13,9 +13,9 @@ export enum ApprovalType {
 export enum ScheduleType {
   FOREVER = 0, // 無限期
   ONCE = 1, // 僅一次
-  EVERY_NOON = 10, // 日延續
-  EVERY_MONDAY = 20, // 週延續
-  EVERY_1TH = 30, // 月延續
+  AUTO_EXTEND_A_DAY = 10, // 結束時自動延續一天
+  AUTO_EXTEND_A_WEEK = 20, // 結束時自動延續一週
+  AUTO_EXTEND_A_MONTH = 30, // 結束時自動延續一個月
 }
 
 // 結算時間

@@ -27,7 +27,13 @@ export class GameWaterItem {
   @IsString()
   @IsNotEmpty()
   platform_code: string;
+
+  @IsString()
+  @IsNotEmpty()
   game_code: string;
+
+  @IsNumber()
+  @IsNotEmpty()
   water: number;
 }
 
@@ -64,12 +70,14 @@ export class CreatePromotionDto {
   @IsNotEmpty()
   title: string;
 
-  @IsOptional()
+  @ValidateIf((t) => t.schedule_type !== ScheduleType.FOREVER)
+  @IsNotEmpty()
   @Transform(({ value }) => new Date(value))
   @IsDate()
   start_at?: string | Date;
 
-  @IsOptional()
+  @ValidateIf((t) => t.schedule_type !== ScheduleType.FOREVER)
+  @IsNotEmpty()
   @Transform(({ value }) => new Date(value))
   @IsDate()
   end_at?: string | Date;
@@ -103,6 +111,11 @@ export class CreatePromotionDto {
   @Type(() => GameWaterItem)
   @IsNotEmpty()
   game_water?: GameWaterItem[];
+
+  @ValidateIf((t) => t.type === PromotionType.WATER)
+  @IsInt()
+  @IsNotEmpty()
+  valid_bet?: number;
 
   @IsInt()
   @IsNotEmpty()

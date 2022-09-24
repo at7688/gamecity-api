@@ -7,6 +7,7 @@ import {
   ApprovalType,
   PromotionType,
   RollingType,
+  ScheduleType,
   SettlementType,
 } from 'src/promotion/enums';
 import { ApplicantStatus } from './enums';
@@ -36,11 +37,13 @@ export class ApplicantService {
     }
 
     // 驗證是否於活動時間內申請
-    if (promotion.start_at !== null && promotion.start_at > new Date()) {
-      throw new BadRequestException('活動尚未開始');
-    }
-    if (promotion.end_at !== null && promotion.end_at < new Date()) {
-      throw new BadRequestException('活動已結束');
+    if (promotion.schedule_type !== ScheduleType.FOREVER) {
+      if (promotion.start_at > new Date()) {
+        throw new BadRequestException('活動尚未開始');
+      }
+      if (promotion.end_at < new Date()) {
+        throw new BadRequestException('活動已結束');
+      }
     }
 
     // 驗證申請人數是否已達上限
