@@ -303,7 +303,7 @@ export class ZgService {
     };
 
     const res = await this.request<ZgBetRecordsRes>(reqConfig);
-    if (res.rows?.length) {
+    if (res?.rows?.length) {
       await Promise.all(
         res.rows.map(async (t) => {
           try {
