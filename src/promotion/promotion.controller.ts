@@ -10,6 +10,8 @@ import {
 import { PromotionService } from './promotion.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
+import { Platforms } from 'src/metas/platforms.meta';
+import { PlatformType } from '@prisma/client';
 
 @Controller('promotions')
 export class PromotionController {
@@ -21,11 +23,13 @@ export class PromotionController {
   }
 
   @Get()
+  @Platforms([PlatformType.PLAYER])
   findAll() {
     return this.promotionService.findAll();
   }
 
   @Get(':id')
+  @Platforms([PlatformType.PLAYER])
   findOne(@Param('id') id: string) {
     return this.promotionService.findOne(id);
   }

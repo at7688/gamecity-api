@@ -1,16 +1,17 @@
-import { Controller, Param, Post } from '@nestjs/common';
+import { CreateApplicantDto } from './dto/create-applicant.dto';
+import { Body, Controller, Param, Post } from '@nestjs/common';
 import { PlatformType, Player } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
 import { Platforms } from 'src/metas/platforms.meta';
 import { ApplicantService } from './applicant.service';
 
-@Controller('applicant')
+@Controller('applicants')
 export class ApplicantController {
   constructor(private readonly applicantService: ApplicantService) {}
 
-  @Post('apply/:id')
+  @Post()
   @Platforms([PlatformType.PLAYER])
-  create(@Param('id') promotion_id: string, @User() player: Player) {
-    return this.applicantService.create(promotion_id, player);
+  create(@Body() data: CreateApplicantDto, @User() player: Player) {
+    return this.applicantService.create(data.promotion_id, player);
   }
 }

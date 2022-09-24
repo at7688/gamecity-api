@@ -70,6 +70,18 @@ export class ApplicantService {
       }
     }
 
+    // 確認是否此活動已有該玩家未審核的申請單
+    const applicantCount = await this.prisma.applicant.count({
+      where: {
+        promotion_id,
+        player_id: player.id,
+        status: ApplicantStatus.APPLIED,
+      },
+    });
+    if (applicantCount) {
+      throw new BadRequestException('已申請待審核');
+    }
+
     // 生成申請單(未審核)
     const applicant = await this.prisma.applicant.create({
       data: {
@@ -122,7 +134,6 @@ export class ApplicantService {
       where: { id: applicant_id },
     });
     if (promotion.type === PromotionType.FIRST_RECHARGE) {
-      let isValid = false;
       // 查詢在活動時間區間內 該玩家是否已有符合首儲的紀錄
       const record = await this.prisma.paymentDepositRec.findFirst({
         where: {
@@ -137,7 +148,7 @@ export class ApplicantService {
         },
       });
 
-      isValid = !!record;
+      if (!record) return false;
 
       // 將該儲值紀錄綁定活動ID (下次報名不可使用此紀錄)
       await this.prisma.paymentDepositRec.update({
@@ -149,9 +160,8 @@ export class ApplicantService {
         },
       });
 
-      return isValid;
+      return true;
     } else if (promotion.type === PromotionType.NORMAL_RECHARGE) {
-      let isValid = false;
       const record = await this.prisma.paymentDepositRec.findFirst({
         where: {
           player_id: applicant.player_id,
@@ -163,7 +173,8 @@ export class ApplicantService {
           promotion_id: null,
         },
       });
-      isValid = !!record;
+
+      if (!record) return false;
 
       // 將該儲值紀錄綁定活動ID (下次報名不可使用此紀錄)
       await this.prisma.paymentDepositRec.update({
@@ -175,7 +186,7 @@ export class ApplicantService {
         },
       });
 
-      return isValid;
+      return true;
     } else if (promotion.type === PromotionType.WATER) {
       // 代定
       return true;
