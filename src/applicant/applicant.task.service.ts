@@ -13,15 +13,37 @@ export class ApplicantTaskService {
   ) {}
   private readonly Logger = new Logger(ApplicantTaskService.name);
 
+  @Cron(CronExpression.EVERY_MINUTE)
+  async endingVerify() {
+    await this.scheduleVarify(SettlementType.ENDING);
+    this.Logger.debug('結算優惠申請單(活動結束結算)');
+  }
+
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  @Timeout(3000)
-  async dailyVarify() {
+  async dailyVerify() {
+    await this.scheduleVarify(SettlementType.DAILY);
+    this.Logger.debug('結算優惠申請單(日結算)');
+  }
+
+  @Cron(CronExpression.EVERY_WEEK)
+  async weeklyVerify() {
+    await this.scheduleVarify(SettlementType.WEEKLY);
+    this.Logger.debug('結算優惠申請單(週結算)');
+  }
+
+  async scheduleVarify(settlement_type: SettlementType) {
     const applicants = await this.prisma.applicant.findMany({
       where: {
         promotion: {
           is_active: true,
-          settlement_type: SettlementType.DAILY,
+          settlement_type,
           pay_approval_type: ApprovalType.AUTO,
+          end_at: {
+            lt:
+              settlement_type === SettlementType.ENDING
+                ? new Date()
+                : undefined,
+          },
         },
         status: ApplicantStatus.APPLIED,
       },
@@ -35,6 +57,5 @@ export class ApplicantTaskService {
         return this.applicantService.autoVerify(t.promotion_id, t.id);
       }),
     );
-    this.Logger.debug('結算優惠申請單(日結算)');
   }
 }
