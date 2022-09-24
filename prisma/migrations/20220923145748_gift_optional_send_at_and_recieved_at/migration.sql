@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Gift" ALTER COLUMN "send_at" DROP NOT NULL,
+ALTER COLUMN "recieved_at" DROP NOT NULL;

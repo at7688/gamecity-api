@@ -69,7 +69,9 @@ export class PromotionService {
   }
 
   findAll() {
-    return this.prisma.promotion.findMany();
+    return this.prisma.promotion.findMany({
+      include: { recharge_reward: true },
+    });
   }
 
   findOne(id: string) {

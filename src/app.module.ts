@@ -53,6 +53,8 @@ import { WalletRecModule } from './wallet-rec/wallet-rec.module';
 import { WithdrawModule } from './withdraw/withdraw.module';
 import { PromotionModule } from './promotion/promotion.module';
 import { FeeReportModule } from './fee-report/fee-report.module';
+import { GiftModule } from './gift/gift.module';
+import { ApplicantModule } from './applicant/applicant.module';
 
 @Module({
   imports: [
@@ -115,6 +117,8 @@ import { FeeReportModule } from './fee-report/fee-report.module';
     GameReportModule,
     PromotionModule,
     FeeReportModule,
+    GiftModule,
+    ApplicantModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
