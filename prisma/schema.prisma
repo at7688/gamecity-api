@@ -665,6 +665,8 @@ model Promotion {
   type  Int // 首儲獎勵 續儲獎勵 遊戲返水
   title String
 
+  status Int @default(1) // 未開始, 進行中, 已結束
+
   schedule_type   Int       @default(1) // (活動期間) 無限期 僅一次 月延續 周延續 日延續
   start_at        DateTime? @db.Timestamptz() // 無限期則留空
   end_at          DateTime? @db.Timestamptz() // 無限期則留空
@@ -728,8 +730,8 @@ model Gift {
   promotion    Promotion @relation(fields: [promotion_id], references: [id])
   promotion_id String
 
-  applicant    Applicant @relation(fields: [applicant_id], references: [id])
-  applicant_id String @unique
+  applicant    Applicant? @relation(fields: [applicant_id], references: [id])
+  applicant_id String? @unique
 
   status Int @default(1) // 未派發, 已派發, 已接收
 

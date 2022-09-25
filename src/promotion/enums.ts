@@ -40,3 +40,9 @@ export enum ApplyLimitType {
   TOTAL_PERIOD = 1, // 活動期間
   EACH_SECTION = 2, // 每檔期
 }
+
+export enum PromotionStatus {
+  COMMING = 1,
+  RUNING = 2,
+  END = 3,
+}

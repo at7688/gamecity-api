@@ -14,6 +14,7 @@ import { ApplicantStatus } from './enums';
 import { GiftService } from 'src/gift/gift.service';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { sumBy } from 'lodash';
+import { SearchApplicantsDto } from './dto/search-applicants.dto';
 
 @Injectable()
 export class ApplicantService {
@@ -212,6 +213,7 @@ export class ApplicantService {
         this.prisma.gift.create({
           data: {
             promotion_id,
+            applicant_id,
             player_id: applicant.player_id,
             amount: rewardAmount,
             rolling_amount: rollingAmount,
@@ -292,6 +294,7 @@ export class ApplicantService {
         this.prisma.gift.create({
           data: {
             promotion_id,
+            applicant_id,
             player_id: applicant.player_id,
             amount: rewardAmount,
             rolling_amount: rollingAmount,
@@ -303,5 +306,47 @@ export class ApplicantService {
         }),
       ]);
     }
+  }
+
+  async findAll(search: SearchApplicantsDto) {
+    const {
+      promotion_id,
+      promotion_name,
+      username,
+      nickname,
+      vip_ids,
+      apply_approval_type,
+      settlement_type,
+      types,
+      approval_statuses,
+      promotion_statuses,
+      apply_start_at,
+      apply_end_at,
+    } = search;
+
+    return this.prisma.applicant.findMany({
+      where: {
+        status: {
+          in: approval_statuses,
+        },
+        promotion: {
+          id: promotion_id,
+          title: { contains: promotion_name },
+          apply_approval_type,
+          settlement_type,
+          type: { in: types },
+          status: { in: promotion_statuses },
+        },
+        player: {
+          username: { contains: username },
+          nickname: { contains: nickname },
+          vip_id: { in: vip_ids },
+        },
+        created_at: {
+          gte: apply_start_at,
+          lte: apply_end_at,
+        },
+      },
+    });
   }
 }

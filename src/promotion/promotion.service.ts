@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
-import { PromotionType } from './enums';
+import { PromotionStatus, PromotionType, ScheduleType } from './enums';
 
 @Injectable()
 export class PromotionService {
@@ -28,6 +28,9 @@ export class PromotionService {
       recharge_reward,
       valid_bet,
     } = data;
+    if (schedule_type !== ScheduleType.FOREVER && end_at < new Date()) {
+      throw new BadRequestException('結束時間不可小於當前時間');
+    }
     return this.prisma.promotion.create({
       data: {
         type,
@@ -62,6 +65,10 @@ export class PromotionService {
         applicants_max,
         settlement_type,
         apply_times,
+        status:
+          schedule_type !== ScheduleType.FOREVER && start_at > new Date()
+            ? PromotionStatus.COMMING
+            : PromotionStatus.RUNING,
       },
       include: {
         recharge_reward: true,
