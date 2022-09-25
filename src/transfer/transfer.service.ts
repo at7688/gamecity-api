@@ -6,6 +6,8 @@ import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { CreateTransferDto } from './dto/create-transfer.dto';
 import { TransferType } from './enums';
 
+// TODO: 管端要能設定代理轉額時的洗碼設定上限
+
 @Injectable()
 export class TransferService {
   constructor(
@@ -61,6 +63,7 @@ export class TransferService {
             type: WalletRecType.TRANSFER_IN,
             agent_id: record.target_agent_id,
             amount: record.amount,
+            rolling_amount: record.amount * record.rolling_demand,
             source: `${record.source.username}(${record.source.nickname})`,
             relative_id: record.id,
           })),
@@ -78,6 +81,7 @@ export class TransferService {
             type: WalletRecType.TRANSFER_IN,
             player_id: record.target_player_id,
             amount: record.amount,
+            rolling_amount: record.amount * record.rolling_demand,
             source: `${record.source.username}(${record.source.nickname})`,
             relative_id: record.id,
           })),

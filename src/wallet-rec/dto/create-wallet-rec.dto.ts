@@ -10,5 +10,5 @@ export class CreateWalletRecDto {
   operator_id?: string;
   note?: string;
   relative_id?: string;
-  rolling_demand?: number = 1;
+  rolling_amount?: number;
 }

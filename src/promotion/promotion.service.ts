@@ -83,30 +83,6 @@ export class PromotionService {
     });
   }
 
-  findByPlayer(player: Player) {
-    return this.prisma.promotion.findMany({
-      where: {
-        vips: {
-          some: {
-            id: player.vip_id,
-          },
-        },
-        OR: [
-          {
-            start_at: {
-              lte: new Date(),
-            },
-            end_at: {
-              gte: new Date(),
-            },
-          },
-          { schedule_type: ScheduleType.FOREVER },
-        ],
-        is_active: true,
-      },
-    });
-  }
-
   findOne(id: string) {
     return `This action returns a #${id} promotion`;
   }

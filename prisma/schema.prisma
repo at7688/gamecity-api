@@ -206,7 +206,7 @@ model WalletRec {
   source         String
   note           String?
   relative_id    String?
-  rolling_demand Int        @default(1)
+  rolling_amount Int?
 }
 
 // model BalanceOperation {

@@ -23,7 +23,7 @@ export class WalletRecService {
       note,
       player_id,
       agent_id,
-      rolling_demand,
+      rolling_amount,
     } = data;
     switch (target_type) {
       case WalletTargetType.AGENT:
@@ -37,7 +37,7 @@ export class WalletRecService {
             amount: type === ManualType.ADD ? amount : -amount,
             source: '',
             operator_id: user.id,
-            rolling_demand,
+            rolling_amount,
             note,
           }),
         );
@@ -53,7 +53,7 @@ export class WalletRecService {
             amount: type === ManualType.ADD ? amount : -amount,
             source: '',
             operator_id: user.id,
-            rolling_demand,
+            rolling_amount,
             note,
           }),
         );
@@ -68,7 +68,7 @@ export class WalletRecService {
     const {
       type,
       player_id,
-      rolling_demand,
+      rolling_amount,
       amount,
       source,
       fee = 0,
@@ -91,7 +91,7 @@ export class WalletRecService {
           operator_id,
           note,
           relative_id,
-          rolling_demand,
+          rolling_amount,
         },
       }),
       this.prisma.player.update({

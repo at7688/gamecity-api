@@ -37,5 +37,5 @@ export class ManualOperationDto {
 
   @IsOptional()
   @IsInt()
-  rolling_demand?: number;
+  rolling_amount?: number;
 }

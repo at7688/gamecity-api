@@ -1,18 +1,15 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { PromotionService } from './promotion.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
-import { Platforms } from 'src/metas/platforms.meta';
-import { PlatformType, Player } from '@prisma/client';
-import { User } from 'src/decorators/user.decorator';
+import { PromotionService } from './promotion.service';
 
 @Controller('promotions')
 export class PromotionController {
@@ -28,14 +25,7 @@ export class PromotionController {
     return this.promotionService.findAll();
   }
 
-  @Get('player')
-  @Platforms([PlatformType.PLAYER])
-  findByPlayer(@User() player: Player) {
-    return this.promotionService.findByPlayer(player);
-  }
-
   @Get(':id')
-  @Platforms([PlatformType.PLAYER])
   findOne(@Param('id') id: string) {
     return this.promotionService.findOne(id);
   }
