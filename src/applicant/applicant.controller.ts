@@ -14,6 +14,7 @@ export class ApplicantController {
   findAll(@Body() search: SearchApplicantsDto, @User() player: Player) {
     return this.applicantService.findAll(search);
   }
+
   @Post('create')
   @Platforms([PlatformType.PLAYER])
   create(@Body() data: CreateApplicantDto, @User() player: Player) {

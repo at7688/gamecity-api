@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
@@ -80,6 +80,30 @@ export class PromotionService {
   findAll() {
     return this.prisma.promotion.findMany({
       include: { recharge_reward: true },
+    });
+  }
+
+  findByPlayer(player: Player) {
+    return this.prisma.promotion.findMany({
+      where: {
+        vips: {
+          some: {
+            id: player.vip_id,
+          },
+        },
+        OR: [
+          {
+            start_at: {
+              lte: new Date(),
+            },
+            end_at: {
+              gte: new Date(),
+            },
+          },
+          { schedule_type: ScheduleType.FOREVER },
+        ],
+        is_active: true,
+      },
     });
   }
 

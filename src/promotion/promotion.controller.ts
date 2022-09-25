@@ -11,7 +11,8 @@ import { PromotionService } from './promotion.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { Platforms } from 'src/metas/platforms.meta';
-import { PlatformType } from '@prisma/client';
+import { PlatformType, Player } from '@prisma/client';
+import { User } from 'src/decorators/user.decorator';
 
 @Controller('promotions')
 export class PromotionController {
@@ -23,9 +24,14 @@ export class PromotionController {
   }
 
   @Get()
-  @Platforms([PlatformType.PLAYER])
   findAll() {
     return this.promotionService.findAll();
+  }
+
+  @Get('player')
+  @Platforms([PlatformType.PLAYER])
+  findByPlayer(@User() player: Player) {
+    return this.promotionService.findByPlayer(player);
   }
 
   @Get(':id')

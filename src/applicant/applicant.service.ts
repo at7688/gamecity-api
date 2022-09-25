@@ -169,6 +169,7 @@ export class ApplicantService {
             note: '未有符合條件的儲值單',
           },
         });
+        return;
       }
 
       const { reward_amount, reward_percent, reward_type, rolling_type } =
@@ -251,6 +252,7 @@ export class ApplicantService {
             note: '有效投注未達標準',
           },
         });
+        return;
       }
 
       // 禮包金額計算
