@@ -715,6 +715,8 @@ model Applicant {
 
   note String?
 
+  gift Gift?
+
 }
 
 // 活動禮包派發 (手動派發/自動派發)
@@ -725,6 +727,9 @@ model Gift {
 
   promotion    Promotion @relation(fields: [promotion_id], references: [id])
   promotion_id String
+
+  applicant    Applicant @relation(fields: [applicant_id], references: [id])
+  applicant_id String @unique
 
   status Int @default(1) // 未派發, 已派發, 已接收
 

@@ -1,4 +1,5 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { ApprovalType, SettlementType } from 'src/promotion/enums';
 
 export class SearchGiftsDto {
   @IsString()
@@ -16,4 +17,16 @@ export class SearchGiftsDto {
   @IsString({ each: true })
   @IsOptional()
   vip_ids?: string[];
+
+  @IsEnum(ApprovalType)
+  @IsOptional()
+  apply_approval_type?: ApprovalType;
+
+  @IsEnum(ApprovalType)
+  @IsOptional()
+  pay_approval_type?: ApprovalType;
+
+  @IsEnum(SettlementType)
+  @IsOptional()
+  settlement_type?: SettlementType;
 }
