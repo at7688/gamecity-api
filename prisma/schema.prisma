@@ -695,6 +695,8 @@ model Promotion {
 
   bank_deposits BankDepositRec[] // 綁定活動的銀行卡儲值紀錄
   payment_deposits PaymentDepositRec[] // 綁定活動的支付工具儲值紀錄
+
+  bet_records BetRecord[]
 }
 
 // 活動申請表 (手動核准/自動核准)
@@ -755,6 +757,9 @@ model BetRecord {
   bet_detail      Json?
   ratios          BetRatioRec[]
   vip_water       Float         @default(0)
+
+  promotion Promotion? @relation(fields: [promotion_id], references: [id])
+  promotion_id String?
 
   @@unique([bet_no, platform_code])
 }

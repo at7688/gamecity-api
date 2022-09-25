@@ -12,6 +12,8 @@ import {
 } from 'src/promotion/enums';
 import { ApplicantStatus } from './enums';
 import { GiftService } from 'src/gift/gift.service';
+import { BetRecordStatus } from 'src/bet-record/enums';
+import { sumBy } from 'lodash';
 
 @Injectable()
 export class ApplicantService {
@@ -126,19 +128,21 @@ export class ApplicantService {
   async autoVerify(promotion_id: string, applicant_id: string) {
     const promotion = await this.prisma.promotion.findUnique({
       where: { id: promotion_id },
-      include: { recharge_reward: true },
+      include: { recharge_reward: true, game_water: true },
     });
-
-    const { recharge_amount } = promotion.recharge_reward;
 
     const applicant = await this.prisma.applicant.findUnique({
       where: { id: applicant_id },
     });
+
+    // 儲值類活動驗證
     if (
       [PromotionType.FIRST_RECHARGE, PromotionType.NORMAL_RECHARGE].includes(
         promotion.type,
       )
     ) {
+      const { recharge_amount } = promotion.recharge_reward;
+
       // 查詢在活動時間區間內 該玩家是否已有符合首儲/續儲的紀錄
       const record = await this.prisma.paymentDepositRec.findFirst({
         where: {
@@ -187,37 +191,117 @@ export class ApplicantService {
           (rewardAmount + record.amount) * promotion.rolling_demand;
       }
 
-      // 將該儲值紀錄綁定活動ID (下次報名不可使用此紀錄)
-      await this.prisma.paymentDepositRec.update({
+      await this.prisma.$transaction([
+        // 將該儲值紀錄綁定活動ID (下次報名不可使用此紀錄)
+        this.prisma.paymentDepositRec.update({
+          where: {
+            id: record.id,
+          },
+          data: {
+            promotion_id,
+          },
+        }),
+        // 更新申請單狀態為「核准」
+        this.prisma.applicant.update({
+          where: { id: applicant.id },
+          data: {
+            status: ApplicantStatus.APPROVED,
+          },
+        }),
+        // 生成禮包(手動/自動派發)
+        this.prisma.gift.create({
+          data: {
+            promotion_id,
+            player_id: applicant.player_id,
+            amount: rewardAmount,
+            rolling_amount: rollingAmount,
+            status:
+              promotion.pay_approval_type === ApprovalType.AUTO
+                ? SendStatus.SENT
+                : SendStatus.UNPROCESSED,
+          },
+        }),
+      ]);
+    } else if (promotion.type === PromotionType.WATER) {
+      // 搜尋出活動時間內符合該反水條件的遊戲注單
+      const records = await this.prisma.betRecord.findMany({
         where: {
-          id: record.id,
-        },
-        data: {
-          promotion_id,
+          platform_code: {
+            in: promotion.game_water.map((t) => t.platform_code),
+          },
+          game_code: {
+            in: promotion.game_water.map((t) => t.game_code),
+          },
+          status: BetRecordStatus.DONE,
+          promotion_id: null,
+          bet_at: {
+            gte: promotion.start_at, // TODO: 依照scheduleType判斷開始計算的時間點
+            lte: new Date(),
+          },
         },
       });
+      // 驗證有效金額是否到達反水標準
+      if (sumBy(records, (t) => t.valid_amount) <= promotion.valid_bet) {
+        await this.prisma.applicant.update({
+          where: { id: applicant.id },
+          data: {
+            status: ApplicantStatus.REJECTED,
+            note: '有效投注未達標準',
+          },
+        });
+      }
 
-      // 更新申請單狀態為「核准」
-      await this.prisma.applicant.update({
-        where: { id: applicant.id },
-        data: {
-          status: ApplicantStatus.APPROVED,
+      // 禮包金額計算
+      const gameWaterMap = promotion.game_water.reduce<Record<string, number>>(
+        (obj, next) => {
+          obj[`${next.platform_code}|${next.game_code}`] = next.water;
+          return obj;
         },
-      });
+        {},
+      );
+      const rewardAmount = +sumBy(
+        records,
+        (t) =>
+          (t.valid_amount * gameWaterMap[`${t.platform_code}|${t.game_code}`]) /
+          100,
+      ).toFixed(0);
 
-      // 生成禮包(手動/自動派發)
-      await this.prisma.gift.create({
-        data: {
-          promotion_id,
-          player_id: applicant.player_id,
-          amount: rewardAmount,
-          rolling_amount: rollingAmount,
-          status:
-            promotion.pay_approval_type === ApprovalType.AUTO
-              ? SendStatus.SENT
-              : SendStatus.UNPROCESSED,
-        },
-      });
+      // 流水金額計算
+      const rollingAmount = rewardAmount * promotion.rolling_demand;
+
+      // 將注單加上以參與活動標註, 修改申請單狀態, 生成禮包
+      await this.prisma.$transaction([
+        this.prisma.betRecord.updateMany({
+          where: {
+            id: {
+              in: records.map((t) => t.id),
+            },
+          },
+          data: {
+            promotion_id,
+          },
+        }),
+        this.prisma.applicant.update({
+          where: {
+            id: applicant_id,
+          },
+          data: {
+            status: ApplicantStatus.APPROVED,
+          },
+        }),
+        this.prisma.gift.create({
+          data: {
+            promotion_id,
+            player_id: applicant.player_id,
+            amount: rewardAmount,
+            rolling_amount: rollingAmount,
+            status:
+              promotion.pay_approval_type === ApprovalType.AUTO
+                ? SendStatus.SENT
+                : SendStatus.UNPROCESSED,
+          },
+        }),
+      ]);
     }
   }
 }

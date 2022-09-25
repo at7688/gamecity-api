@@ -26,6 +26,7 @@ export class PromotionService {
       settlement_type,
       apply_times,
       recharge_reward,
+      valid_bet,
     } = data;
     return this.prisma.promotion.create({
       data: {
@@ -37,6 +38,7 @@ export class PromotionService {
         apply_approval_type,
         pay_approval_type,
         schedule_type,
+        valid_bet,
         vips: {
           connect: vip_ids.map((id) => ({ id })),
         },
@@ -96,6 +98,7 @@ export class PromotionService {
       applicants_max,
       apply_times,
       recharge_reward,
+      valid_bet,
     } = data;
     return this.prisma.promotion.update({
       where: {
@@ -111,6 +114,7 @@ export class PromotionService {
         pay_approval_type,
         schedule_type,
         settlement_type,
+        valid_bet,
         vips: {
           connect: vip_ids.map((id) => ({ id })),
         },
