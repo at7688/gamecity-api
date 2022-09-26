@@ -1,7 +1,10 @@
+import { Prisma } from '@prisma/client';
 import { SearchPlayerRollingDto } from './dto/search-player-rolling.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchGiftsDto } from './dto/search-gifts.dto';
+import { PlayerRolling, playersRolling } from './raw/playersRolling';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable()
 export class GiftService {
@@ -81,32 +84,41 @@ export class GiftService {
       page,
       perpage,
     } = search;
-    const data = await this.prisma.gift.groupBy({
-      by: ['player_id', 'status'],
-      _count: {
-        _all: true,
-      },
-      _sum: {
-        amount: true,
-        rolling_amount: true,
+
+    const findManyArg: Prisma.PlayerFindManyArgs = {
+      select: {
+        id: true,
+        nickname: true,
+        username: true,
       },
       where: {
-        player: {
-          username: { contains: username },
-          nickname: { contains: nickname },
-        },
-        recieved_at: {
-          gte: recieve_start_at,
-          lte: recieve_end_at,
+        username,
+        nickname,
+        gifts: {
+          some: {
+            recieved_at: {
+              gte: recieve_start_at,
+              lte: recieve_end_at,
+            },
+          },
         },
       },
       take: perpage,
       skip: (page - 1) * perpage,
-      orderBy: {
-        player_id: 'desc',
-      },
+    };
+
+    const players = await this.prisma.player.findMany(findManyArg);
+    const count = await this.prisma.player.count({ where: findManyArg.where });
+    if (!players.length) {
+      this.prisma.error(ResCode.NOT_FOUND, '查無資料');
+    }
+    const items = await this.prisma.$queryRaw<PlayerRolling[]>(
+      playersRolling(players.map((t) => t.id)),
+    );
+    return this.prisma.listFormat({
+      items,
+      count,
     });
-    return this.prisma.success(data);
   }
 
   async findAll(search: SearchGiftsDto) {
