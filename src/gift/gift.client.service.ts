@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player } from '@prisma/client';
+import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
@@ -28,9 +29,18 @@ export class GiftClientService {
       where: {
         id: gift_id,
         player_id: player.id,
+        status: SendStatus.SENT,
       },
       include: { promotion: true },
     });
+
+    if (!gift) {
+      this.prisma.resHandler({
+        code: ResCode.GIFT_ALREADY_RECIEVE,
+        msg: '無此禮包或禮包已領取',
+      });
+    }
+
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
         type: WalletRecType.GIFT_RECIEVE,

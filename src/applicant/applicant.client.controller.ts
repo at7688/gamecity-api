@@ -1,4 +1,5 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { CreateApplicantDto } from './dto/create-applicant.dto';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { PlatformType, Player } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
 import { Platforms } from 'src/metas/platforms.meta';
@@ -12,5 +13,9 @@ export class ApplicantClientController {
   @Get()
   findAll(@User() player: Player) {
     return this.applicantService.findAll(player);
+  }
+  @Post()
+  create(@Body() data: CreateApplicantDto, @User() player: Player) {
+    return this.applicantService.create(data.promotion_id, player);
   }
 }

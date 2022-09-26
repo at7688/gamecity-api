@@ -124,10 +124,10 @@ import { ApplicantModule } from './applicant/applicant.module';
 
   providers: [
     AppService,
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: HttpExceptionFilter,
+    // },
     BankService,
   ],
   // exports: [AppService],

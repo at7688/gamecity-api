@@ -134,6 +134,7 @@ export class ApplicantService {
           },
           status: BetRecordStatus.DONE,
           promotion_id: null,
+          player_id: applicant.player_id,
           bet_at: {
             gte: promotion.start_at, // TODO: 依照scheduleType判斷開始計算的時間點
             lte: new Date(),

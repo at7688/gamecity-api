@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable()
 export class PrismaService extends PrismaClient {
@@ -26,5 +27,20 @@ export class PrismaService extends PrismaClient {
     extra?: E;
   }) {
     return { items, count, search, ...extra };
+  }
+
+  resHandler({
+    code,
+    msg = '',
+    data = null,
+  }: {
+    code: ResCode;
+    msg?: string;
+    data?: any;
+  }) {
+    if (code === ResCode.SUCCESS) {
+      return { code, msg, data };
+    }
+    throw new BadRequestException({ code, msg });
   }
 }
