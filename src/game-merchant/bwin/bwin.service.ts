@@ -89,9 +89,7 @@ export class BwinService {
       },
     });
 
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 
   async getGameList() {

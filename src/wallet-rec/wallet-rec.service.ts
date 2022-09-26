@@ -61,7 +61,7 @@ export class WalletRecService {
       default:
         break;
     }
-    return { success: true };
+    return this.prisma.success();
   }
 
   async playerCreate(data: CreateWalletRecDto) {

@@ -1,20 +1,13 @@
-import { SendStatus } from './../gift/enums';
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { Player } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
+import { sumBy } from 'lodash';
+import { BetRecordStatus } from 'src/bet-record/enums';
+import { GiftService } from 'src/gift/gift.service';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {
-  ApprovalType,
-  PromotionType,
-  RollingType,
-  ScheduleType,
-  SettlementType,
-} from 'src/promotion/enums';
-import { ApplicantStatus } from './enums';
-import { GiftService } from 'src/gift/gift.service';
-import { BetRecordStatus } from 'src/bet-record/enums';
-import { sumBy } from 'lodash';
+import { ApprovalType, PromotionType, RollingType } from 'src/promotion/enums';
+import { SendStatus } from './../gift/enums';
 import { SearchApplicantsDto } from './dto/search-applicants.dto';
+import { ApplicantStatus } from './enums';
 
 @Injectable()
 export class ApplicantService {

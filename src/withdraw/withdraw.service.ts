@@ -154,6 +154,6 @@ export class WithdrawService {
         })),
       ]);
     }
-    return { success: true };
+    return this.prisma.success();
   }
 }

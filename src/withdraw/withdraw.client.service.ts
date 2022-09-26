@@ -86,9 +86,7 @@ export class WithdrawClientService {
       },
     });
 
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 
   findAll(search: SearchWithdrawsDto) {

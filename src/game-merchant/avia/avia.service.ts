@@ -139,9 +139,7 @@ export class AviaService {
       },
     };
     await this.request(reqConfig);
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 
   async fetchBetRecords(start: Date, end: Date) {

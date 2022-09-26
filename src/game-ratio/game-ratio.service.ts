@@ -22,7 +22,7 @@ export class GameRatioService {
         }),
       ),
     );
-    return { success: true };
+    return this.prisma.success();
   }
   async set(data: CreateGameRatioDto) {
     const { game_code, platform_code, agent_id, ratio, water, water_duty } =

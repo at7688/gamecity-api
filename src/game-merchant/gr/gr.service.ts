@@ -89,9 +89,7 @@ export class GrService {
       },
     });
 
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 
   async getGameList() {

@@ -128,7 +128,7 @@ export class PaymentToolService {
         data: { is_current: true },
       }),
     ]);
-    return { success: true };
+    return this.prisma.success();
   }
 
   remove(id: string) {

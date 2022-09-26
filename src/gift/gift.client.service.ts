@@ -35,10 +35,10 @@ export class GiftClientService {
     });
 
     if (!gift) {
-      this.prisma.resHandler({
-        code: ResCode.GIFT_ALREADY_RECIEVE,
-        msg: '無此禮包或禮包已領取',
-      });
+      throw this.prisma.error(
+        ResCode.GIFT_ALREADY_RECIEVE,
+        '無此禮包或禮包已領取',
+      );
     }
 
     await this.prisma.$transaction([
@@ -60,8 +60,6 @@ export class GiftClientService {
         },
       }),
     ]);
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 }

@@ -186,9 +186,7 @@ export class OgService {
       },
     });
 
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 
   async getGameList() {

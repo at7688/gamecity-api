@@ -111,9 +111,7 @@ export class BngService {
         },
       });
 
-      return {
-        success: true,
-      };
+      return this.prisma.success();
     } catch (err) {
       throw new BadRequestException(err);
     }

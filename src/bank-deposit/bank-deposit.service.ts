@@ -107,6 +107,6 @@ export class BankDepositService {
         relative_id: record.id,
       })),
     ]);
-    return { success: true };
+    return this.prisma.success();
   }
 }

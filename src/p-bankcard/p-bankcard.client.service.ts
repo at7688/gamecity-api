@@ -77,8 +77,6 @@ export class PBankcardClientService {
         },
       }),
     ]);
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 }

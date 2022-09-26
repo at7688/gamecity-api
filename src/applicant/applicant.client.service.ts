@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Player } from '@prisma/client';
+import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   ApprovalType,
@@ -29,16 +30,16 @@ export class ApplicantClientService {
     });
     // 驗證是否有該活動(或活動未開啟)
     if (!promotion) {
-      throw new BadRequestException('無此活動');
+      this.prisma.error(ResCode.NOT_FOUND, '無此活動');
     }
 
     // 驗證是否於活動時間內申請
     if (promotion.schedule_type !== ScheduleType.FOREVER) {
       if (promotion.start_at > new Date()) {
-        throw new BadRequestException('活動尚未開始');
+        this.prisma.error(ResCode.PROMOTION_NOT_RUNNING, '活動尚未開始');
       }
       if (promotion.end_at < new Date()) {
-        throw new BadRequestException('活動已結束');
+        this.prisma.error(ResCode.PROMOTION_NOT_RUNNING, '活動已結束');
       }
     }
 
@@ -53,13 +54,13 @@ export class ApplicantClientService {
         },
       });
       if (applicantCount >= promotion.applicants_max) {
-        throw new BadRequestException('已達申請人數上限');
+        this.prisma.error(ResCode.OVER_APPLICANT_LIMIT, '已達申請人數上限');
       }
     }
 
     // 驗證是否符合可申請的VIP等級
     if (!promotion.vips.some((t) => t.id === player.vip_id)) {
-      throw new BadRequestException('玩家等級資格不符');
+      this.prisma.error(ResCode.VIP_LEVEL_NOT_ALLOW, '玩家等級資格不符');
     }
 
     // 驗證是否達到個人申請上限
@@ -74,7 +75,7 @@ export class ApplicantClientService {
         },
       });
       if (applicantCount >= promotion.apply_times) {
-        throw new BadRequestException('已達個人申請次數上限');
+        this.prisma.error(ResCode.OVER_APPLY_TIMES, '已達個人申請次數上限');
       }
     }
 
@@ -87,7 +88,7 @@ export class ApplicantClientService {
       },
     });
     if (applyingCount) {
-      throw new BadRequestException('已申請待審核');
+      this.prisma.error(ResCode.ALREADY_APPLIED, '已申請待審核');
     }
 
     // 確認是否此活動已有該玩家已拒絕的申請單
@@ -99,7 +100,7 @@ export class ApplicantClientService {
       },
     });
     if (rejectedCount) {
-      throw new BadRequestException('申請未通過');
+      this.prisma.error(ResCode.APPLICANT_REJECTED, '申請未通過');
     }
 
     // 生成申請單(未審核)
@@ -117,7 +118,7 @@ export class ApplicantClientService {
     ) {
       await this.applicantService.autoVerify(promotion_id, applicant.id);
     }
-    return { success: true };
+    return this.prisma.success();
   }
 
   async findAll(player: Player) {

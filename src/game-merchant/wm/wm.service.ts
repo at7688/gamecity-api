@@ -110,9 +110,7 @@ export class WmService {
       },
     });
 
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 
   async getGameList() {
@@ -139,7 +137,7 @@ export class WmService {
       skipDuplicates: true,
     });
 
-    return { success: true };
+    return this.prisma.success();
   }
 
   async getGameLink(game_id: string, player: Player) {

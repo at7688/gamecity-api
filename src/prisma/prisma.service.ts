@@ -26,21 +26,13 @@ export class PrismaService extends PrismaClient {
     search?: R;
     extra?: E;
   }) {
-    return { items, count, search, ...extra };
+    return this.success({ items, count, search, ...extra });
   }
 
-  resHandler({
-    code,
-    msg = '',
-    data = null,
-  }: {
-    code: ResCode;
-    msg?: string;
-    data?: any;
-  }) {
-    if (code === ResCode.SUCCESS) {
-      return { code, msg, data };
-    }
+  error(code: ResCode, msg?: string) {
     throw new BadRequestException({ code, msg });
+  }
+  success(data?: any, msg?: string) {
+    return { code: ResCode.SUCCESS, data, msg: msg || 'Success.' };
   }
 }

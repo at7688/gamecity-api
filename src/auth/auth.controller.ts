@@ -4,6 +4,7 @@ import { Player } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
 import { Platforms } from 'src/metas/platforms.meta';
 import { Public } from 'src/metas/public.meta';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -11,6 +12,7 @@ import { LoginDto } from './dto/login.dto';
 @Controller('auth')
 export class AuthController {
   constructor(
+    private readonly prisma: PrismaService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {}
@@ -36,7 +38,7 @@ export class AuthController {
   @Post('logout')
   @Public()
   async logout(@Request() req) {
-    return { success: true };
+    return this.prisma.success();
   }
 
   @Get('me')

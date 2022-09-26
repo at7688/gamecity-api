@@ -21,6 +21,6 @@ export class GamePlatformService {
       },
     });
 
-    return { success: true };
+    return this.prisma.success();
   }
 }

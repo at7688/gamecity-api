@@ -140,9 +140,7 @@ export class AbService {
       },
     });
 
-    return {
-      success: true,
-    };
+    return this.prisma.success();
   }
 
   async getGameList() {

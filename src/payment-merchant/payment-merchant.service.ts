@@ -20,7 +20,7 @@ export class PaymentMerchantService {
       },
     });
 
-    return { success: true };
+    return this.prisma.success();
   }
 
   findAll() {
@@ -53,7 +53,7 @@ export class PaymentMerchantService {
       },
     });
 
-    return { success: true };
+    return this.prisma.success();
   }
 
   remove(id: string) {
