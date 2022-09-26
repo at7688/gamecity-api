@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Player } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import { SendStatus } from './enums';
+import { ClientSearchGiftsDto } from './dto/client-search-gifts.dto';
+import { GiftType, SendStatus } from './enums';
 
 @Injectable()
 export class GiftClientService {
@@ -13,14 +14,31 @@ export class GiftClientService {
     private readonly walletRecService: WalletRecService,
   ) {}
 
-  findAll(player: Player) {
-    return this.prisma.gift.findMany({
+  async findAll(search: ClientSearchGiftsDto, player: Player) {
+    const { status } = search;
+    const findManyArg: Prisma.GiftFindManyArgs = {
       where: {
         player_id: player.id,
+        status,
       },
       include: {
         promotion: true,
+        sender: {
+          select: {
+            nickname: true,
+            username: true,
+            id: true,
+            layer: true,
+          },
+        },
       },
+      orderBy: {
+        created_at: 'desc',
+      },
+    };
+    return this.prisma.listFormat({
+      items: await this.prisma.gift.findMany(findManyArg),
+      count: await this.prisma.gift.count({ where: findManyArg.where }),
     });
   }
 
@@ -31,7 +49,7 @@ export class GiftClientService {
         player_id: player.id,
         status: SendStatus.SENT,
       },
-      include: { promotion: true },
+      include: { promotion: true, sender: true },
     });
 
     if (!gift) {
@@ -47,7 +65,10 @@ export class GiftClientService {
         player_id: player.id,
         amount: gift.amount,
         rolling_amount: gift.rolling_amount,
-        source: gift.promotion.title,
+        source:
+          gift.type === GiftType.PROMOTION
+            ? gift.promotion.title
+            : gift.sender.username,
         relative_id: gift.id,
       })),
       this.prisma.gift.updateMany({
@@ -57,6 +78,7 @@ export class GiftClientService {
         },
         data: {
           status: SendStatus.RECIEVED,
+          recieved_at: new Date(),
         },
       }),
     ]);

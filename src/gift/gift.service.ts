@@ -1,3 +1,4 @@
+import { SearchPlayerRollingDto } from './dto/search-player-rolling.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchGiftsDto } from './dto/search-gifts.dto';
@@ -69,6 +70,43 @@ export class GiftService {
         _count: true,
       }),
     };
+  }
+
+  async playerRolling(search: SearchPlayerRollingDto) {
+    const {
+      username,
+      nickname,
+      recieve_start_at,
+      recieve_end_at,
+      page,
+      perpage,
+    } = search;
+    const data = await this.prisma.gift.groupBy({
+      by: ['player_id', 'status'],
+      _count: {
+        _all: true,
+      },
+      _sum: {
+        amount: true,
+        rolling_amount: true,
+      },
+      where: {
+        player: {
+          username: { contains: username },
+          nickname: { contains: nickname },
+        },
+        recieved_at: {
+          gte: recieve_start_at,
+          lte: recieve_end_at,
+        },
+      },
+      take: perpage,
+      skip: (page - 1) * perpage,
+      orderBy: {
+        player_id: 'desc',
+      },
+    });
+    return this.prisma.success(data);
   }
 
   async findAll(search: SearchGiftsDto) {

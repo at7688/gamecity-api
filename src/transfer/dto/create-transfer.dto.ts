@@ -14,13 +14,8 @@ export class CreateTransferDto {
   @IsEnum(TransferType)
   type: TransferType;
 
-  @ValidateIf((t) => t.type === TransferType.PLAYER)
   @IsNotEmpty()
-  target_player_id?: string;
-
-  @ValidateIf((t) => t.type === TransferType.AGENT)
-  @IsNotEmpty()
-  target_agent_id?: string;
+  username?: string;
 
   @IsNumber()
   @IsNotEmpty()

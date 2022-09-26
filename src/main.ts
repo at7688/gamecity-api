@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ValidationPipe,
   VersioningType,
   VERSION_NEUTRAL,
@@ -8,6 +9,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import * as requestIp from 'request-ip';
+import { ResCode } from './errors/enums';
+import { take } from 'lodash';
 const port = process.env.PORT || 8080;
 
 async function bootstrap() {
@@ -23,11 +26,18 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
+      exceptionFactory(errors) {
+        const msgs = errors.map((t) => Object.values(t.constraints)).flat();
+        throw new BadRequestException({
+          code: ResCode.FORMAT_ERROR,
+          msg: msgs?.[0] || '',
+        });
+      },
     }),
   );
 
   const config = new DocumentBuilder()
-    .setTitle('Game City')
+    .setTitle('ASG')
     .setDescription('...')
     .setVersion('1.0')
     .addBearerAuth()

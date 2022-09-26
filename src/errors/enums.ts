@@ -9,5 +9,8 @@ export enum ResCode {
 
   VIP_LEVEL_NOT_ALLOW = 'PY0301', // 玩家等級資格不符
 
+  BALANCE_NOT_ENOUGH = 'AL0020', // 餘額不足
   NOT_FOUND = 'AL0010', // 查無紀錄
+
+  FORMAT_ERROR = 'AL0099', // 格式驗證錯誤
 }

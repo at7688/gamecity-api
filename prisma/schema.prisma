@@ -206,7 +206,7 @@ model WalletRec {
   source         String
   note           String?
   relative_id    String?
-  rolling_amount Int?
+  rolling_amount Float?
 }
 
 // model BalanceOperation {
@@ -229,7 +229,7 @@ model TransferRec {
   operator         AdminUser? @relation(fields: [operator_id], references: [id])
   operator_id      String?
   amount           Float
-  rolling_demand   Int // 洗碼倍數
+  rolling_demand   Float // 洗碼倍數
   inner_note       String?
   outter_note      String?
   created_at       DateTime   @default(now()) @db.Timestamptz()
@@ -309,6 +309,8 @@ model Member {
   bet_ratio_rec BetRatioRec[]
 
   duty AgentDuty?
+
+  gifts Gift[]
 }
 
 model AgentDuty {
@@ -462,8 +464,11 @@ model Game {
   category      GameCategory? @relation(fields: [category_code], references: [code])
   category_code String?
 
+  rolling_demand Float @default(1)
+
   @@unique([code, platform_code])
 }
+
 
 model Inbox {
   id             String     @id @default(cuid())
@@ -685,7 +690,7 @@ model Promotion {
 
   apply_times Int @default(0) // 可申請次數 (0為無限制)
 
-  rolling_demand Int @default(1) // 洗碼倍數
+  rolling_demand Float @default(1) // 洗碼倍數
 
   game_water GameWater[] // 返水活動(遊戲退水%)
   valid_bet Int? // 有效投注達標值
@@ -727,8 +732,13 @@ model Gift {
   player    Player @relation(fields: [player_id], references: [id])
   player_id String
 
-  promotion    Promotion @relation(fields: [promotion_id], references: [id])
-  promotion_id String
+  type Int @default(1) // 活動禮包 代理轉額禮包
+
+  sender Member? @relation(fields: [sender_id], references: [id])
+  sender_id String?
+
+  promotion    Promotion? @relation(fields: [promotion_id], references: [id])
+  promotion_id String?
 
   applicant    Applicant? @relation(fields: [applicant_id], references: [id])
   applicant_id String? @unique

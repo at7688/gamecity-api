@@ -33,6 +33,6 @@ export class PrismaService extends PrismaClient {
     throw new BadRequestException({ code, msg });
   }
   success(data?: any, msg?: string) {
-    return { code: ResCode.SUCCESS, data, msg: msg || 'Success.' };
+    return { code: ResCode.SUCCESS, data, msg: msg || '成功' };
   }
 }
