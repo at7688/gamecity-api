@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { ClientSearchGiftsDto } from './dto/client-search-gifts.dto';
-import { GiftType, SendStatus } from './enums';
+import { GiftType, GiftStatus } from './enums';
 
 @Injectable()
 export class GiftClientService {
@@ -47,7 +47,7 @@ export class GiftClientService {
       where: {
         id: gift_id,
         player_id: player.id,
-        status: SendStatus.SENT,
+        status: GiftStatus.SENT,
       },
       include: { promotion: true, sender: true },
     });
@@ -77,7 +77,7 @@ export class GiftClientService {
           player_id: player.id,
         },
         data: {
-          status: SendStatus.RECIEVED,
+          status: GiftStatus.RECIEVED,
           recieved_at: new Date(),
         },
       }),

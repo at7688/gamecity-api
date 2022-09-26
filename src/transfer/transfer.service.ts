@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Member } from '@prisma/client';
 import { ResCode } from 'src/errors/enums';
-import { GiftType, SendStatus } from 'src/gift/enums';
+import { GiftType, GiftStatus } from 'src/gift/enums';
 import { getAllSubs } from 'src/member/raw/getAllSubs';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -120,7 +120,7 @@ export class TransferService {
             player_id: record.target_player_id,
             amount: record.amount,
             rolling_amount: record.amount * record.nums_rolling,
-            status: SendStatus.SENT,
+            status: GiftStatus.SENT,
           },
         }),
       ]);

@@ -1,8 +1,8 @@
 import { IsIn, IsOptional } from 'class-validator';
-import { SendStatus } from '../enums';
+import { GiftStatus } from '../enums';
 
 export class ClientSearchGiftsDto {
-  @IsIn([SendStatus.SENT, SendStatus.RECIEVED])
+  @IsIn([GiftStatus.SENT, GiftStatus.RECIEVED])
   @IsOptional()
   status: number;
 }

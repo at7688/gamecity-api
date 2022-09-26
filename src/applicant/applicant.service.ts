@@ -5,7 +5,7 @@ import { GiftService } from 'src/gift/gift.service';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ApprovalType, PromotionType, RollingType } from 'src/promotion/enums';
-import { SendStatus } from './../gift/enums';
+import { GiftStatus } from './../gift/enums';
 import { SearchApplicantsDto } from './dto/search-applicants.dto';
 import { ApplicantStatus } from './enums';
 
@@ -109,8 +109,8 @@ export class ApplicantService {
             rolling_amount: rollingAmount,
             status:
               promotion.pay_approval_type === ApprovalType.AUTO
-                ? SendStatus.SENT
-                : SendStatus.UNPROCESSED,
+                ? GiftStatus.SENT
+                : GiftStatus.UNPROCESSED,
           },
         }),
       ]);
@@ -192,8 +192,8 @@ export class ApplicantService {
             rolling_amount: rollingAmount,
             status:
               promotion.pay_approval_type === ApprovalType.AUTO
-                ? SendStatus.SENT
-                : SendStatus.UNPROCESSED,
+                ? GiftStatus.SENT
+                : GiftStatus.UNPROCESSED,
           },
         }),
       ]);
