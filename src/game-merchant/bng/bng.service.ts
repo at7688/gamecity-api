@@ -360,6 +360,7 @@ export class BngService {
                 bet_no: t.order_id,
                 amount: t.bet,
                 valid_amount: t.valid_bet,
+                rolling_amount: t.valid_bet * game.nums_rolling,
                 win_lose_amount: t.diff,
                 bet_at: new Date(t.bet_time),
                 result_at: new Date(t.result_time),
@@ -369,6 +370,7 @@ export class BngService {
                 game_code: t.game_code,
                 status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
+                nums_rolling: game.nums_rolling,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({
@@ -382,8 +384,10 @@ export class BngService {
                 },
               },
               update: {
+                amount: t.bet,
                 valid_amount: t.valid_bet,
                 win_lose_amount: t.diff,
+                rolling_amount: t.valid_bet * game.nums_rolling,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
               },
             });

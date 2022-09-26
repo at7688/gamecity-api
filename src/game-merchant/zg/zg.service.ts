@@ -312,6 +312,9 @@ export class ZgService {
               // 略過RAW測試帳號
               return;
             }
+            const winLoseAmount = numeral(t.payout_amount)
+              .subtract(t.bet_amount)
+              .value();
             // 上層佔成資訊
             const [game, ratios] = await this.gameMerchantService.getBetInfo(
               player,
@@ -329,9 +332,8 @@ export class ZgService {
                 bet_no: t.id,
                 amount: t.bet_amount,
                 valid_amount: t.valid_amount,
-                win_lose_amount: numeral(t.payout_amount)
-                  .subtract(t.bet_amount)
-                  .value(),
+                rolling_amount: t.valid_amount * game.nums_rolling,
+                win_lose_amount: winLoseAmount,
                 bet_at: new Date(t.bet_at),
                 result_at: new Date(t.finish_at),
                 player_id: player.id,
@@ -346,6 +348,7 @@ export class ZgService {
                   5: BetRecordStatus.REFUND,
                 }[t.status],
                 bet_detail: t as unknown as Prisma.InputJsonObject,
+                nums_rolling: game.nums_rolling,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({
@@ -359,10 +362,10 @@ export class ZgService {
                 },
               },
               update: {
+                amount: t.bet_amount,
                 valid_amount: t.valid_amount,
-                win_lose_amount: numeral(t.payout_amount)
-                  .subtract(t.bet_amount)
-                  .value(),
+                rolling_amount: t.valid_amount * game.nums_rolling,
+                win_lose_amount: winLoseAmount,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
               },
             });

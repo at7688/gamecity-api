@@ -23,7 +23,7 @@ export class CreateTransferDto {
 
   @IsInt()
   @IsOptional()
-  rolling_demand = 1; // 洗碼倍數
+  nums_rolling = 1; // 洗碼倍數
 
   @IsString()
   @IsOptional()

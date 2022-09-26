@@ -305,6 +305,15 @@ export class BwinService {
               this.platformCode,
               t.productId.toString(),
             );
+            const betAmount = numeral(t.bet)
+              .divide(this.creditMultiple)
+              .value();
+            const validAmount = numeral(t.validBet)
+              .divide(this.creditMultiple)
+              .value();
+            const winLoseAmount = numeral(t.result)
+              .divide(this.creditMultiple)
+              .value();
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
@@ -314,13 +323,10 @@ export class BwinService {
               },
               create: {
                 bet_no: t.id.toString(),
-                amount: numeral(t.bet).divide(this.creditMultiple).value(),
-                valid_amount: numeral(t.validBet)
-                  .divide(this.creditMultiple)
-                  .value(),
-                win_lose_amount: numeral(t.result)
-                  .divide(this.creditMultiple)
-                  .value(),
+                amount: betAmount,
+                valid_amount: validAmount,
+                rolling_amount: validAmount * game.nums_rolling,
+                win_lose_amount: winLoseAmount,
                 bet_at: new Date(t.createdAt),
                 result_at: new Date(t.endAt),
                 player_id: player.id,
@@ -333,6 +339,7 @@ export class BwinService {
                   cancel: BetRecordStatus.REFUND,
                 }[t.status],
                 bet_detail: t as unknown as Prisma.InputJsonObject,
+                nums_rolling: game.nums_rolling,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({
@@ -352,12 +359,10 @@ export class BwinService {
                   finish: BetRecordStatus.DONE,
                   cancel: BetRecordStatus.REFUND,
                 }[t.status],
-                valid_amount: numeral(t.validBet)
-                  .divide(this.creditMultiple)
-                  .value(),
-                win_lose_amount: numeral(t.result)
-                  .divide(this.creditMultiple)
-                  .value(),
+                amount: betAmount,
+                valid_amount: validAmount,
+                rolling_amount: validAmount * game.nums_rolling,
+                win_lose_amount: winLoseAmount,
               },
             });
           } catch (err) {

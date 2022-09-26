@@ -361,6 +361,7 @@ export class AbService {
               bet_no: t.betNum.toString(),
               amount: t.betAmount,
               valid_amount: t.validAmount,
+              rolling_amount: t.validAmount * game.nums_rolling,
               win_lose_amount: t.winOrLossAmount,
               bet_at: new Date(t.betTime),
               result_at: new Date(t.gameRoundEndTime),
@@ -375,6 +376,7 @@ export class AbService {
               }[t.status],
               bet_detail: t as unknown as Prisma.InputJsonObject,
               vip_water,
+              nums_rolling: game.nums_rolling,
               ratios: {
                 createMany: {
                   data: ratios.map((r) => ({
@@ -394,8 +396,10 @@ export class AbService {
                 111: BetRecordStatus.DONE,
                 120: BetRecordStatus.REFUND,
               }[t.status],
+              amount: t.betAmount,
               valid_amount: t.validAmount,
               win_lose_amount: t.winOrLossAmount,
+              rolling_amount: t.validAmount * game.nums_rolling,
             },
           });
         } catch (err) {

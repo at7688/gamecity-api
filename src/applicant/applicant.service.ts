@@ -76,11 +76,10 @@ export class ApplicantService {
       }
 
       // 流水金額計算
-      let rollingAmount = rewardAmount * promotion.rolling_demand;
+      let rollingAmount = rewardAmount * promotion.nums_rolling;
 
       if (rolling_type === RollingType.INCLUDE_RECHARGE) {
-        rollingAmount =
-          (rewardAmount + record.amount) * promotion.rolling_demand;
+        rollingAmount = (rewardAmount + record.amount) * promotion.nums_rolling;
       }
 
       await this.prisma.$transaction([
@@ -162,7 +161,7 @@ export class ApplicantService {
       ).toFixed(0);
 
       // 流水金額計算
-      const rollingAmount = rewardAmount * promotion.rolling_demand;
+      const rollingAmount = rewardAmount * promotion.nums_rolling;
 
       // 將注單加上以參與活動標註, 修改申請單狀態, 生成禮包
       await this.prisma.$transaction([

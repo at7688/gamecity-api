@@ -20,7 +20,7 @@ export class TransferService {
   ) {}
 
   async create(data: CreateTransferDto, agent: Member) {
-    const { type, username, amount, rolling_demand, inner_note, outter_note } =
+    const { type, username, amount, nums_rolling, inner_note, outter_note } =
       data;
 
     if (agent.balance - amount < 0) {
@@ -47,7 +47,7 @@ export class TransferService {
           target_agent_id:
             type === TransferType.AGENT ? targetAgent.id : undefined,
           amount,
-          rolling_demand,
+          nums_rolling,
           inner_note,
           outter_note,
         },
@@ -68,7 +68,7 @@ export class TransferService {
           type: WalletRecType.TRANSFER_IN,
           agent_id: record.target_agent_id,
           amount: record.amount,
-          rolling_amount: record.amount * record.rolling_demand,
+          rolling_amount: record.amount * record.nums_rolling,
           source: `${record.source.username}(${record.source.nickname})`,
           relative_id: record.id,
         })),
@@ -95,7 +95,7 @@ export class TransferService {
           target_player_id:
             type === TransferType.PLAYER ? player.id : undefined,
           amount,
-          rolling_demand,
+          nums_rolling,
           inner_note,
           outter_note,
         },
@@ -119,7 +119,7 @@ export class TransferService {
             sender_id: agent.id,
             player_id: record.target_player_id,
             amount: record.amount,
-            rolling_amount: record.amount * record.rolling_demand,
+            rolling_amount: record.amount * record.nums_rolling,
             status: SendStatus.SENT,
           },
         }),

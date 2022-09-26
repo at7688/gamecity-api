@@ -229,7 +229,7 @@ model TransferRec {
   operator         AdminUser? @relation(fields: [operator_id], references: [id])
   operator_id      String?
   amount           Float
-  rolling_demand   Float // 洗碼倍數
+  nums_rolling   Float @default(1) // 洗碼倍數
   inner_note       String?
   outter_note      String?
   created_at       DateTime   @default(now()) @db.Timestamptz()
@@ -464,7 +464,7 @@ model Game {
   category      GameCategory? @relation(fields: [category_code], references: [code])
   category_code String?
 
-  rolling_demand Float @default(1)
+  nums_rolling Float @default(1)
 
   @@unique([code, platform_code])
 }
@@ -690,7 +690,7 @@ model Promotion {
 
   apply_times Int @default(0) // 可申請次數 (0為無限制)
 
-  rolling_demand Float @default(1) // 洗碼倍數
+  nums_rolling Float @default(1) // 洗碼倍數
 
   game_water GameWater[] // 返水活動(遊戲退水%)
   valid_bet Int? // 有效投注達標值
@@ -762,6 +762,8 @@ model BetRecord {
   status          Int           @default(1) // 投注中 已派彩 已退款
   amount          Float
   valid_amount    Float?
+  rolling_amount    Float?
+  nums_rolling Float @default(1)
   win_lose_amount Float?
   bet_at          DateTime      @db.Timestamptz()
   result_at       DateTime?     @db.Timestamptz()

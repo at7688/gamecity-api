@@ -479,6 +479,7 @@ export class OgService {
                 bet_no: t.id.toString(),
                 amount: +t.bettingamount,
                 valid_amount: +t.validbet,
+                rolling_amount: +t.validbet * game.nums_rolling,
                 win_lose_amount: +t.winloseamount,
                 bet_at: new Date(t.bettingdate),
                 // result_at: new Date(t.endAt),
@@ -488,6 +489,7 @@ export class OgService {
                 game_code: t.gamename,
                 status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
+                nums_rolling: game.nums_rolling,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({
@@ -503,7 +505,9 @@ export class OgService {
               update: {
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 status: BetRecordStatus.DONE,
+                amount: +t.bettingamount,
                 valid_amount: +t.validbet,
+                rolling_amount: +t.validbet * game.nums_rolling,
                 win_lose_amount: +t.winloseamount,
               },
             });

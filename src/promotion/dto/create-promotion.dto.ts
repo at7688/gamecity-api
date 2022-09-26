@@ -119,7 +119,7 @@ export class CreatePromotionDto {
 
   @IsInt()
   @IsNotEmpty()
-  rolling_demand: number;
+  nums_rolling: number;
 
   @IsInt()
   @IsNotEmpty()

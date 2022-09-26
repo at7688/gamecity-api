@@ -206,6 +206,7 @@ export class AviaService {
             bet_target: t.Content,
             game_code: t.Type,
             category_code: game.category_code,
+            nums_rolling: game.nums_rolling,
             ratios: {
               createMany: {
                 data: ratios.map((r) => ({

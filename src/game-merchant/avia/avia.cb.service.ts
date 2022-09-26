@@ -214,9 +214,6 @@ export class AviaCbService {
         sendData: data as unknown as Prisma.InputJsonObject,
       },
     });
-    const platform = await this.prisma.gamePlatform.findUnique({
-      where: { code: this.aviaService.platformCode },
-    });
 
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({

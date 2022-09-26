@@ -329,6 +329,7 @@ export class WmService {
                 bet_no: t.betId,
                 amount: +t.bet,
                 valid_amount: +t.validbet,
+                rolling_amount: +t.validbet * game.nums_rolling,
                 win_lose_amount: +t.winLoss,
                 bet_at: new Date(t.betTime),
                 result_at: new Date(t.settime),
@@ -338,6 +339,7 @@ export class WmService {
                 game_code: t.gid,
                 status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
+                nums_rolling: game.nums_rolling,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({
@@ -351,7 +353,9 @@ export class WmService {
                 },
               },
               update: {
+                amount: +t.bet,
                 valid_amount: +t.validbet,
+                rolling_amount: +t.validbet * game.nums_rolling,
                 win_lose_amount: +t.winLoss,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
               },

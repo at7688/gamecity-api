@@ -323,6 +323,7 @@ export class GrService {
                 bet_no: t.id_str.toString(),
                 amount: t.bet,
                 valid_amount: t.valid_bet,
+                rolling_amount: t.valid_bet * game.nums_rolling,
                 win_lose_amount: t.profit,
                 bet_at: new Date(t.create_time),
                 player_id: player.id,
@@ -331,6 +332,7 @@ export class GrService {
                 game_code: t.game_type.toString(),
                 status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
+                nums_rolling: game.nums_rolling,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({
@@ -344,7 +346,9 @@ export class GrService {
                 },
               },
               update: {
+                amount: t.bet,
                 valid_amount: t.valid_bet,
+                rolling_amount: t.valid_bet * game.nums_rolling,
                 win_lose_amount: t.profit,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
               },
