@@ -1,18 +1,25 @@
 import { PlatformsBridgeService } from './platforms-bridge.service';
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { User } from 'src/decorators/user.decorator';
 import { PlatformType, Player } from '@prisma/client';
 import { Platforms } from 'src/metas/platforms.meta';
+import { LoginGameDto } from './dto/login-game-dto';
+import { TransBackDto } from './dto/trans-back-dto';
 
-@Controller('game/bridge')
+@Controller('client/games')
 @Platforms([PlatformType.PLAYER])
 export class PlatformsBridgeController {
   constructor(
     private readonly platformsBridgeService: PlatformsBridgeService,
   ) {}
 
-  @Get('back/:platform?')
-  tranferBack(@User() player: Player, @Param('platform') platform?: string) {
-    return this.platformsBridgeService.transferBack(player, platform);
+  @Post('login')
+  login(@Body() data: LoginGameDto, @User() player: Player) {
+    return this.platformsBridgeService.login(data, player);
+  }
+
+  @Post('transBack')
+  tranferBack(@Body() data: TransBackDto, @User() player: Player) {
+    return this.platformsBridgeService.transferBack(data, player);
   }
 }

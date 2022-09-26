@@ -8,6 +8,8 @@ import { GrService } from '../gr/gr.service';
 import { OgService } from '../og/og.service';
 import { WmService } from '../wm/wm.service';
 import { ZgService } from '../zg/zg.service';
+import { LoginGameDto } from './dto/login-game-dto';
+import { TransBackDto } from './dto/trans-back-dto';
 
 @Injectable()
 export class PlatformsBridgeService {
@@ -22,19 +24,25 @@ export class PlatformsBridgeService {
     private readonly og: OgService,
   ) {}
 
-  async transferBack(player: Player, platform?: string) {
-    const _map = {
-      ab: () => this.ab.transferBack(player),
-      bwin: () => this.bwin.transferBack(player),
-      gr: () => this.gr.transferBack(player),
-      zg: () => this.zg.transferBack(player),
-      bng: () => this.bng.transferBack(player),
-      wm: () => this.wm.transferBack(player),
-      og: () => this.og.transferBack(player),
-    };
+  gameHub = {
+    ab: this.ab,
+    bwin: this.bwin,
+    gr: this.gr,
+    zg: this.zg,
+    bng: this.bng,
+    wm: this.wm,
+    og: this.og,
+  };
 
-    if (platform) {
-      return _map[platform];
+  async login(data: LoginGameDto, player: Player) {
+    const { platform_code, game_code } = data;
+    return this.prisma.success(await this.gameHub[platform_code].login(player));
+  }
+
+  async transferBack(data: TransBackDto, player: Player) {
+    const { platform_code } = data;
+    if (platform_code) {
+      return this.gameHub[platform_code].transferBack(player);
     }
     const platforms = await this.prisma.gameAccount.findMany({
       where: {
@@ -43,14 +51,14 @@ export class PlatformsBridgeService {
       },
     });
     const result = await Promise.all(
-      platforms.map((t) => _map[t.platform_code]()),
+      platforms.map((t) => this.gameHub[t.platform_code].transferBack(player)),
     );
 
-    return {
-      platforms: platforms.map((t, i) => ({
+    return this.prisma.success(
+      platforms.map((t, i) => ({
         code: t.platform_code,
         balance: result[i].balance,
       })),
-    };
+    );
   }
 }
