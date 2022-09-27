@@ -756,7 +756,7 @@ model BetRecord {
   amount          Float
   valid_amount    Float?
   rolling_amount    Float?
-  nums_rolling Float @default(1)
+  nums_rolling Float @default(1) // 當前遊戲洗碼量紀錄
   win_lose_amount Float?
   bet_at          DateTime      @db.Timestamptz()
   result_at       DateTime?     @db.Timestamptz()

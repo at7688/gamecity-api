@@ -34,8 +34,4 @@ export class ManualOperationDto {
   @IsString()
   @IsOptional()
   note?: string;
-
-  @IsOptional()
-  @IsInt()
-  rolling_amount?: number;
 }

@@ -10,6 +10,7 @@ import { AdminUser, Member, Menu, Player, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { Cache } from 'cache-manager';
 import * as IP from 'ip';
+import { playerRolling } from 'src/player/raw/playerRolling';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
 import { LoginDto } from './dto/login.dto';
@@ -280,16 +281,42 @@ export class AuthService {
     }
   }
 
-  async getLoginInfo(user: LoginUser | Player) {
-    if ('vip_id' in user) {
-      return this.prisma.player.findUnique({ where: { id: user.id } });
-    }
-    return {
+  async getAdminInfo(loginUser: AdminUser) {
+    const user = await this.prisma.adminUser.findUnique({
+      where: {
+        id: loginUser.id,
+      },
+      include: {
+        admin_role: true,
+      },
+    });
+    return this.prisma.success({
       user,
-      menu: await this.fetchRoleMenu(
-        'admin_role_id' in user ? user.admin_role.code : 'AGENT',
-      ),
-    };
+      menu: await this.fetchRoleMenu(user.admin_role.code),
+    });
+  }
+
+  async getAgentInfo(agent: Member) {
+    const user = await this.prisma.member.findUnique({
+      where: {
+        id: agent.id,
+      },
+    });
+    return this.prisma.success({
+      user,
+      menu: await this.fetchRoleMenu('AGENT'),
+    });
+  }
+
+  async getPlayerInfo(player: Player) {
+    const user = await this.prisma.player.findUnique({
+      where: {
+        id: player.id,
+      },
+    });
+    const rollingInfo =
+      (await this.prisma.$queryRaw(playerRolling(user.id)))[0] || {};
+    return this.prisma.success({ ...user, ...rollingInfo });
   }
 
   playerValidate(token: string) {

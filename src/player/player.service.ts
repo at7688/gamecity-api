@@ -142,10 +142,11 @@ export class PlayerService {
         },
       },
     });
-    return {
+
+    return this.prisma.success({
       parents: await this.prisma.$queryRaw(getAllParents(player.agent_id)),
       player,
-    };
+    });
   }
 
   async updatePw(id: string, password: string) {

@@ -3,7 +3,10 @@ import { SearchPlayerRollingDto } from './dto/search-player-rolling.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchGiftsDto } from './dto/search-gifts.dto';
-import { PlayerRolling, playersRolling } from './raw/playersRolling';
+import {
+  RollingOverview,
+  giftRollingOverview,
+} from './raw/giftRollingOverview';
 import { ResCode } from 'src/errors/enums';
 import { GiftStatus, GiftType } from './enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
@@ -81,7 +84,7 @@ export class GiftService {
     };
   }
 
-  async playerRolling(search: SearchPlayerRollingDto) {
+  async overview(search: SearchPlayerRollingDto) {
     const {
       username,
       nickname,
@@ -118,8 +121,8 @@ export class GiftService {
     if (!players.length) {
       this.prisma.error(ResCode.NOT_FOUND, '查無資料');
     }
-    const items = await this.prisma.$queryRaw<PlayerRolling[]>(
-      playersRolling(players.map((t) => t.id)),
+    const items = await this.prisma.$queryRaw<RollingOverview[]>(
+      giftRollingOverview(players.map((t) => t.id)),
     );
     return this.prisma.listFormat({
       items,

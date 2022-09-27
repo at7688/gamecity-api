@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Request } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Player } from '@prisma/client';
+import { PlatformType, Player } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
 import { Platforms } from 'src/metas/platforms.meta';
 import { Public } from 'src/metas/public.meta';
@@ -23,11 +23,11 @@ export class AuthController {
   @Public()
   async login(@Body() body: LoginDto) {
     switch (this.platform) {
-      case 'ADMIN':
+      case PlatformType.ADMIN:
         return this.authService.adminUserLogin(body);
-      case 'AGENT':
+      case PlatformType.AGENT:
         return this.authService.agentLogin(body);
-      case 'PLAYER':
+      case PlatformType.PLAYER:
         return this.authService.playerLogin(body);
 
       default:
@@ -42,8 +42,14 @@ export class AuthController {
   }
 
   @Get('me')
-  @Platforms(['ADMIN', 'AGENT', 'PLAYER'])
-  async me(@User() user: LoginUser | Player) {
-    return this.authService.getLoginInfo(user);
+  @Platforms([PlatformType.ADMIN, PlatformType.AGENT, PlatformType.PLAYER])
+  async getAdminInfo(@User() user: LoginUser | Player) {
+    if ('vip_id' in user) {
+      return this.authService.getPlayerInfo(user);
+    } else if ('admin_role_id' in user) {
+      return this.authService.getAdminInfo(user);
+    } else {
+      return this.authService.getAgentInfo(user);
+    }
   }
 }

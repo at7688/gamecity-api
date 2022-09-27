@@ -16,15 +16,7 @@ export class WalletRecService {
   }
 
   async manualOperation(data: ManualOperationDto, user: AdminUser) {
-    const {
-      type,
-      target_type,
-      amount,
-      note,
-      player_id,
-      agent_id,
-      rolling_amount,
-    } = data;
+    const { type, target_type, amount, note, player_id, agent_id } = data;
     switch (target_type) {
       case WalletTargetType.AGENT:
         await this.prisma.$transaction(
@@ -35,9 +27,8 @@ export class WalletRecService {
                 : WalletRecType.MANUAL_SUB,
             agent_id,
             amount: type === ManualType.ADD ? amount : -amount,
-            source: '',
+            source: user.username,
             operator_id: user.id,
-            rolling_amount,
             note,
           }),
         );
@@ -51,9 +42,8 @@ export class WalletRecService {
                 : WalletRecType.MANUAL_SUB,
             player_id,
             amount: type === ManualType.ADD ? amount : -amount,
-            source: '',
+            source: user.username,
             operator_id: user.id,
-            rolling_amount,
             note,
           }),
         );

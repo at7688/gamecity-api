@@ -14,8 +14,8 @@ export class GiftController {
     return this.giftService.findAll(search);
   }
 
-  @Post('playerRollings')
-  playerRolling(@Body() search: SearchPlayerRollingDto) {
-    return this.giftService.playerRolling(search);
+  @Post('overview')
+  overview(@Body() search: SearchPlayerRollingDto) {
+    return this.giftService.overview(search);
   }
 }

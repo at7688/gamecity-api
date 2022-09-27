@@ -1,17 +1,17 @@
 import { Prisma } from '@prisma/client';
 
-export interface PlayerRolling {
+export interface RollingOverview {
   player_id: string;
   gift_amount: number;
   rolling_amount: number;
-  statuses: PlayerRollingStatus[];
+  statuses: GiftStatusInfo[];
   created_at: Date;
   recieved_at: null;
   username: string;
   nickname: string;
 }
 
-export interface PlayerRollingStatus {
+export interface GiftStatusInfo {
   player_id: string;
   status: number;
   count: number;
@@ -19,7 +19,7 @@ export interface PlayerRollingStatus {
   rolling_amount: number;
 }
 
-export const playersRolling = (player_ids: string[]) => Prisma.sql`
+export const giftRollingOverview = (player_ids: string[]) => Prisma.sql`
 
 WITH filterGifts AS (
   SELECT * FROM "Gift"
