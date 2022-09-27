@@ -191,6 +191,7 @@ model WithdrawRec {
 
 model WalletRec {
   id             String     @id @default(cuid())
+  target Int @default(1) // 會員 代理
   type           Int // 儲值加點,轉入,轉出,提領扣點,注金加扣,活動贈點,人工加點,人工扣點,金流手續費,退水,佔成
   player         Player?    @relation(fields: [player_id], references: [id])
   player_id      String?

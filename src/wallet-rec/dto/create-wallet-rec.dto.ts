@@ -1,12 +1,12 @@
 import { WalletRecType } from '../enums';
 
-export class CreateWalletRecDto {
+export interface CreateWalletRecDto {
   type: WalletRecType;
   player_id?: string;
   agent_id?: string;
   amount: number;
   source: string;
-  fee?: number = 0;
+  fee?: number;
   operator_id?: string;
   note?: string;
   relative_id?: string;

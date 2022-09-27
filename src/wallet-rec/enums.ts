@@ -25,11 +25,6 @@ export enum WalletRecType {
 }
 
 export enum WalletTargetType {
-  AGENT = 1,
-  PLAYER = 2,
-}
-
-export enum ManualType {
-  ADD = 1,
-  SUB = 2,
+  PLAYER = 1,
+  AGENT = 2,
 }

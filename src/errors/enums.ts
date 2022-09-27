@@ -11,6 +11,7 @@ export enum ResCode {
 
   BALANCE_NOT_ENOUGH = 'AL0020', // 餘額不足
   NOT_FOUND = 'AL0010', // 查無紀錄
+  EMPTY_VAL = 'AL0020', // 不可為空
 
   FORMAT_ERROR = 'AL0099', // 格式驗證錯誤
 }

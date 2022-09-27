@@ -1,31 +1,21 @@
-import { ManualType } from './../enums';
 import {
   IsEnum,
-  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
-  ValidateIf,
 } from 'class-validator';
-import { WalletRecType, WalletTargetType } from '../enums';
+import { WalletTargetType } from '../enums';
 
 export class ManualOperationDto {
   @IsEnum(WalletTargetType)
   @IsNotEmpty()
   target_type?: WalletTargetType;
 
-  @IsEnum(ManualType)
+  @IsString()
   @IsNotEmpty()
-  type: ManualType;
-
-  @IsString()
-  @ValidateIf((t) => t.target_type === WalletTargetType.PLAYER)
-  player_id?: string;
-
-  @IsString()
-  @ValidateIf((t) => t.target_type === WalletTargetType.AGENT)
-  agent_id?: string;
+  username: string;
 
   @IsNumber()
   @IsNotEmpty()

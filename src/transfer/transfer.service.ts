@@ -77,6 +77,8 @@ export class TransferService {
       nickname,
       amount_start,
       amount_end,
+      start_at,
+      end_at,
       page,
       perpage,
     } = search;
@@ -93,6 +95,10 @@ export class TransferService {
             gte: amount_start,
             lte: amount_end,
           },
+          created_at: {
+            gte: start_at,
+            lte: end_at,
+          },
         },
         include: {
           target: {
@@ -106,6 +112,9 @@ export class TransferService {
         },
         take: perpage,
         skip: (page - 1) * perpage,
+        orderBy: {
+          created_at: 'desc',
+        },
       };
       return this.prisma.listFormat({
         items: await this.prisma.transferRec.findMany(findManyArgs),
@@ -125,6 +134,10 @@ export class TransferService {
             gte: amount_start,
             lte: amount_end,
           },
+          created_at: {
+            gte: start_at,
+            lte: end_at,
+          },
         },
         include: {
           source: {
@@ -138,6 +151,9 @@ export class TransferService {
         },
         take: perpage,
         skip: (page - 1) * perpage,
+        orderBy: {
+          created_at: 'desc',
+        },
       };
       return this.prisma.listFormat({
         items: await this.prisma.transferRec.findMany(findManyArgs),
