@@ -7,13 +7,17 @@ export interface PlayerRolling {
 }
 
 export const playerRolling = (player_id?: string) => Prisma.sql`
-SELECT r.*, g.required_rolling FROM (
+SELECT
+	COALESCE(current_rolling, 0) current_rolling,
+	COALESCE(required_rolling, 0) required_rolling
+FROM "Player" p
+LEFT JOIN (
 	SELECT player_id, SUM(rolling_amount) current_rolling
 	FROM "BetRecord"
 	WHERE status = 2
 	GROUP BY player_id
-) r
-JOIN (
+) r ON r.player_id = p.id
+LEFT JOIN (
 	SELECT
 		player_id,
 		SUM(rolling_amount) required_rolling
@@ -21,6 +25,7 @@ JOIN (
 	WHERE status = 3
 	GROUP BY player_id
 ) g ON g.player_id = r.player_id
+
 ${player_id ? Prisma.sql`WHERE r.player_id = ${player_id}` : Prisma.empty}
 
 `;
