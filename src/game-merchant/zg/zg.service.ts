@@ -20,6 +20,7 @@ import { GameCategory } from 'src/game/enums';
 import * as CryptoJS from 'crypto-js';
 import { ZgGetGameLinkReq, ZgGetGameLinkRes } from './types/getGameLink';
 import * as numeral from 'numeral';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable()
 export class ZgService {
@@ -137,7 +138,10 @@ export class ZgService {
     return res;
   }
 
-  async getGameLink(game_id: string, player: Player) {
+  async getGameLink(player: Player, game_id: string) {
+    if (!game_id) {
+      this.prisma.error(ResCode.EMPTY_GAME_CODE, '遊戲不可為空');
+    }
     const reqConfig: ZgReqBase<ZgGetGameLinkReq> = {
       method: 'POST',
       path: '/v1/member/login_game',
@@ -254,7 +258,7 @@ export class ZgService {
       await this.createPlayer(player);
     }
 
-    const gameUrl = await this.getGameLink(game_id, player);
+    const gameUrl = await this.getGameLink(player, game_id);
 
     const currentPlayer = await this.prisma.player.findUnique({
       where: { id: player.id },

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Player } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbService } from '../ab/ab.service';
 import { BngService } from '../bng/bng.service';
@@ -9,6 +9,7 @@ import { OgService } from '../og/og.service';
 import { WmService } from '../wm/wm.service';
 import { ZgService } from '../zg/zg.service';
 import { LoginGameDto } from './dto/login-game-dto';
+import { SearchGameDto } from './dto/search-game-dto';
 import { TransBackDto } from './dto/trans-back-dto';
 
 @Injectable()
@@ -34,12 +35,40 @@ export class PlatformsBridgeService {
     og: this.og,
   };
 
-  async login(data: LoginGameDto, player: Player) {
-    const { platform_code, game_code } = data;
-    return this.prisma.success(await this.gameHub[platform_code].login(player));
+  async gameList(search: SearchGameDto) {
+    const { category_code, platform_code, name } = search;
+    const findManyArgs: Prisma.GameFindManyArgs = {
+      where: {
+        category_code,
+        platform_code,
+        name: { contains: name },
+      },
+    };
+    return this.prisma.listFormat({
+      items: await this.prisma.game.findMany(findManyArgs),
+      count: await this.prisma.game.count({ where: findManyArgs.where }),
+    });
   }
 
-  async transferBack(data: TransBackDto, player: Player) {
+  async login(data: LoginGameDto, player: Player) {
+    try {
+      await this.transferBack(player, {}); // WM測試機會失敗(因為轉額上限)
+      const { platform_code, game_code } = data;
+      if (['ab', 'og'].includes(platform_code)) {
+        return this.prisma.success(
+          await this.gameHub[platform_code].login(player),
+        );
+      } else {
+        return this.prisma.success(
+          await this.gameHub[platform_code].login(game_code, player),
+        );
+      }
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async transferBack(player: Player, data: TransBackDto) {
     const { platform_code } = data;
     if (platform_code) {
       return this.gameHub[platform_code].transferBack(player);

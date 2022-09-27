@@ -9,6 +9,11 @@ export enum ResCode {
 
   VIP_LEVEL_NOT_ALLOW = 'PY0301', // 玩家等級資格不符
 
+  EMPTY_GAME_CODE = 'PY0401', // 遊戲代號不可為空
+  GAME_MERCHANT_ERR = 'PY0501', // 遊戲商回傳錯誤
+  TRANS_TO_GAME_ERR = 'PY0502', // 遊戲商轉入錯誤
+  TRANS_FROM_GAME_ERR = 'PY0503', // 遊戲商轉入錯誤
+
   BALANCE_NOT_ENOUGH = 'AL0020', // 餘額不足
   NOT_FOUND = 'AL0010', // 查無紀錄
   EMPTY_VAL = 'AL0020', // 不可為空

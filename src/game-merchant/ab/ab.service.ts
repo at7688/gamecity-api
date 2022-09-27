@@ -176,7 +176,6 @@ export class AbService {
       data: {
         player: player.username + this.suffix,
         language: 'zh_TW',
-        returnUrl: 'https://gamecityad.kidult.one/login',
       },
     };
 

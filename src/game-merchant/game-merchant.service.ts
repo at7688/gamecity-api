@@ -9,6 +9,7 @@ import { compact } from 'lodash';
 import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable()
 export class GameMerchantService {
@@ -76,7 +77,7 @@ export class GameMerchantService {
   async transferToErrorHandle(trans_id, platform_code: string, player: Player) {
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_FROM_GAME,
+        type: WalletRecType.TRANSFER_TO_GAME_CANCELED,
         player_id: player.id,
         amount: player.balance,
         source: platform_code,
@@ -84,7 +85,25 @@ export class GameMerchantService {
         note: '轉入遊戲失敗',
       })),
     ]);
-    throw new BadGatewayException('轉入遊戲失敗');
+    this.prisma.error(ResCode.TRANS_TO_GAME_ERR, '轉入遊戲失敗');
+  }
+
+  async transferBackErrorHandle(
+    trans_id,
+    platform_code: string,
+    player: Player,
+  ) {
+    await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.TRANSFER_FROM_GAME_CANCELED,
+        player_id: player.id,
+        amount: player.balance,
+        source: platform_code,
+        relative_id: trans_id,
+        note: '遊戲轉回失敗',
+      })),
+    ]);
+    this.prisma.error(ResCode.TRANS_FROM_GAME_ERR, '遊戲轉回失敗');
   }
 
   async getVipWater(player: Player, platform_code: string, game_code: string) {

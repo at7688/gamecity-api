@@ -1,4 +1,3 @@
-import { type } from 'os';
 import { BngResBase } from './base';
 
 export interface BngGetGameLinkReq {

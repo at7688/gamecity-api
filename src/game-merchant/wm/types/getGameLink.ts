@@ -7,6 +7,7 @@ export interface WmGetGameLinkReq {
   lang: number;
   syslang: 0 | 1;
   voice: string;
+  mode?: string;
 }
 
 export type WmGetGameLinkRes = WmResBase<string>;

@@ -9,6 +9,7 @@ import * as CryptoJS from 'crypto-js';
 import { formatRFC3339 } from 'date-fns';
 import * as numeral from 'numeral';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { ResCode } from 'src/errors/enums';
 import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
@@ -150,7 +151,7 @@ export class BngService {
     return res;
   }
 
-  async getGameLink(game_id: string, player: Player) {
+  async getGameLink(player: Player, game_id: string) {
     const reqConfig: BngReqBase<BngGetGameLinkReq> = {
       method: 'POST',
       path: '/agent/user_login',
@@ -263,6 +264,9 @@ export class BngService {
   }
 
   async login(game_id: string, player: Player) {
+    if (!game_id) {
+      this.prisma.error(ResCode.EMPTY_GAME_CODE, '遊戲不可為空');
+    }
     const gameAcc = await this.prisma.gameAccount.findUnique({
       where: {
         platform_code_player_id: {
@@ -276,7 +280,7 @@ export class BngService {
       await this.createPlayer(player);
     }
 
-    const gameUrl = await this.getGameLink(game_id, player);
+    const gameUrl = await this.getGameLink(player, game_id);
 
     const currentPlayer = await this.prisma.player.findUnique({
       where: { id: player.id },

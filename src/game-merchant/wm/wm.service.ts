@@ -8,6 +8,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
 import { format } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { ResCode } from 'src/errors/enums';
 import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
@@ -50,33 +51,19 @@ export class WmService {
       },
     };
     console.log(axiosConfig);
-    try {
-      const res = await axios.request<T>(axiosConfig);
-      console.log(res.data);
-      if (![0, 107].includes(res.data.errorCode)) {
-        await this.gameMerchantService.requestErrorHandle(
-          this.platformCode,
-          path,
-          method,
-          data,
-          res.data,
-        );
-      }
-      return res.data;
-    } catch (err) {
-      await this.prisma.merchantLog.create({
-        data: {
-          merchant_code: this.platformCode,
-          action: 'ERROR',
-          path,
-          method,
-          sendData: data,
-          resData: err.response?.data,
-        },
-      });
-      console.log('Error :' + err.message);
-      console.log('Error Info:' + JSON.stringify(err.response?.data));
+    const res = await axios.request<T>(axiosConfig);
+    console.log(res.data);
+    if (![0, 107].includes(res.data.errorCode)) {
+      await this.gameMerchantService.requestErrorHandle(
+        this.platformCode,
+        path,
+        method,
+        data,
+        res.data,
+      );
+      this.prisma.error(ResCode.GAME_MERCHANT_ERR, JSON.stringify(res.data));
     }
+    return res.data;
   }
 
   async createPlayer(player: Player) {
@@ -140,7 +127,18 @@ export class WmService {
     return this.prisma.success();
   }
 
-  async getGameLink(game_id: string, player: Player) {
+  async getGameLink(player: Player, game_id: string) {
+    const lobbyMap: Record<string, string> = {
+      101: 'onlybac',
+      102: 'onlydgtg',
+      103: 'onlyrou',
+      104: 'onlysicbo',
+      105: 'onlyniuniu',
+      107: 'onlyfantan',
+      108: 'onlysedie',
+      110: 'onlyfishshrimpcrab',
+      128: 'onlyandarbahar',
+    };
     const reqConfig: WmReqBase<WmGetGameLinkReq> = {
       method: 'POST',
       path: '',
@@ -151,6 +149,7 @@ export class WmService {
         lang: 9,
         syslang: 0,
         voice: 'cn',
+        mode: lobbyMap[game_id],
       },
     };
 
@@ -186,24 +185,24 @@ export class WmService {
       },
     };
 
-    const res = await this.request<WmTransferToRes>(reqConfig);
+    try {
+      const res = await this.request<WmTransferToRes>(reqConfig);
+      // 紀錄轉入
+      await this.gameMerchantService.transferRecord(
+        player,
+        this.platformCode,
+        true,
+      );
 
-    if (!res) {
+      return res;
+    } catch (err) {
       await this.gameMerchantService.transferToErrorHandle(
         trans_id,
         this.platformCode,
         player,
       );
+      throw err;
     }
-
-    // 紀錄轉入
-    await this.gameMerchantService.transferRecord(
-      player,
-      this.platformCode,
-      true,
-    );
-
-    return res;
   }
 
   async transferBack(player: Player) {
@@ -232,7 +231,16 @@ export class WmService {
         },
       };
 
-      await this.request<WmTransferBackRes>(reqConfig);
+      try {
+        await this.request<WmTransferBackRes>(reqConfig);
+      } catch (err) {
+        await this.gameMerchantService.transferToErrorHandle(
+          trans_id,
+          this.platformCode,
+          player,
+        );
+        throw err;
+      }
     }
 
     // 紀錄轉回
@@ -261,7 +269,7 @@ export class WmService {
       await this.createPlayer(player);
     }
 
-    const gameUrl = await this.getGameLink(game_id, player);
+    const gameUrl = await this.getGameLink(player, game_id);
 
     const currentPlayer = await this.prisma.player.findUnique({
       where: { id: player.id },
