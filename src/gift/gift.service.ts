@@ -5,10 +5,16 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchGiftsDto } from './dto/search-gifts.dto';
 import { PlayerRolling, playersRolling } from './raw/playersRolling';
 import { ResCode } from 'src/errors/enums';
+import { GiftStatus, GiftType } from './enums';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 
 @Injectable()
 export class GiftService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly walletRecService: WalletRecService,
+  ) {}
 
   async statistics(search: SearchGiftsDto) {
     const {
@@ -123,7 +129,7 @@ export class GiftService {
 
   async findAll(search: SearchGiftsDto) {
     const { promotion_id, username, nickname, vip_ids } = search;
-    return this.prisma.gift.findMany({
+    const findManyArg: Prisma.GiftFindManyArgs = {
       where: {
         promotion_id,
         player: {
@@ -141,6 +147,66 @@ export class GiftService {
       include: {
         promotion: true,
       },
+    };
+    return this.prisma.listFormat({
+      items: await this.prisma.gift.findMany(findManyArg),
+      count: await this.prisma.gift.count({ where: findManyArg.where }),
     });
+  }
+
+  async abandon(gift_id: string) {
+    const gift = await this.prisma.gift.findUnique({
+      where: { id: gift_id },
+      include: { promotion: true, sender: true },
+    });
+    if (!gift) {
+      this.prisma.error(ResCode.NOT_FOUND, '查無紀錄');
+    }
+    if (gift.type === GiftType.PROMOTION) {
+      await this.prisma.$transaction([
+        this.prisma.gift.update({
+          where: {
+            id: gift.id,
+          },
+          data: {
+            status: GiftStatus.ABANDONED,
+          },
+        }),
+        ...(await this.walletRecService.playerCreate({
+          type: WalletRecType.GIFT_ROLLBACK,
+          player_id: gift.player_id,
+          amount: -gift.amount,
+          rolling_amount: -gift.rolling_amount,
+          source: gift.promotion.title,
+          relative_id: gift.id,
+        })),
+      ]);
+    } else if (gift.type === GiftType.AGENT_SEND) {
+      await this.prisma.$transaction([
+        this.prisma.gift.update({
+          where: {
+            id: gift.id,
+          },
+          data: {
+            status: GiftStatus.ABANDONED,
+          },
+        }),
+        ...(await this.walletRecService.playerCreate({
+          type: WalletRecType.GIFT_ROLLBACK,
+          player_id: gift.player_id,
+          amount: -gift.amount,
+          rolling_amount: -gift.rolling_amount,
+          source: gift.sender.username,
+          relative_id: gift.id,
+        })),
+        ...(await this.walletRecService.agentCreate({
+          type: WalletRecType.GIFT_ROLLBACK,
+          agent_id: gift.sender_id,
+          amount: gift.amount,
+          source: gift.sender.username,
+          relative_id: gift.id,
+        })),
+      ]);
+    }
   }
 }

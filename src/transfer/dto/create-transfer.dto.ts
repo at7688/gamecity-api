@@ -10,20 +10,13 @@ import {
 } from 'class-validator';
 import { TransferType } from '../enums';
 export class CreateTransferDto {
-  @IsNotEmpty()
-  @IsEnum(TransferType)
-  type: TransferType;
-
+  @IsString()
   @IsNotEmpty()
   username?: string;
 
   @IsNumber()
   @IsNotEmpty()
   amount: number;
-
-  @IsInt()
-  @IsOptional()
-  nums_rolling = 1; // 洗碼倍數
 
   @IsString()
   @IsOptional()

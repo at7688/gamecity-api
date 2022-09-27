@@ -13,7 +13,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ClientSearchGiftsDto } from './dto/client-search-gifts.dto';
 import { GiftClientService } from './gift.client.service';
 
-@Controller('client/gifts')
+@Controller('client/gift')
 @Platforms([PlatformType.PLAYER])
 export class GiftClientController {
   constructor(private readonly giftService: GiftClientService) {}

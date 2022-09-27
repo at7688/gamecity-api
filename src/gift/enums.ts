@@ -7,5 +7,5 @@ export enum GiftStatus {
 
 export enum GiftType {
   PROMOTION = 1,
-  TRANSFER = 2,
+  AGENT_SEND = 2,
 }

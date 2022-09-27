@@ -18,8 +18,10 @@ export enum WalletRecType {
   BET_RESULT = 63,
   GAME_GIFT = 64, // 遊戲商紅包
 
-  GIFT_RECIEVE = 71, // 禮包接收
-  GIFT_ROLLBACK = 72, // 禮包回滾
+  GIFT_SEND = 71, // 禮包發送
+  GIFT_RECIEVE = 72, // 禮包接收
+  GIFT_ROLLBACK = 73, // 禮包回滾
+  GIFT_BACK = 74, // 禮包退回
 }
 
 export enum WalletTargetType {

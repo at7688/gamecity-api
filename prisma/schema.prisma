@@ -22,7 +22,6 @@ model AdminUser {
   login_rec     LoginRec[]
   operations    OperationRec[]
   wallet_rec    WalletRec[]
-  transfer_rec  TransferRec[]
   identities    IdentityVerify[]
 }
 
@@ -197,7 +196,8 @@ model WalletRec {
   player_id      String?
   agent          Member?    @relation(fields: [agent_id], references: [id])
   agent_id       String?
-  origin_amount  Float
+  origin_balance  Float
+  result_balance  Float
   amount         Float
   fee            Float      @default(0)
   operator       AdminUser? @relation(fields: [operator_id], references: [id])
@@ -219,17 +219,11 @@ model WalletRec {
 
 model TransferRec {
   id               String     @id @default(cuid())
-  type             Int // 給會員, 給代理,
-  source           Member?    @relation("source", fields: [source_id], references: [id])
-  source_id        String?
-  target_player    Player?    @relation(fields: [target_player_id], references: [id])
-  target_player_id String?
-  target_agent     Member?    @relation("target_agent", fields: [target_agent_id], references: [id])
-  target_agent_id  String?
-  operator         AdminUser? @relation(fields: [operator_id], references: [id])
-  operator_id      String?
+  source           Member    @relation("source", fields: [source_id], references: [id])
+  source_id        String
+  target     Member    @relation("target_agent", fields: [target_id], references: [id])
+  target_id  String
   amount           Float
-  nums_rolling   Float @default(1) // 洗碼倍數
   inner_note       String?
   outter_note      String?
   created_at       DateTime   @default(now()) @db.Timestamptz()
@@ -263,7 +257,6 @@ model Player {
   invites          Player[]            @relation("player")
   bankcard         PlayerCard[]
   wallet_rec       WalletRec[]
-  transfer_rec     TransferRec[]
   bet_records      BetRecord[]
   game_accounts    GameAccount[]
 

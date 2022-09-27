@@ -1,4 +1,4 @@
 export enum TransferType {
-  PLAYER = 1,
-  AGENT = 2,
+  SENT = 1,
+  RECIEVED = 2,
 }

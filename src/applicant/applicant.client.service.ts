@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Player } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
@@ -122,14 +122,29 @@ export class ApplicantClientService {
   }
 
   async findAll(player: Player) {
-    return this.prisma.applicant.findMany({
+    const findManyArg: Prisma.ApplicantFindManyArgs = {
       where: {
         player_id: player.id,
       },
       include: {
-        promotion: true,
-        gift: true,
+        promotion: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+        },
+        gift: {
+          select: {
+            id: true,
+            status: true,
+          },
+        },
       },
+    };
+    return this.prisma.listFormat({
+      items: await this.prisma.applicant.findMany(findManyArg),
+      count: await this.prisma.applicant.count({ where: findManyArg.where }),
     });
   }
 }
