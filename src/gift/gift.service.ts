@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Member, Prisma } from '@prisma/client';
 import { SearchPlayerRollingDto } from './dto/search-player-rolling.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -11,6 +11,7 @@ import { ResCode } from 'src/errors/enums';
 import { GiftStatus, GiftType } from './enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
+import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 
 @Injectable()
 export class GiftService {
@@ -84,7 +85,7 @@ export class GiftService {
     };
   }
 
-  async overview(search: SearchPlayerRollingDto) {
+  async overview(search: SearchPlayerRollingDto, agent?: Member) {
     const {
       username,
       nickname,
@@ -93,6 +94,13 @@ export class GiftService {
       page,
       perpage,
     } = search;
+
+    let playersByAgent;
+    if (agent) {
+      playersByAgent = await this.prisma.$queryRaw<SubPlayer[]>(
+        subPlayers(agent.id),
+      );
+    }
 
     const findManyArg: Prisma.PlayerFindManyArgs = {
       select: {
@@ -103,6 +111,9 @@ export class GiftService {
       where: {
         username,
         nickname,
+        id: {
+          in: agent ? playersByAgent.map((t) => t.id) : undefined,
+        },
         gifts: {
           some: {
             recieved_at: {
@@ -130,10 +141,19 @@ export class GiftService {
     });
   }
 
-  async findAll(search: SearchGiftsDto) {
-    const { promotion_id, username, nickname, vip_ids } = search;
+  async findAll(search: SearchGiftsDto, agent?: Member) {
+    const {
+      promotion_id,
+      username,
+      nickname,
+      vip_ids,
+      send_start_at,
+      send_end_at,
+    } = search;
+
     const findManyArg: Prisma.GiftFindManyArgs = {
       where: {
+        sender_id: agent?.id,
         promotion_id,
         player: {
           username: {
@@ -146,9 +166,16 @@ export class GiftService {
             in: vip_ids,
           },
         },
+        send_at: {
+          gte: send_start_at,
+          lte: send_end_at,
+        },
       },
       include: {
         promotion: true,
+      },
+      orderBy: {
+        created_at: 'desc',
       },
     };
     return this.prisma.listFormat({

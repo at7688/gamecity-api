@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AdminUser, Prisma } from '@prisma/client';
+import { AdminUser, Member, Prisma } from '@prisma/client';
 import * as numeral from 'numeral';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -13,7 +13,7 @@ import { WalletTargetType } from './enums';
 export class WalletRecService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(search: SearchWalletRecDto) {
+  async findAll(search: SearchWalletRecDto, agent?: Member) {
     const {
       target_types,
       types,
@@ -29,6 +29,7 @@ export class WalletRecService {
 
     const findManyArgs: Prisma.WalletRecFindManyArgs = {
       where: {
+        agent_id: agent?.id,
         type: {
           in: types,
         },

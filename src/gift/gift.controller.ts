@@ -4,19 +4,31 @@ import { SearchGiftsDto } from './dto/search-gifts.dto';
 import { GiftService } from './gift.service';
 import { Platforms } from 'src/metas/platforms.meta';
 import { PlatformType } from '@prisma/client';
+import { User } from 'src/decorators/user.decorator';
+import { LoginUser } from 'src/types';
 
 @Controller('gift')
 export class GiftController {
   constructor(private readonly giftService: GiftService) {}
 
   @Post('list')
-  findAll(@Body() search: SearchGiftsDto) {
-    return this.giftService.findAll(search);
+  @Platforms([PlatformType.AGENT])
+  findAll(@Body() search: SearchGiftsDto, @User() user: LoginUser) {
+    if ('admin_role_id' in user) {
+      return this.giftService.findAll(search);
+    } else {
+      return this.giftService.findAll(search, user);
+    }
   }
 
   @Post('overview')
-  overview(@Body() search: SearchPlayerRollingDto) {
-    return this.giftService.overview(search);
+  @Platforms([PlatformType.AGENT])
+  overview(@Body() search: SearchPlayerRollingDto, @User() user: LoginUser) {
+    if ('admin_role_id' in user) {
+      return this.giftService.overview(search);
+    } else {
+      return this.giftService.overview(search, user);
+    }
   }
 
   @Post('abandon/:id')

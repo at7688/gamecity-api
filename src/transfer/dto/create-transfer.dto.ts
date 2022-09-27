@@ -1,20 +1,10 @@
-import { Prisma } from '@prisma/client';
-import {
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  ValidateIf,
-} from 'class-validator';
-import { TransferType } from '../enums';
+import { IsNotEmpty, IsOptional, IsPositive, IsString } from 'class-validator';
 export class CreateTransferDto {
   @IsString()
   @IsNotEmpty()
   username?: string;
 
-  @IsNumber()
+  @IsPositive()
   @IsNotEmpty()
   amount: number;
 

@@ -1,12 +1,11 @@
-import { ResCode } from 'src/errors/enums';
 import { Injectable } from '@nestjs/common';
-import { Member, Prisma } from '@prisma/client';
+import { Member } from '@prisma/client';
+import { ResCode } from 'src/errors/enums';
+import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import { AgentSearchGiftsDto } from './dto/agent-search-gifts.dto';
 import { CreateGiftDto } from './dto/create-gift.dto';
 import { GiftStatus, GiftType } from './enums';
-import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 
 @Injectable()
 export class GiftAgentService {
@@ -41,42 +40,5 @@ export class GiftAgentService {
       },
     });
     return this.prisma.success();
-  }
-
-  async findAll(search: AgentSearchGiftsDto, agent: Member) {
-    const { username, nickname, send_start_at, send_end_at, vip_ids } = search;
-    const findManyArg: Prisma.GiftFindManyArgs = {
-      where: {
-        sender_id: agent.id,
-        player: {
-          username: { contains: username },
-          nickname: { contains: nickname },
-          vip_id: {
-            in: vip_ids,
-          },
-        },
-        send_at: {
-          gte: send_start_at,
-          lte: send_end_at,
-        },
-      },
-      include: {
-        promotion: true,
-        player: {
-          select: {
-            nickname: true,
-            username: true,
-            id: true,
-          },
-        },
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-    };
-    return this.prisma.listFormat({
-      items: await this.prisma.gift.findMany(findManyArg),
-      count: await this.prisma.gift.count({ where: findManyArg.where }),
-    });
   }
 }
