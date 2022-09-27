@@ -6,12 +6,14 @@ import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { ClientSearchGiftsDto } from './dto/client-search-gifts.dto';
 import { GiftType, GiftStatus } from './enums';
+import { GiftService } from './gift.service';
 
 @Injectable()
 export class GiftClientService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletRecService: WalletRecService,
+    private readonly giftService: GiftService,
   ) {}
 
   async findAll(search: ClientSearchGiftsDto, player: Player) {
@@ -83,5 +85,18 @@ export class GiftClientService {
       }),
     ]);
     return this.prisma.success();
+  }
+
+  async abandon(gift_id: string, player: Player) {
+    const gift = await this.prisma.gift.findFirst({
+      where: {
+        player_id: player.id,
+        id: gift_id,
+      },
+    });
+    if (!gift) {
+      this.prisma.error(ResCode.NOT_FOUND);
+    }
+    return this.giftService.abandon(gift_id);
   }
 }

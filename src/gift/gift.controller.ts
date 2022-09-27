@@ -1,5 +1,5 @@
 import { SearchPlayerRollingDto } from './dto/search-player-rolling.dto';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post } from '@nestjs/common';
 import { SearchGiftsDto } from './dto/search-gifts.dto';
 import { GiftService } from './gift.service';
 import { Platforms } from 'src/metas/platforms.meta';
@@ -17,5 +17,10 @@ export class GiftController {
   @Post('overview')
   overview(@Body() search: SearchPlayerRollingDto) {
     return this.giftService.overview(search);
+  }
+
+  @Post('abandon/:id')
+  abandon(@Param('id') gift_id: string) {
+    return this.giftService.abandon(gift_id);
   }
 }

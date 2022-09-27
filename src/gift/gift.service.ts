@@ -160,7 +160,7 @@ export class GiftService {
   async abandon(gift_id: string) {
     const gift = await this.prisma.gift.findUnique({
       where: { id: gift_id },
-      include: { promotion: true, sender: true },
+      include: { promotion: true, sender: true, player: true },
     });
     if (!gift) {
       this.prisma.error(ResCode.NOT_FOUND, '查無紀錄');
@@ -203,13 +203,14 @@ export class GiftService {
           relative_id: gift.id,
         })),
         ...(await this.walletRecService.agentCreate({
-          type: WalletRecType.GIFT_ROLLBACK,
+          type: WalletRecType.GIFT_BACK,
           agent_id: gift.sender_id,
           amount: gift.amount,
-          source: gift.sender.username,
+          source: gift.player.username,
           relative_id: gift.id,
         })),
       ]);
     }
+    return this.prisma.success();
   }
 }
