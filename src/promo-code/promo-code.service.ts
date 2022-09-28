@@ -38,7 +38,7 @@ export class PromoCodeService {
     const { code, parent_id, inviter_id, note, is_active } = data;
     const record = await this.prisma.promoCode.findUnique({ where: { code } });
     if (record) {
-      this.prisma.error(ResCode.CODE_DUPICATED, '推廣碼重複');
+      this.prisma.error(ResCode.DATA_DUPICATED, '推廣碼重複');
     }
     try {
       await this.prisma.promoCode.create({
@@ -86,15 +86,22 @@ export class PromoCodeService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} promoCode`;
+  findOne(code: string) {
+    return `This action returns a #${code} promoCode`;
   }
 
-  update(id: number, updatePromoCodeDto: UpdatePromoCodeDto) {
-    return `This action updates a #${id} promoCode`;
+  async update(code: string, data: UpdatePromoCodeDto) {
+    const { note, is_active } = data;
+    await this.prisma.promoCode.update({
+      where: {
+        code,
+      },
+      data: { note, is_active },
+    });
+    return this.prisma.success();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} promoCode`;
+  remove(code: string) {
+    return `This action removes a #${code} promoCode`;
   }
 }

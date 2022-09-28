@@ -13,21 +13,16 @@ export class SearchAgentsDto extends PaginateDto {
 
   @IsInt({ each: true })
   @IsOptional()
-  @Transform(({ value }) => {
-    return value.map(Number);
-  })
   layers?: number[];
 
   @IsIn([0, 1, 2])
   @IsOptional()
-  @Transform(({ value }) => +value)
   is_blocked?: number;
 
   @IsOptional()
   @IsString()
   parent_id: string;
 
-  @Transform(({ value }) => !!value)
   @IsBoolean()
   @IsOptional()
   all: boolean;

@@ -46,21 +46,21 @@ export class PromoCodeController {
     return this.promoCodeService.findAll(search, user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.promoCodeService.findOne(+id);
+  @Get(':code')
+  findOne(@Param('code') code: string) {
+    return this.promoCodeService.findOne(code);
   }
 
-  @Patch(':id')
+  @Patch(':code')
   update(
-    @Param('id') id: string,
+    @Param('code') code: string,
     @Body() updatePromoCodeDto: UpdatePromoCodeDto,
   ) {
-    return this.promoCodeService.update(+id, updatePromoCodeDto);
+    return this.promoCodeService.update(code, updatePromoCodeDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.promoCodeService.remove(+id);
+  @Delete(':code')
+  remove(@Param('code') code: string) {
+    return this.promoCodeService.remove(code);
   }
 }

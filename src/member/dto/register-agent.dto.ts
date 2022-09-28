@@ -6,7 +6,7 @@ import {
   IsString,
 } from 'class-validator';
 
-export class CreateAgentDto {
+export class RegisterAgentDto {
   @IsString()
   @IsNotEmpty()
   username: string;
@@ -20,12 +20,12 @@ export class CreateAgentDto {
   nickname: string;
 
   @IsString()
-  @IsNotEmpty()
-  promo_code?: string;
+  @IsOptional()
+  invited_code: string;
 
   @IsString()
-  @IsOptional()
-  parent_id?: string;
+  @IsNotEmpty()
+  promo_code?: string;
 
   @IsString()
   @IsOptional()

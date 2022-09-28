@@ -1,3 +1,4 @@
+import { RegisterAgentDto } from './dto/register-agent.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Member, Prisma } from '@prisma/client';
@@ -13,6 +14,7 @@ import { agentWithSubNums } from './raw/agentWithSubNums';
 import { getAllParents } from './raw/getAllParents';
 import { getAllSubs } from './raw/getAllSubs';
 import { getTreeNode, TreeNodeMember } from './raw/getTreeNode';
+import { ResCode } from 'src/errors/enums';
 @Injectable()
 export class MemberService {
   constructor(
@@ -21,19 +23,29 @@ export class MemberService {
   ) {}
   isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
 
-  async create({ password, ...data }: CreateAgentDto, user: LoginUser) {
+  async create(data: CreateAgentDto, user: LoginUser) {
+    const {
+      password,
+      nickname,
+      username,
+      promo_code,
+      parent_id,
+      email,
+      phone,
+    } = data;
+
     const hash = await argon2.hash(password);
     let parent: Member | null = null;
     if ('admin_role_id' in user) {
-      if (data.parent_id) {
+      if (parent_id) {
         parent = await this.prisma.member.findUnique({
-          where: { id: data.parent_id },
+          where: { id: parent_id },
         });
       }
     } else {
-      if (data.parent_id) {
+      if (parent_id) {
         parent = (await this.getAllSubs(user.id)).find(
-          (t) => t.id === data.parent_id,
+          (t) => t.id === parent_id,
         );
         if (!parent) {
           throw new BadRequestException('上層錯誤');
@@ -45,12 +57,96 @@ export class MemberService {
 
     return this.prisma.member.create({
       data: {
-        ...data,
+        nickname,
+        username,
         password: hash,
         parent_id: parent?.id,
         layer: parent ? ++parent.layer : 1,
+        promos: {
+          create: {
+            code: promo_code,
+          },
+        },
+        contact:
+          email || phone
+            ? {
+                create: {
+                  email,
+                  phone,
+                },
+              }
+            : undefined,
       },
     });
+  }
+  async register(data: RegisterAgentDto) {
+    const {
+      password,
+      nickname,
+      username,
+      promo_code,
+      invited_code,
+      phone,
+      email,
+    } = data;
+    // 確認帳號是否重複
+    const record = await this.prisma.member.findUnique({
+      where: {
+        username,
+      },
+    });
+    if (record) {
+      this.prisma.error(ResCode.DATA_DUPICATED, '帳號不可用');
+    }
+    const invitedPromo = await this.prisma.promoCode.findUnique({
+      where: {
+        code: invited_code,
+      },
+      include: {
+        parent: {
+          select: {
+            id: true,
+            username: true,
+            layer: true,
+          },
+        },
+      },
+    });
+    if (!invitedPromo) {
+      this.prisma.error(ResCode.NOT_FOUND, '無此推薦碼');
+    }
+    const { parent } = invitedPromo;
+    const hash = await argon2.hash(password);
+    try {
+      await this.prisma.member.create({
+        data: {
+          nickname,
+          username,
+          password: hash,
+          parent_id: parent.id,
+          layer: parent ? ++parent.layer : 1,
+          invited_code,
+          promos: {
+            create: {
+              code: promo_code,
+            },
+          },
+          contact:
+            email || phone
+              ? {
+                  create: {
+                    email,
+                    phone,
+                  },
+                }
+              : undefined,
+        },
+      });
+    } catch (err) {
+      this.prisma.error(ResCode.DB_ERR, JSON.stringify(err));
+    }
+
+    return this.prisma.success();
   }
 
   getAllSubs(id: string | null) {

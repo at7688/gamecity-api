@@ -1,3 +1,4 @@
+import { RegisterAgentDto } from './dto/register-agent.dto';
 import {
   Controller,
   Get,
@@ -18,21 +19,29 @@ import { SearchAgentsDto } from './dto/search-agents.dto';
 import { User } from 'src/decorators/user.decorator';
 import { LoginUser } from 'src/types';
 import { SetAgentDutyDto } from './dto/set-agent-duty.dto';
+import { Public } from 'src/metas/public.meta';
 
-@Controller('agents')
+@Controller('agent')
 @Serilizer(MemberDto)
 export class MemberController {
   constructor(private readonly memberService: MemberService) {}
 
-  @Post()
+  @Post('register')
+  @Public()
+  register(@Body() body: RegisterAgentDto) {
+    return this.memberService.register(body);
+  }
+
+  @Post('create')
   create(@Body() body: CreateAgentDto, @User() user: LoginUser) {
     return this.memberService.create(body, user);
   }
 
-  @Get()
+  @Post('list')
   findAll(@Query() query: SearchAgentsDto, @User() user: LoginUser) {
     return this.memberService.findAll(query, user);
   }
+
   @Get('tree')
   getTreeNode(@Query('parent_id') parent_id: string, @User() user: LoginUser) {
     return this.memberService.getTreeNode(parent_id, user);
