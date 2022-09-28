@@ -324,6 +324,7 @@ export class AbService {
       },
     };
     const res = await this.request<AbGetBalanceRes>(reqConfig);
+
     return res.data.list[0].amount;
   }
 

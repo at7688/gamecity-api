@@ -8,6 +8,7 @@ import { GrService } from '../gr/gr.service';
 import { OgService } from '../og/og.service';
 import { WmService } from '../wm/wm.service';
 import { ZgService } from '../zg/zg.service';
+import { GetBalanceDto } from './dto/get-balance-dto';
 import { LoginGameDto } from './dto/login-game-dto';
 import { SearchGameDto } from './dto/search-game-dto';
 import { TransBackDto } from './dto/trans-back-dto';
@@ -35,6 +36,40 @@ export class PlatformsBridgeService {
     og: this.og,
   };
 
+  async getBalance(player: Player, data: GetBalanceDto) {
+    const { platform_code } = data;
+
+    const platforms = await this.prisma.gameAccount.findMany({
+      where: {
+        player_id: player.id,
+        platform_code,
+      },
+    });
+    const results = await Promise.all(
+      platforms.map(async (t) => {
+        const credit = (await this.gameHub[t.platform_code].getBalance(
+          player,
+        )) as number;
+        await this.prisma.gameAccount.update({
+          where: {
+            platform_code_player_id: {
+              platform_code: t.platform_code,
+              player_id: player.id,
+            },
+          },
+          data: {
+            credit,
+          },
+        });
+        return {
+          platform_code: t.platform_code,
+          credit,
+        };
+      }),
+    );
+    return this.prisma.success(results);
+  }
+
   async gameList(search: SearchGameDto) {
     const { category_code, platform_code, name } = search;
     const findManyArgs: Prisma.GameFindManyArgs = {
@@ -50,7 +85,7 @@ export class PlatformsBridgeService {
     });
   }
 
-  async login(data: LoginGameDto, player: Player) {
+  async login(player: Player, data: LoginGameDto) {
     try {
       await this.transferBack(player, {}); // WM測試機會失敗(因為轉額上限)
       const { platform_code, game_code } = data;

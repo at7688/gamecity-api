@@ -1,26 +1,24 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import { addHours, format, subMinutes } from 'date-fns';
+import * as CryptoJS from 'crypto-js';
+import * as numeral from 'numeral';
+import { BetRecordStatus } from 'src/bet-record/enums';
+import { ResCode } from 'src/errors/enums';
+import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
 import { ZgReqBase, ZgResBase } from './types/base';
 import { ZgCreatePlayerReq, ZgCreatePlayerRes } from './types/createPlayer';
 import { ZgBetRecordsReq, ZgBetRecordsRes } from './types/fetchBetRecords';
 import { ZgGameListRes } from './types/gameList';
-import * as qs from 'query-string';
-import { ZgTransferToReq, ZgTransferToRes } from './types/transferTo';
-import { WalletRecType } from 'src/wallet-rec/enums';
 import { ZgGetBalanceReq, ZgGetBalanceRes } from './types/getBalance';
-import { ZgTransferBackReq, ZgTransferBackRes } from './types/transferBack';
-import { BetRecordStatus } from 'src/bet-record/enums';
-import { v4 as uuidv4 } from 'uuid';
-import { GameCategory } from 'src/game/enums';
-import * as CryptoJS from 'crypto-js';
 import { ZgGetGameLinkReq, ZgGetGameLinkRes } from './types/getGameLink';
-import * as numeral from 'numeral';
-import { ResCode } from 'src/errors/enums';
+import { ZgTransferBackReq, ZgTransferBackRes } from './types/transferBack';
+import { ZgTransferToReq, ZgTransferToRes } from './types/transferTo';
 
 @Injectable()
 export class ZgService {

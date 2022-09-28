@@ -212,7 +212,7 @@ export class GrService {
   }
 
   async transferBack(player: Player) {
-    const { balance, account } = await this.getBalance(player);
+    const balance = await this.getBalance(player);
 
     if (balance > 0) {
       const trans_id = uuidv4();
@@ -229,7 +229,7 @@ export class GrService {
         method: 'POST',
         path: '/api/platform/debit_balance_v3',
         data: {
-          account,
+          account: `${player.username}@${this.suffix}`,
           debit_amount: balance,
           order_id: trans_id,
         },
@@ -292,7 +292,7 @@ export class GrService {
       },
     };
     const res = await this.request<GrGetBalanceRes>(reqConfig);
-    return res.data;
+    return res.data.balance;
   }
 
   async fetchBetRecords(start: Date, end: Date) {

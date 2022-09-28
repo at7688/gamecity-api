@@ -6,6 +6,7 @@ import { PlatformType, Player } from '@prisma/client';
 import { Platforms } from 'src/metas/platforms.meta';
 import { LoginGameDto } from './dto/login-game-dto';
 import { TransBackDto } from './dto/trans-back-dto';
+import { GetBalanceDto } from './dto/get-balance-dto';
 
 @Controller('client/game')
 @Platforms([PlatformType.PLAYER])
@@ -21,11 +22,15 @@ export class PlatformsBridgeController {
 
   @Post('login')
   login(@Body() data: LoginGameDto, @User() player: Player) {
-    return this.platformsBridgeService.login(data, player);
+    return this.platformsBridgeService.login(player, data);
   }
 
   @Post('transBack')
   tranferBack(@Body() data: TransBackDto, @User() player: Player) {
     return this.platformsBridgeService.transferBack(player, data);
+  }
+  @Post('getBalance')
+  getBalance(@Body() data: GetBalanceDto, @User() player: Player) {
+    return this.platformsBridgeService.getBalance(player, data);
   }
 }

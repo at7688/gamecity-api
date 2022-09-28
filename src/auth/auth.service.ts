@@ -313,6 +313,14 @@ export class AuthService {
       where: {
         id: player.id,
       },
+      include: {
+        game_accounts: {
+          select: {
+            platform_code: true,
+            credit: true,
+          },
+        },
+      },
     });
     const rollingInfo =
       (await this.prisma.$queryRaw(playerRolling(user.id)))[0] || {};
