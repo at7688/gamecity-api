@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "PromoCode" ADD COLUMN     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "ips" TEXT[],
+ADD COLUMN     "is_active" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "note" TEXT;

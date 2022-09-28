@@ -6,12 +6,12 @@ import {
   IsPositive,
   IsString,
 } from 'class-validator';
-import { WalletTargetType } from '../enums';
+import { TargetType } from 'src/enums';
 
 export class ManualOperationDto {
-  @IsEnum(WalletTargetType)
+  @IsEnum(TargetType)
   @IsNotEmpty()
-  target_type?: WalletTargetType;
+  target_type?: TargetType;
 
   @IsString()
   @IsNotEmpty()

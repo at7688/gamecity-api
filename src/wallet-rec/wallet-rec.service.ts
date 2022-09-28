@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { AdminUser, Member, Prisma } from '@prisma/client';
 import * as numeral from 'numeral';
+import { TargetType } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { CreateWalletRecDto } from './dto/create-wallet-rec.dto';
 import { ManualOperationDto } from './dto/manual-operation.dto';
 import { SearchWalletRecDto } from './dto/search-wallet-rec.dto';
-import { WalletTargetType } from './enums';
 
 @Injectable()
 export class WalletRecService {
@@ -93,7 +93,7 @@ export class WalletRecService {
       this.prisma.error(ResCode.EMPTY_VAL, '數值不可為空');
     }
     try {
-      if (target_type === WalletTargetType.AGENT) {
+      if (target_type === TargetType.AGENT) {
         const agent = await this.prisma.member.findUnique({
           where: {
             username,
@@ -165,7 +165,7 @@ export class WalletRecService {
       this.prisma.walletRec.create({
         data: {
           type,
-          target: WalletTargetType.PLAYER,
+          target: TargetType.PLAYER,
           player_id,
           amount,
           origin_balance: player.balance,
@@ -210,7 +210,7 @@ export class WalletRecService {
       this.prisma.walletRec.create({
         data: {
           type,
-          target: WalletTargetType.AGENT,
+          target: TargetType.AGENT,
           agent_id,
           amount,
           origin_balance: agent.balance,

@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { InboxTargetType } from '../enums';
+import { TargetType } from 'src/enums';
 
 export class CreateInboxDto {
   @IsString()
@@ -20,7 +20,7 @@ export class CreateInboxDto {
   @IsOptional()
   username?: string;
 
-  @IsEnum(InboxTargetType)
+  @IsEnum(TargetType)
   @IsNotEmpty()
-  target_type: InboxTargetType; // 1: 代理, 2: 玩家
+  target_type: TargetType; // 1: 代理, 2: 玩家
 }

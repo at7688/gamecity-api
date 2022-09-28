@@ -8,3 +8,8 @@ export enum LangType {
   TW = 'tw',
   CN = 'cn',
 }
+
+export enum TargetType {
+  PLAYER = 1,
+  AGENT = 2,
+}

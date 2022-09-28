@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
+import { TargetType } from 'src/enums';
 import { MemberService } from 'src/member/member.service';
 import { SubAgent, subAgents } from 'src/player/raw/subAgents';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -8,7 +9,7 @@ import { LoginUser } from '../types';
 import { CreateInboxDto } from './dto/create-inbox.dto';
 import { SearchInboxsDto } from './dto/search-inboxs.dto';
 import { UpdateInboxDto } from './dto/update-inbox.dto';
-import { InboxTargetType, InboxViewType, ReadStatus } from './enums';
+import { InboxViewType, ReadStatus } from './enums';
 
 @Injectable()
 export class InboxService {
@@ -66,7 +67,7 @@ export class InboxService {
   async checkCreateTargets(data: CreateInboxDto, user: LoginUser) {
     if (this.isAdmin) {
       // 管理站
-      if (data.target_type === InboxTargetType.AGENT) {
+      if (data.target_type === TargetType.AGENT) {
         return this.prisma.member.findMany({
           select: {
             id: true,
@@ -91,7 +92,7 @@ export class InboxService {
       }
     } else {
       // 代理站
-      if (data.target_type === InboxTargetType.AGENT) {
+      if (data.target_type === TargetType.AGENT) {
         return this.prisma.member.findMany({
           select: {
             id: true,
@@ -143,7 +144,7 @@ export class InboxService {
           createMany: {
             data: toMembers.map((m) => ({
               [this.isAdmin ? 'from_user_id' : 'from_member_id']: user.id,
-              [data.target_type === InboxTargetType.AGENT
+              [data.target_type === TargetType.AGENT
                 ? 'to_member_id'
                 : 'to_player_id']: m.id,
             })),
@@ -192,7 +193,7 @@ export class InboxService {
         ...where,
         [this.isAdmin ? 'from_user_id' : 'from_member_id']: user.id,
       };
-      if (target_type === InboxTargetType.AGENT) {
+      if (target_type === TargetType.AGENT) {
         where = {
           ...where,
           to_member: {
@@ -201,7 +202,7 @@ export class InboxService {
           },
         };
         console.log(where);
-      } else if (target_type === InboxTargetType.PLAYER) {
+      } else if (target_type === TargetType.PLAYER) {
         where = {
           ...where,
           to_player: {

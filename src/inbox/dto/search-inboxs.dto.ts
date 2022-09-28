@@ -1,13 +1,8 @@
 import { Transform } from 'class-transformer';
-import {
-  IsEnum,
-  IsIn,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
-import { InboxTargetType, InboxViewType, ReadStatus } from '../enums';
+import { TargetType } from 'src/enums';
+import { InboxViewType, ReadStatus } from '../enums';
 
 export class SearchInboxsDto extends PaginateDto {
   @IsString()
@@ -22,10 +17,10 @@ export class SearchInboxsDto extends PaginateDto {
   @IsOptional()
   nickname?: string;
 
-  @IsEnum(InboxTargetType)
+  @IsEnum(TargetType)
   @IsOptional()
   @Transform(({ value }) => +value)
-  target_type?: InboxTargetType;
+  target_type?: TargetType;
 
   @IsEnum(InboxViewType) // 1 寄信, 2 收信
   @IsNotEmpty()

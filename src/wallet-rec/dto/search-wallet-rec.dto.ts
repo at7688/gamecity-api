@@ -7,12 +7,13 @@ import {
   IsString,
 } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
-import { WalletRecType, WalletTargetType } from '../enums';
+import { TargetType } from 'src/enums';
+import { WalletRecType } from '../enums';
 
 export class SearchWalletRecDto extends PaginateDto {
-  @IsEnum(WalletTargetType, { each: true })
+  @IsEnum(TargetType, { each: true })
   @IsOptional()
-  target_types: WalletTargetType[];
+  target_types: TargetType[];
 
   @IsEnum(WalletRecType, { each: true })
   @IsOptional()
