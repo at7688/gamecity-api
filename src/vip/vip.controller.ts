@@ -23,7 +23,7 @@ export class VipController {
 
   @Get()
   findAll() {
-    return this.vipService.findAll();
+    return this.vipService.conditionCheck();
   }
 
   @Get('options')

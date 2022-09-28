@@ -87,7 +87,7 @@ model Menu {
 
 model PromoCode {
   code       String   @id
-  type Int  // 會員推廣 代理推廣
+  type Int  @default(1) // 會員推廣 代理推廣
   is_active  Boolean  @default(true)
   parent     Member  @relation("parent", fields: [parent_id], references: [id])
   parent_id  String
@@ -348,10 +348,11 @@ model Contact {
 
 model Vip {
   id                String        @id @default(cuid())
+  sort  Int @default(autoincrement())
   name              String
   icon              String?
-  valid_bet         Int           @default(0)
-  deposite_min      Int
+  valid_bet         Int           @default(0) // 有效投注量
+  deposit_min      Int  @default(0)   // 最低儲值量
   withdraw_min      Int
   withdraw_max      Int
   card_rotate_id    Int

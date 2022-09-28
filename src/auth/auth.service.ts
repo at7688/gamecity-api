@@ -141,7 +141,7 @@ export class AuthService {
         vip: {
           select: {
             name: true,
-            deposite_min: true,
+            deposit_min: true,
             withdraw_min: true,
             withdraw_max: true,
           },

@@ -16,7 +16,7 @@ export class CreateVipDto {
 
   @IsInt()
   @IsNotEmpty()
-  deposite_min: number;
+  deposit_min: number;
 
   @IsInt()
   @IsNotEmpty()

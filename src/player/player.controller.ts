@@ -38,9 +38,9 @@ export class PlayerController {
     return this.playerService.validate(username);
   }
 
-  @Get()
-  findAll(@Query() query: SearchPlayersDto, @User() user: LoginUser) {
-    return this.playerService.findAll(query, user);
+  @Post('list')
+  findAll(@Body() search: SearchPlayersDto, @User() user: LoginUser) {
+    return this.playerService.findAll(search, user);
   }
 
   @Get(':id')

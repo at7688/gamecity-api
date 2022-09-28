@@ -21,19 +21,14 @@ export class SearchPlayersDto extends PaginateDto {
 
   @IsOptional()
   @IsString({ each: true })
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value?.split(',').map((s) => s.trim()) : value,
-  )
   vip_ids: string[];
 
   @IsIn([0, 1, 2])
   @IsOptional()
-  @Transform(({ value }) => +value)
   is_blocked?: number;
 
   @IsIn([0, 1, 2])
   @IsOptional()
-  @Transform(({ value }) => +value)
   is_lock_bet?: number;
 
   @IsOptional()
