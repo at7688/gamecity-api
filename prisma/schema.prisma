@@ -87,7 +87,7 @@ model Menu {
 
 model PromoCode {
   code       String   @id
-  type Int @default(1) // 會員推廣 代理推廣
+  type Int  // 會員推廣 代理推廣
   is_active  Boolean  @default(true)
   parent     Member  @relation("parent", fields: [parent_id], references: [id])
   parent_id  String

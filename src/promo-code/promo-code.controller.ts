@@ -16,6 +16,8 @@ import { LoginUser } from 'src/types';
 import { User } from 'src/decorators/user.decorator';
 import { Request } from 'express';
 import { Public } from 'src/metas/public.meta';
+import { Platforms } from 'src/metas/platforms.meta';
+import { PlatformType } from '@prisma/client';
 
 @Controller('promoCode')
 export class PromoCodeController {
@@ -39,8 +41,8 @@ export class PromoCodeController {
   }
 
   @Post('list')
+  @Platforms([PlatformType.AGENT])
   findAll(@Body() search: SearchPromoCode, @User() user: LoginUser) {
-    console.log(search);
     if ('admin_role_id' in user) {
       return this.promoCodeService.findAll(search);
     }

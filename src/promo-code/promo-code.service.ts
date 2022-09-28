@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Member, Prisma } from '@prisma/client';
 import { uniq } from 'lodash';
+import { TargetType } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { SubAgent, subAgents } from 'src/player/raw/subAgents';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -35,7 +36,7 @@ export class PromoCodeService {
   }
 
   async create(data: CreatePromoCodeDto) {
-    const { code, parent_id, inviter_id, note, is_active } = data;
+    const { code, parent_id, inviter_id, note, is_active, type } = data;
     const record = await this.prisma.promoCode.findUnique({ where: { code } });
     if (record) {
       this.prisma.error(ResCode.DATA_DUPICATED, '推廣碼重複');
@@ -43,6 +44,7 @@ export class PromoCodeService {
     try {
       await this.prisma.promoCode.create({
         data: {
+          type,
           code,
           parent_id,
           inviter_id,
@@ -58,13 +60,14 @@ export class PromoCodeService {
   }
 
   async findAll(search: SearchPromoCode, agent?: Member) {
-    const { parent_username, inviter_username, code, is_active } = search;
+    const { parent_username, inviter_username, code, is_active, type } = search;
     let agents = [];
     if (agent) {
       agents = await this.prisma.$queryRaw<SubAgent[]>(subAgents(agent.id));
     }
     const findManyArgs: Prisma.PromoCodeFindManyArgs = {
       where: {
+        type,
         parent: {
           id: {
             in: agent ? agents.map((t) => t.id) : undefined,
@@ -79,7 +82,31 @@ export class PromoCodeService {
         code,
         is_active: numToBooleanSearch(is_active),
       },
+      include: {
+        parent: {
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+            layer: true,
+          },
+        },
+        inviter: {
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+          },
+        },
+        _count: {
+          select: {
+            players: true,
+            agents: true,
+          },
+        },
+      },
     };
+
     return this.prisma.listFormat({
       items: await this.prisma.promoCode.findMany(findManyArgs),
       count: await this.prisma.promoCode.count({ where: findManyArgs.where }),

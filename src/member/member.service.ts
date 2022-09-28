@@ -15,6 +15,7 @@ import { getAllParents } from './raw/getAllParents';
 import { getAllSubs } from './raw/getAllSubs';
 import { getTreeNode, TreeNodeMember } from './raw/getTreeNode';
 import { ResCode } from 'src/errors/enums';
+import { TargetType } from 'src/enums';
 @Injectable()
 export class MemberService {
   constructor(
@@ -64,6 +65,7 @@ export class MemberService {
         layer: parent ? ++parent.layer : 1,
         promos: {
           create: {
+            type: TargetType.AGENT,
             code: promo_code,
           },
         },
@@ -98,9 +100,10 @@ export class MemberService {
     if (record) {
       this.prisma.error(ResCode.DATA_DUPICATED, '帳號不可用');
     }
-    const invitedPromo = await this.prisma.promoCode.findUnique({
+    const invitedPromo = await this.prisma.promoCode.findFirst({
       where: {
         code: invited_code,
+        type: TargetType.AGENT,
       },
       include: {
         parent: {
@@ -128,6 +131,7 @@ export class MemberService {
           invited_code,
           promos: {
             create: {
+              type: TargetType.AGENT,
               code: promo_code,
             },
           },

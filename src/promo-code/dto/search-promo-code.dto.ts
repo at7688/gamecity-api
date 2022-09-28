@@ -1,7 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import { TargetType } from 'src/enums';
 
 export class SearchPromoCode {
+  @IsEnum(TargetType)
+  @IsOptional()
+  type?: TargetType = TargetType.PLAYER;
+
   @IsInt()
   @IsOptional()
   @Transform(({ value }) => +value)

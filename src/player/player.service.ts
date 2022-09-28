@@ -1,3 +1,4 @@
+import { RegisterPlayerDto } from './dto/register-player.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
@@ -13,6 +14,8 @@ import { SearchPlayersDto } from './dto/search-players.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { playerList } from './raw/playerList';
 import { SubAgent, subAgents } from './raw/subAgents';
+import { TargetType } from 'src/enums';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable()
 export class PlayerService {
@@ -32,6 +35,54 @@ export class PlayerService {
     return this.prisma.success(!!record ? 'INVALID' : 'VALID');
   }
 
+  async register(data: RegisterPlayerDto) {
+    const { password, username, nickname, invited_code, phone, email } = data;
+    const hash = await argon2.hash(password);
+
+    const invitedPromo = await this.prisma.promoCode.findFirst({
+      where: {
+        type: TargetType.PLAYER,
+        code: invited_code,
+      },
+    });
+    if (!invitedPromo) {
+      this.prisma.error(ResCode.NOT_FOUND, '推薦碼不可用');
+    }
+    const { parent_id, inviter_id } = invitedPromo;
+
+    // 如果有初始化VIP, 則同時綁定
+    const vip = await this.prisma.vip.findFirst({
+      where: { valid_bet: 0, deposite_min: 0 },
+      orderBy: { name: 'asc' },
+    });
+
+    try {
+      await this.prisma.player.create({
+        data: {
+          username,
+          nickname,
+          agent_id: parent_id,
+          inviter_id,
+          password: hash,
+          vip_id: vip?.id,
+          invited_code,
+          contact:
+            phone || email
+              ? {
+                  create: {
+                    phone,
+                    email: email || null,
+                  },
+                }
+              : undefined,
+        },
+      });
+    } catch (err) {
+      this.prisma.error(ResCode.DB_ERR, JSON.stringify(err));
+    }
+
+    return this.prisma.success();
+  }
   async create(data: CreatePlayerDto, user: LoginUser) {
     const { password, username, nickname, agent_id, phone, email } = data;
     const hash = await argon2.hash(password);

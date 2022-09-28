@@ -1,3 +1,4 @@
+import { RegisterPlayerDto } from './dto/register-player.dto';
 import {
   Body,
   Controller,
@@ -20,7 +21,13 @@ import { PlayerService } from './player.service';
 export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
 
-  @Post()
+  @Post('register')
+  @Public()
+  register(@Body() data: RegisterPlayerDto) {
+    return this.playerService.register(data);
+  }
+
+  @Post('create')
   create(@Body() createPlayerDto: CreatePlayerDto, @User() user: LoginUser) {
     return this.playerService.create(createPlayerDto, user);
   }
