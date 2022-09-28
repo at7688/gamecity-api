@@ -55,6 +55,7 @@ import { PromotionModule } from './promotion/promotion.module';
 import { FeeReportModule } from './fee-report/fee-report.module';
 import { GiftModule } from './gift/gift.module';
 import { ApplicantModule } from './applicant/applicant.module';
+import { PromoCodeModule } from './promo-code/promo-code.module';
 
 @Module({
   imports: [
@@ -119,6 +120,7 @@ import { ApplicantModule } from './applicant/applicant.module';
     FeeReportModule,
     GiftModule,
     ApplicantModule,
+    PromoCodeModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

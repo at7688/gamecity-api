@@ -86,14 +86,18 @@ model Menu {
 }
 
 model PromoCode {
-  code   String  @id
-  is_active Boolean @default(true)
-  type Int @default(1)
-  agent  Member?
-  player Player?
-  created_at DateTime         @default(now()) @db.Timestamptz()
-  note String?
-  ips String[]
+  code       String   @id
+  type Int @default(1) // 會員推廣 代理推廣
+  is_active  Boolean  @default(true)
+  parent     Member  @relation("parent", fields: [parent_id], references: [id])
+  parent_id  String
+  inviter    Player?  @relation("inviter", fields: [inviter_id], references: [id])
+  inviter_id String?
+  players    Player[]
+  agents     Member[]
+  created_at DateTime @default(now()) @db.Timestamptz()
+  note       String?
+  ips        String[]
 }
 
 model ChipsRec {
@@ -174,7 +178,7 @@ model BankDepositRec {
 
   is_first Boolean @default(false) // 是否為該玩家首儲
 
-  promotion Promotion? @relation(fields: [promotion_id], references: [id])
+  promotion    Promotion? @relation(fields: [promotion_id], references: [id])
   promotion_id String?
 }
 
@@ -196,14 +200,14 @@ model WithdrawRec {
 
 model WalletRec {
   id             String     @id @default(cuid())
-  target Int @default(1) // 會員 代理
+  target         Int        @default(1) // 會員 代理
   type           Int // 儲值加點,轉入,轉出,提領扣點,注金加扣,活動贈點,人工加點,人工扣點,金流手續費,退水,佔成
   player         Player?    @relation(fields: [player_id], references: [id])
   player_id      String?
   agent          Member?    @relation(fields: [agent_id], references: [id])
   agent_id       String?
-  origin_balance  Float
-  result_balance  Float
+  origin_balance Float
+  result_balance Float
   amount         Float
   fee            Float      @default(0)
   operator       AdminUser? @relation(fields: [operator_id], references: [id])
@@ -215,24 +219,16 @@ model WalletRec {
   rolling_amount Float?
 }
 
-// model BalanceOperation {
-//   id String @id @default(cuid())
-//   type Int  @default(1) // 代理, 會員
-//   note String?
-//   amount Float
-//   created_at     DateTime   @default(now()) @db.Timestamptz()
-// }
-
 model TransferRec {
-  id               String     @id @default(cuid())
-  source           Member    @relation("source", fields: [source_id], references: [id])
-  source_id        String
-  target     Member    @relation("target_agent", fields: [target_id], references: [id])
-  target_id  String
-  amount           Float
-  inner_note       String?
-  outter_note      String?
-  created_at       DateTime   @default(now()) @db.Timestamptz()
+  id          String   @id @default(cuid())
+  source      Member   @relation("source", fields: [source_id], references: [id])
+  source_id   String
+  target      Member   @relation("target_agent", fields: [target_id], references: [id])
+  target_id   String
+  amount      Float
+  inner_note  String?
+  outter_note String?
+  created_at  DateTime @default(now()) @db.Timestamptz()
 }
 
 model Player {
@@ -244,14 +240,13 @@ model Player {
   updated_at       DateTime            @updatedAt @db.Timestamptz()
   is_active        Boolean             @default(true)
   is_blocked       Boolean             @default(false)
-  promo_code       String?             @unique
   vip_id           String?
   agent_id         String
   inviter_id       String?
   is_lock_bet      Boolean             @default(false)
   agent            Member              @relation(fields: [agent_id], references: [id])
   inviter          Player?             @relation("player", fields: [inviter_id], references: [id])
-  promo            PromoCode?          @relation(fields: [promo_code], references: [code])
+  promos           PromoCode[]         @relation("inviter")
   vip              Vip?                @relation(fields: [vip_id], references: [id])
   bank_deposits    BankDepositRec[]
   withdraws        WithdrawRec[]
@@ -277,6 +272,9 @@ model Player {
 
   gifts Gift[]
 
+  invited      PromoCode? @relation(fields: [invited_code], references: [code])
+  invited_code String?
+
 }
 
 model Member {
@@ -287,13 +285,12 @@ model Member {
   created_at        DateTime      @default(now()) @db.Timestamptz()
   updated_at        DateTime      @updatedAt @db.Timestamptz()
   parent_id         String?
-  promo_code        String?       @unique
   is_active         Boolean       @default(true)
   layer             Int           @default(1)
   is_blocked        Boolean       @default(false)
   balance           Float         @default(0)
   parent            Member?       @relation("agent", fields: [parent_id], references: [id])
-  promo             PromoCode?    @relation(fields: [promo_code], references: [code])
+  promos            PromoCode[]   @relation("parent")
   contact           Contact?
   sended_inboxs     Inbox[]       @relation("from")
   received_inboxs   Inbox[]       @relation("to")
@@ -310,6 +307,9 @@ model Member {
   duty AgentDuty?
 
   gifts Gift[]
+
+  invited      PromoCode? @relation(fields: [invited_code], references: [code])
+  invited_code String?
 }
 
 model AgentDuty {
@@ -468,7 +468,6 @@ model Game {
   @@unique([code, platform_code])
 }
 
-
 model Inbox {
   id             String     @id @default(cuid())
   from_user_id   String?
@@ -587,7 +586,7 @@ model PaymentDepositRec {
 
   is_first Boolean @default(false) // 是否為該玩家首儲
 
-  promotion Promotion? @relation(fields: [promotion_id], references: [id])
+  promotion    Promotion? @relation(fields: [promotion_id], references: [id])
   promotion_id String?
 
   trans_id String? @unique
@@ -671,15 +670,15 @@ model Promotion {
 
   status Int @default(1) // 未開始, 進行中, 已結束
 
-  schedule_type   Int       @default(1) // (活動期間) 無限期 僅一次 月延續 周延續 日延續
-  start_at        DateTime? @db.Timestamptz() // 無限期則留空
-  end_at          DateTime? @db.Timestamptz() // 無限期則留空
+  schedule_type Int       @default(1) // (活動期間) 無限期 僅一次 月延續 周延續 日延續
+  start_at      DateTime? @db.Timestamptz() // 無限期則留空
+  end_at        DateTime? @db.Timestamptz() // 無限期則留空
 
   is_active           Boolean @default(false) // 關閉則佔不開放申請
   apply_approval_type Int     @default(1) // 人工審核 自動審核
 
-  settlement_type Int       @default(1) // (生成禮包時間點) 立即結算 活動結束時結算(排程查看)
-  pay_approval_type   Int     @default(1) // (禮包是否直接派發) 審核派發 免審派發
+  settlement_type   Int @default(1) // (生成禮包時間點) 立即結算 活動結束時結算(排程查看)
+  pay_approval_type Int @default(1) // (禮包是否直接派發) 審核派發 免審派發
 
   vips Vip[]
 
@@ -692,14 +691,14 @@ model Promotion {
   nums_rolling Float @default(1) // 洗碼倍數
 
   game_water GameWater[] // 返水活動(遊戲退水%)
-  valid_bet Int? // 有效投注達標值
+  valid_bet  Int? // 有效投注達標值
 
   recharge_reward RechargeReward? // 儲值活動公式
 
   applicants Applicant[] // 活動報名單
-  gifts Gift[] // 活動禮包
+  gifts      Gift[] // 活動禮包
 
-  bank_deposits BankDepositRec[] // 綁定活動的銀行卡儲值紀錄
+  bank_deposits    BankDepositRec[] // 綁定活動的銀行卡儲值紀錄
   payment_deposits PaymentDepositRec[] // 綁定活動的支付工具儲值紀錄
 
   bet_records BetRecord[]
@@ -733,14 +732,14 @@ model Gift {
 
   type Int @default(1) // 活動禮包 代理轉額禮包
 
-  sender Member? @relation(fields: [sender_id], references: [id])
+  sender    Member? @relation(fields: [sender_id], references: [id])
   sender_id String?
 
   promotion    Promotion? @relation(fields: [promotion_id], references: [id])
   promotion_id String?
 
   applicant    Applicant? @relation(fields: [applicant_id], references: [id])
-  applicant_id String? @unique
+  applicant_id String?    @unique
 
   status Int @default(1) // 未派發, 已派發, 已接收
 
@@ -748,7 +747,7 @@ model Gift {
 
   rolling_amount Float // 洗碼金額 ex: 2,000 (4倍流水)
 
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
   send_at     DateTime? @db.Timestamptz(6)
   recieved_at DateTime? @db.Timestamptz(6)
 }
@@ -761,8 +760,8 @@ model BetRecord {
   status          Int           @default(1) // 投注中 已派彩 已退款
   amount          Float
   valid_amount    Float?
-  rolling_amount    Float?
-  nums_rolling Float @default(1) // 當前遊戲洗碼量紀錄
+  rolling_amount  Float?
+  nums_rolling    Float         @default(1) // 當前遊戲洗碼量紀錄
   win_lose_amount Float?
   bet_at          DateTime      @db.Timestamptz()
   result_at       DateTime?     @db.Timestamptz()
@@ -776,7 +775,7 @@ model BetRecord {
   ratios          BetRatioRec[]
   vip_water       Float         @default(0)
 
-  promotion Promotion? @relation(fields: [promotion_id], references: [id])
+  promotion    Promotion? @relation(fields: [promotion_id], references: [id])
   promotion_id String?
 
   @@unique([bet_no, platform_code])

@@ -29,7 +29,7 @@ async function bootstrap() {
       exceptionFactory(errors) {
         const msgs = errors.map((t) => Object.values(t.constraints)).flat();
         throw new BadRequestException({
-          code: ResCode.FORMAT_ERROR,
+          code: ResCode.FORMAT_ERR,
           msg: msgs?.[0] || '',
         });
       },

@@ -9,7 +9,6 @@ import { JwtService } from '@nestjs/jwt';
 import { AdminUser, Member, Menu, Player, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { Cache } from 'cache-manager';
-import * as IP from 'ip';
 import { playerRolling } from 'src/player/raw/playerRolling';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
@@ -25,16 +24,19 @@ interface AdminRoleLogin {
   user: AdminUser;
   role: string;
   password: string;
+  ip: string;
 }
 interface AgentLogin {
   platform: 'AGENT';
   user: Member;
   password: string;
+  ip: string;
 }
 interface PlayerLogin {
   platform: 'PLAYER';
   user: Player;
   password: string;
+  ip: string;
 }
 
 export type LoginHandlerParams = AdminRoleLogin | AgentLogin | PlayerLogin;
@@ -104,7 +106,7 @@ export class AuthService {
     });
   }
 
-  async adminUserLogin({ username, password }: LoginDto) {
+  async adminUserLogin({ username, password }: LoginDto, ip: string) {
     const user = await this.prisma.adminUser.findUnique({
       where: { username },
       include: {
@@ -117,10 +119,11 @@ export class AuthService {
       password,
       user,
       role: user?.admin_role.code,
+      ip,
     });
   }
 
-  async agentLogin({ username, password }: LoginDto) {
+  async agentLogin({ username, password }: LoginDto, ip: string) {
     const user = await this.prisma.member.findUnique({
       where: { username },
     });
@@ -128,9 +131,10 @@ export class AuthService {
       platform: 'AGENT',
       password,
       user,
+      ip,
     });
   }
-  async playerLogin({ username, password }: LoginDto) {
+  async playerLogin({ username, password }: LoginDto, ip: string) {
     const user = await this.prisma.player.findUnique({
       where: { username },
       include: {
@@ -148,6 +152,7 @@ export class AuthService {
       platform: 'PLAYER',
       password,
       user,
+      ip,
     });
   }
 
@@ -159,7 +164,7 @@ export class AuthService {
     }
   }
 
-  async loginErrHandler({ user, password, ...params }: LoginHandlerParams) {
+  async loginErrHandler({ user, password, ip, ...params }: LoginHandlerParams) {
     // 獲取帳戶失敗
     if (!user) {
       throw new BadRequestException('user is not exist');
@@ -190,7 +195,7 @@ export class AuthService {
               username: user.username,
             },
           },
-          ip: IP.address(),
+          ip,
           nums_failed: 0,
           platform: this.platform,
         },
@@ -270,7 +275,7 @@ export class AuthService {
               username: user.username,
             },
           },
-          ip: IP.address(),
+          ip,
           failed_msg,
           nums_failed,
           platform: this.platform,

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "PromoCode" ADD COLUMN     "type" INTEGER NOT NULL DEFAULT 1;

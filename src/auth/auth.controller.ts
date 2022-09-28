@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PlatformType, Player } from '@prisma/client';
+import { Request } from 'express';
 import { User } from 'src/decorators/user.decorator';
 import { Platforms } from 'src/metas/platforms.meta';
 import { Public } from 'src/metas/public.meta';
@@ -21,14 +22,14 @@ export class AuthController {
 
   @Post('login')
   @Public()
-  async login(@Body() body: LoginDto) {
+  async login(@Body() body: LoginDto, @Req() req: Request) {
     switch (this.platform) {
       case PlatformType.ADMIN:
-        return this.authService.adminUserLogin(body);
+        return this.authService.adminUserLogin(body, req.ip);
       case PlatformType.AGENT:
-        return this.authService.agentLogin(body);
+        return this.authService.agentLogin(body, req.ip);
       case PlatformType.PLAYER:
-        return this.authService.playerLogin(body);
+        return this.authService.playerLogin(body, req.ip);
 
       default:
         break;
@@ -37,7 +38,7 @@ export class AuthController {
 
   @Post('logout')
   @Public()
-  async logout(@Request() req) {
+  async logout(@Req() req) {
     return this.prisma.success();
   }
 
