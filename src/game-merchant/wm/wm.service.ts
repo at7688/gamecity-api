@@ -61,7 +61,6 @@ export class WmService {
         data,
         res.data,
       );
-      this.prisma.error(ResCode.GAME_MERCHANT_ERR, JSON.stringify(res.data));
     }
     return res.data;
   }
@@ -162,11 +161,18 @@ export class WmService {
     return res.result;
   }
 
-  async transferTo(player: Player) {
+  async transferTo(_player: Player) {
+    const player = await this.prisma.player.findUnique({
+      where: { id: _player.id },
+    });
+
+    if (player.balance <= 0) {
+      return;
+    }
     const trans_id = uuidv4();
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_TO_GAME,
+        type: WalletRecType.TRANS_TO_GAME,
         player_id: player.id,
         amount: -player.balance,
         source: this.platformCode,
@@ -188,10 +194,10 @@ export class WmService {
     try {
       const res = await this.request<WmTransferToRes>(reqConfig);
       // 紀錄轉入
-      await this.gameMerchantService.transferRecord(
+      await this.gameMerchantService.transToRec(
         player,
         this.platformCode,
-        true,
+        player.balance,
       );
 
       return res;
@@ -208,12 +214,11 @@ export class WmService {
   async transferBack(player: Player) {
     const balance = await this.getBalance(player);
 
-    const trans_id = uuidv4();
-
     if (balance > 0) {
+      const trans_id = uuidv4();
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
-          type: WalletRecType.TRANSFER_FROM_GAME,
+          type: WalletRecType.TRANS_FROM_GAME,
           player_id: player.id,
           amount: balance,
           source: this.platformCode,
@@ -244,15 +249,13 @@ export class WmService {
     }
 
     // 紀錄轉回
-    await this.gameMerchantService.transferRecord(
+    await this.gameMerchantService.transBackRec(
       player,
       this.platformCode,
-      false,
+      balance,
     );
 
-    return {
-      balance, // 轉回的餘額
-    };
+    return this.prisma.success(balance);
   }
 
   async login(game_id: string, player: Player) {
@@ -271,17 +274,9 @@ export class WmService {
 
     const gameUrl = await this.getGameLink(player, game_id);
 
-    const currentPlayer = await this.prisma.player.findUnique({
-      where: { id: player.id },
-    });
+    await this.transferTo(player);
 
-    if (currentPlayer.balance) {
-      await this.transferTo(currentPlayer);
-    }
-
-    return {
-      path: gameUrl,
-    };
+    return this.prisma.success(gameUrl);
   }
 
   async getBalance(player: Player) {

@@ -37,6 +37,7 @@ export class GiftAgentService {
         amount,
         rolling_amount: amount * nums_rolling,
         status: GiftStatus.SENT,
+        send_at: new Date(),
       },
     });
     return this.prisma.success();

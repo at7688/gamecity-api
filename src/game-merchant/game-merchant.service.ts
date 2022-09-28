@@ -72,12 +72,14 @@ export class GameMerchantService {
         resData,
       },
     });
+
+    this.prisma.error(ResCode.GAME_MERCHANT_ERR, JSON.stringify(resData));
   }
 
   async transferToErrorHandle(trans_id, platform_code: string, player: Player) {
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_TO_GAME_CANCELED,
+        type: WalletRecType.TRANS_TO_GAME_CANCELED,
         player_id: player.id,
         amount: player.balance,
         source: platform_code,
@@ -95,7 +97,7 @@ export class GameMerchantService {
   ) {
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_FROM_GAME_CANCELED,
+        type: WalletRecType.TRANS_FROM_GAME_CANCELED,
         player_id: player.id,
         amount: player.balance,
         source: platform_code,
@@ -121,7 +123,8 @@ export class GameMerchantService {
     ]);
   }
 
-  transferRecord(player: Player, platform_code: string, isTransTo: boolean) {
+  transToRec(player: Player, platform_code: string, credit: number) {
+    console.log('transToRec', credit);
     return this.prisma.gameAccount.update({
       where: {
         platform_code_player_id: {
@@ -130,7 +133,25 @@ export class GameMerchantService {
         },
       },
       data: {
-        has_credit: isTransTo,
+        credit: {
+          increment: credit,
+        },
+      },
+    });
+  }
+  transBackRec(player: Player, platform_code: string, credit: number) {
+    console.log('transBackRec', credit);
+    return this.prisma.gameAccount.update({
+      where: {
+        platform_code_player_id: {
+          player_id: player.id,
+          platform_code,
+        },
+      },
+      data: {
+        credit: {
+          decrement: credit,
+        },
       },
     });
   }

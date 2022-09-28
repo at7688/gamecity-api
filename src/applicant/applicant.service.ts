@@ -111,6 +111,10 @@ export class ApplicantService {
               promotion.pay_approval_type === ApprovalType.AUTO
                 ? GiftStatus.SENT
                 : GiftStatus.UNPROCESSED,
+            send_at:
+              promotion.pay_approval_type === ApprovalType.AUTO
+                ? new Date()
+                : null,
           },
         }),
       ]);
@@ -194,6 +198,10 @@ export class ApplicantService {
               promotion.pay_approval_type === ApprovalType.AUTO
                 ? GiftStatus.SENT
                 : GiftStatus.UNPROCESSED,
+            send_at:
+              promotion.pay_approval_type === ApprovalType.AUTO
+                ? new Date()
+                : null,
           },
         }),
       ]);

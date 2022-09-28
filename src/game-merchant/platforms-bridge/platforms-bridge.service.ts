@@ -76,9 +76,12 @@ export class PlatformsBridgeService {
     const platforms = await this.prisma.gameAccount.findMany({
       where: {
         player_id: player.id,
-        has_credit: true,
+        credit: {
+          gt: 0,
+        },
       },
     });
+    console.log(platforms);
     const result = await Promise.all(
       platforms.map((t) => this.gameHub[t.platform_code].transferBack(player)),
     );

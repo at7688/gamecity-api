@@ -63,7 +63,13 @@ export class OgService {
       const res = await axios.request<T>(axiosConfig);
       console.log(res.data);
       if (res.data.status !== 'success') {
-        throw new Error(JSON.stringify(res.data.data));
+        await this.gameMerchantService.requestErrorHandle(
+          this.platformCode,
+          path,
+          method,
+          data,
+          res.data,
+        );
       }
       await this.prisma.merchantLog.create({
         data: {
@@ -301,11 +307,18 @@ export class OgService {
     return res.data.url;
   }
 
-  async transferTo(player: Player) {
+  async transferTo(_player: Player) {
+    const player = await this.prisma.player.findUnique({
+      where: { id: _player.id },
+    });
+
+    if (player.balance <= 0) {
+      return;
+    }
     const trans_id = uuidv4();
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_TO_GAME,
+        type: WalletRecType.TRANS_TO_GAME,
         player_id: player.id,
         amount: -player.balance,
         source: this.platformCode,
@@ -324,34 +337,33 @@ export class OgService {
       },
     };
 
-    const res = await this.request<OgTransferToRes>(reqConfig);
+    try {
+      const res = await this.request<OgTransferToRes>(reqConfig);
+      // 紀錄轉入
+      await this.gameMerchantService.transToRec(
+        player,
+        this.platformCode,
+        player.balance,
+      );
 
-    if (!res) {
+      return res;
+    } catch (err) {
       await this.gameMerchantService.transferToErrorHandle(
         trans_id,
         this.platformCode,
         player,
       );
+      throw err;
     }
-
-    // 紀錄轉入
-    await this.gameMerchantService.transferRecord(
-      player,
-      this.platformCode,
-      true,
-    );
-
-    return res.data;
   }
 
   async transferBack(player: Player) {
     const balance = await this.getBalance(player);
-    const trans_id = uuidv4();
-
     if (balance > 0) {
+      const trans_id = uuidv4();
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
-          type: WalletRecType.TRANSFER_FROM_GAME,
+          type: WalletRecType.TRANS_FROM_GAME,
           player_id: player.id,
           amount: balance,
           source: this.platformCode,
@@ -369,19 +381,26 @@ export class OgService {
         },
       };
 
-      await this.request<OgTransferBackRes>(reqConfig);
+      try {
+        await this.request<OgTransferBackRes>(reqConfig);
+      } catch (err) {
+        await this.gameMerchantService.transferToErrorHandle(
+          trans_id,
+          this.platformCode,
+          player,
+        );
+        throw err;
+      }
     }
 
     // 紀錄轉回
-    await this.gameMerchantService.transferRecord(
+    await this.gameMerchantService.transBackRec(
       player,
       this.platformCode,
-      false,
+      balance,
     );
 
-    return {
-      balance, // 轉回的餘額
-    };
+    return this.prisma.success(balance);
   }
 
   async login(player: Player) {
@@ -406,17 +425,9 @@ export class OgService {
 
     const gameUrl = await this.getGameLink(gameKey);
 
-    const currentPlayer = await this.prisma.player.findUnique({
-      where: { id: player.id },
-    });
+    await this.transferTo(player);
 
-    if (currentPlayer.balance) {
-      await this.transferTo(currentPlayer);
-    }
-
-    return {
-      path: gameUrl,
-    };
+    return this.prisma.success(gameUrl);
   }
 
   async getBalance(player: Player) {

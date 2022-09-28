@@ -90,7 +90,13 @@ export class AbService {
     try {
       const res = await axios.request<T>(axiosConfig);
       if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
-        throw new BadRequestException(JSON.stringify(res.data));
+        await this.gameMerchantService.requestErrorHandle(
+          this.platformCode,
+          path,
+          method,
+          data,
+          res.data,
+        );
       }
       await this.prisma.merchantLog.create({
         data: {
@@ -184,12 +190,20 @@ export class AbService {
     return res.data.gameLoginUrl;
   }
 
-  async transferTo(player: Player) {
+  async transferTo(_player: Player) {
+    const player = await this.prisma.player.findUnique({
+      where: { id: _player.id },
+    });
+
+    if (player.balance <= 0) {
+      return;
+    }
+
     const trans_id = this.operatorId + uuidv4().substring(0, 13);
 
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_TO_GAME,
+        type: WalletRecType.TRANS_TO_GAME,
         player_id: player.id,
         amount: -player.balance,
         source: this.platformCode,
@@ -209,24 +223,24 @@ export class AbService {
       },
     };
 
-    const res = await this.request<AbTransferToRes>(reqConfig);
+    try {
+      const res = await this.request<AbTransferToRes>(reqConfig);
+      // 紀錄轉入
+      await this.gameMerchantService.transToRec(
+        player,
+        this.platformCode,
+        player.balance,
+      );
 
-    if (!res) {
+      return res;
+    } catch (err) {
       await this.gameMerchantService.transferToErrorHandle(
         trans_id,
         this.platformCode,
         player,
       );
+      throw err;
     }
-
-    // 紀錄轉入
-    await this.gameMerchantService.transferRecord(
-      player,
-      this.platformCode,
-      true,
-    );
-
-    return res.data;
   }
 
   async transferBack(player: Player) {
@@ -234,6 +248,15 @@ export class AbService {
 
     if (balance > 0) {
       const trans_id = this.operatorId + uuidv4().substring(0, 13);
+      await this.prisma.$transaction([
+        ...(await this.walletRecService.playerCreate({
+          type: WalletRecType.TRANS_FROM_GAME,
+          player_id: player.id,
+          amount: balance,
+          source: this.platformCode,
+          relative_id: trans_id,
+        })),
+      ]);
       const reqConfig: AbReqBase<AbTransferBackReq> = {
         method: 'POST',
         path: '/Transfer',
@@ -246,30 +269,25 @@ export class AbService {
         },
       };
 
-      const res = await this.request<AbTransferBackRes>(reqConfig);
-      if (res.resultCode === 'OK') {
-        await this.prisma.$transaction([
-          ...(await this.walletRecService.playerCreate({
-            type: WalletRecType.TRANSFER_FROM_GAME,
-            player_id: player.id,
-            amount: balance,
-            source: this.platformCode,
-            relative_id: trans_id,
-          })),
-        ]);
+      try {
+        await this.request<AbTransferBackRes>(reqConfig);
+        // 紀錄轉回
+        await this.gameMerchantService.transBackRec(
+          player,
+          this.platformCode,
+          balance,
+        );
+      } catch (err) {
+        await this.gameMerchantService.transferToErrorHandle(
+          trans_id,
+          this.platformCode,
+          player,
+        );
+        throw err;
       }
     }
 
-    // 紀錄轉回
-    await this.gameMerchantService.transferRecord(
-      player,
-      this.platformCode,
-      false,
-    );
-
-    return {
-      balance, // 轉回的餘額
-    };
+    return this.prisma.success(balance);
   }
 
   async login(player: Player) {
@@ -288,17 +306,9 @@ export class AbService {
 
     const gameUrl = await this.getGameLink(player);
 
-    const currentPlayer = await this.prisma.player.findUnique({
-      where: { id: player.id },
-    });
+    await this.transferTo(player);
 
-    if (currentPlayer.balance) {
-      await this.transferTo(currentPlayer);
-    }
-
-    return {
-      path: gameUrl,
-    };
+    return this.prisma.success(gameUrl);
   }
 
   async getBalance(player: Player) {

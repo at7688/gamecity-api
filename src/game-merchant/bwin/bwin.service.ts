@@ -50,7 +50,13 @@ export class BwinService {
       const res = await axios.request<T>(axiosConfig);
       // console.log(res.data);
       if (res.data.error) {
-        throw new Error(res.data.error.message);
+        await this.gameMerchantService.requestErrorHandle(
+          this.platformCode,
+          path,
+          method,
+          data,
+          res.data,
+        );
       }
       return res.data;
     } catch (err) {
@@ -157,11 +163,18 @@ export class BwinService {
     return res.data.url;
   }
 
-  async transferTo(player: Player) {
+  async transferTo(_player: Player) {
+    const player = await this.prisma.player.findUnique({
+      where: { id: _player.id },
+    });
+
+    if (player.balance <= 0) {
+      return;
+    }
     const trans_id = uuidv4();
     await this.prisma.$transaction([
       ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANSFER_TO_GAME,
+        type: WalletRecType.TRANS_TO_GAME,
         player_id: player.id,
         amount: -player.balance,
         source: this.platformCode,
@@ -190,10 +203,10 @@ export class BwinService {
     }
 
     // 紀錄轉入
-    await this.gameMerchantService.transferRecord(
+    await this.gameMerchantService.transToRec(
       player,
       this.platformCode,
-      true,
+      player.balance,
     );
 
     return res.data;
@@ -201,12 +214,12 @@ export class BwinService {
 
   async transferBack(player: Player) {
     const balance = await this.getBalance(player);
-    const trans_id = uuidv4();
 
     if (balance > 0) {
+      const trans_id = uuidv4();
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
-          type: WalletRecType.TRANSFER_FROM_GAME,
+          type: WalletRecType.TRANS_FROM_GAME,
           player_id: player.id,
           amount: balance,
           source: this.platformCode,
@@ -223,19 +236,26 @@ export class BwinService {
         },
       };
 
-      await this.request<BwinTransferBackRes>(reqConfig);
+      try {
+        await this.request<BwinTransferBackRes>(reqConfig);
+      } catch (err) {
+        await this.gameMerchantService.transferToErrorHandle(
+          trans_id,
+          this.platformCode,
+          player,
+        );
+        throw err;
+      }
     }
 
     // 紀錄轉回
-    await this.gameMerchantService.transferRecord(
+    await this.gameMerchantService.transBackRec(
       player,
       this.platformCode,
-      false,
+      balance,
     );
 
-    return {
-      balance, // 轉回的餘額
-    };
+    return this.prisma.success(balance);
   }
 
   async login(game_id: string, player: Player) {
@@ -257,17 +277,9 @@ export class BwinService {
 
     const gameUrl = await this.getGameLink(player, game_id);
 
-    const currentPlayer = await this.prisma.player.findUnique({
-      where: { id: player.id },
-    });
+    await this.transferTo(player);
 
-    if (currentPlayer.balance) {
-      await this.transferTo(currentPlayer);
-    }
-
-    return {
-      path: gameUrl,
-    };
+    return this.prisma.success(gameUrl);
   }
 
   async getBalance(player: Player) {
