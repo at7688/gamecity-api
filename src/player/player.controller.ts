@@ -9,19 +9,26 @@ import {
   Query,
 } from '@nestjs/common';
 import { User } from 'src/decorators/user.decorator';
+import { Public } from 'src/metas/public.meta';
 import { LoginUser } from 'src/types';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { SearchPlayersDto } from './dto/search-players.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { PlayerService } from './player.service';
 
-@Controller('players')
+@Controller('player')
 export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
 
   @Post()
   create(@Body() createPlayerDto: CreatePlayerDto, @User() user: LoginUser) {
     return this.playerService.create(createPlayerDto, user);
+  }
+
+  @Post('validate/:username')
+  @Public()
+  validate(@Param('username') username: string) {
+    return this.playerService.validate(username);
   }
 
   @Get()

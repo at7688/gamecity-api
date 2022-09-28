@@ -1,18 +1,18 @@
-import { getAllParents } from './../member/raw/getAllParents';
-import { SearchPlayersDto } from './dto/search-players.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreatePlayerDto } from './dto/create-player.dto';
-import { UpdatePlayerDto } from './dto/update-player.dto';
-import { LoginUser } from 'src/types';
-import { Member, Player, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { MemberService } from 'src/member/member.service';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
-import { SubAgent, subAgents } from './raw/subAgents';
-import { playerList } from './raw/playerList';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { LoginUser } from 'src/types';
 import { numToBooleanSearch } from 'src/utils';
+import { getAllParents } from './../member/raw/getAllParents';
+import { CreatePlayerDto } from './dto/create-player.dto';
+import { SearchPlayersDto } from './dto/search-players.dto';
+import { UpdatePlayerDto } from './dto/update-player.dto';
+import { playerList } from './raw/playerList';
+import { SubAgent, subAgents } from './raw/subAgents';
 
 @Injectable()
 export class PlayerService {
@@ -22,6 +22,15 @@ export class PlayerService {
     private readonly memberService: MemberService,
   ) {}
   isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
+
+  async validate(username: string) {
+    const record = await this.prisma.player.findUnique({
+      where: {
+        username,
+      },
+    });
+    return this.prisma.success(!!record ? 'INVALID' : 'VALID');
+  }
 
   async create(data: CreatePlayerDto, user: LoginUser) {
     const { password, username, nickname, agent_id, phone, email } = data;

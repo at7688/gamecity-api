@@ -32,6 +32,7 @@ export class PromoCodeController {
   validate(@Param('code') code: string) {
     return this.promoCodeService.validate(code);
   }
+
   @Post('create')
   create(@Body() createPromoCodeDto: CreatePromoCodeDto) {
     return this.promoCodeService.create(createPromoCodeDto);
