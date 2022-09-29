@@ -1,3 +1,4 @@
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
 import { WalletRecModule } from 'src/wallet-rec/wallet-rec.module';
@@ -19,6 +20,7 @@ import { OgService } from './og/og.service';
 import { OgTaskService } from './og/og.task.service';
 import { PlatformsBridgeController } from './platforms-bridge/platforms-bridge.controller';
 import { PlatformsBridgeService } from './platforms-bridge/platforms-bridge.service';
+import { TransferProcessor } from './transfer/transfer.processor';
 import { WmController } from './wm/wm.controller';
 import { WmService } from './wm/wm.service';
 import { WmTaskService } from './wm/wm.task.service';
@@ -27,7 +29,13 @@ import { ZgService } from './zg/zg.service';
 import { ZgTaskService } from './zg/zg.task.service';
 
 @Module({
-  imports: [WalletRecModule, AuthModule],
+  imports: [
+    WalletRecModule,
+    AuthModule,
+    BullModule.registerQueue({
+      name: 'transfer',
+    }),
+  ],
   controllers: [
     AbController,
     BngController,
@@ -55,6 +63,7 @@ import { ZgTaskService } from './zg/zg.task.service';
     GameMerchantService,
     GrTaskService,
     PlatformsBridgeService,
+    TransferProcessor,
   ],
 })
 export class GameMerchantModule {}

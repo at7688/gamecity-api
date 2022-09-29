@@ -10,12 +10,19 @@ import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { ResCode } from 'src/errors/enums';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { TransferQueue } from './types';
+import { CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class GameMerchantService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletRecService: WalletRecService,
+
+    @InjectQueue('transfer')
+    private readonly transferQueue: Queue<TransferQueue>,
   ) {}
 
   async validateGame(platform_code: string, game_code: string) {
@@ -87,6 +94,18 @@ export class GameMerchantService {
         note: '轉入遊戲失敗',
       })),
     ]);
+    await this.transferQueue.add(
+      platform_code,
+      {
+        platform_code,
+        trans_id,
+        player_id: player.id,
+        retryTimes: 1,
+      },
+      {
+        delay: 1000 * 60,
+      },
+    );
     this.prisma.error(ResCode.TRANS_TO_GAME_ERR, '轉入遊戲失敗');
   }
 

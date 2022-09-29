@@ -56,6 +56,7 @@ import { FeeReportModule } from './fee-report/fee-report.module';
 import { GiftModule } from './gift/gift.module';
 import { ApplicantModule } from './applicant/applicant.module';
 import { PromoCodeModule } from './promo-code/promo-code.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -121,6 +122,12 @@ import { PromoCodeModule } from './promo-code/promo-code.module';
     GiftModule,
     ApplicantModule,
     PromoCodeModule,
+    BullModule.forRoot({
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
   ],
   controllers: [AppController, UploadsController, BankController],
 

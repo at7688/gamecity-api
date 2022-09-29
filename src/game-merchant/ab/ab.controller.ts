@@ -42,4 +42,8 @@ export class AbController {
   fetchBetRecord(@Param('id') id) {
     return this.abService.fetchBetRecord(id);
   }
+  @Get('transCheck/:trans_id')
+  transferCheck(@Param('trans_id') trans_id: string) {
+    return this.abService.transferCheck(trans_id);
+  }
 }

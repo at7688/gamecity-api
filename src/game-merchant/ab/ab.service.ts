@@ -1,6 +1,9 @@
+import { AbTransferCheckReq, AbTransferCheckRes } from './types/transferCheck';
+import { InjectQueue } from '@nestjs/bull';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
+import { Queue } from 'bull';
 import * as CryptoJS from 'crypto-js';
 import { format } from 'date-fns';
 import * as qs from 'query-string';
@@ -89,6 +92,7 @@ export class AbService {
     };
     try {
       const res = await axios.request<T>(axiosConfig);
+
       if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
         await this.gameMerchantService.requestErrorHandle(
           this.platformCode,
@@ -190,6 +194,23 @@ export class AbService {
     return res.data.gameLoginUrl;
   }
 
+  async transferCheck(trans_id: string) {
+    const reqConfig: AbReqBase<AbTransferCheckReq> = {
+      method: 'POST',
+      path: '/GetTransferState',
+      data: {
+        sn: trans_id,
+      },
+    };
+
+    try {
+      const res = await this.request<AbTransferCheckRes>(reqConfig);
+      return res.data.transferState === 1;
+    } catch (err) {
+      return false;
+    }
+  }
+
   async transferTo(_player: Player) {
     const player = await this.prisma.player.findUnique({
       where: { id: _player.id },
@@ -225,6 +246,8 @@ export class AbService {
 
     try {
       const res = await this.request<AbTransferToRes>(reqConfig);
+
+      throw new Error('ab transfer error testing');
       // 紀錄轉入
       await this.gameMerchantService.transToRec(
         player,
