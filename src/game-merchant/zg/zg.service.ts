@@ -19,6 +19,7 @@ import { ZgGameListRes } from './types/gameList';
 import { ZgGetBalanceReq, ZgGetBalanceRes } from './types/getBalance';
 import { ZgGetGameLinkReq, ZgGetGameLinkRes } from './types/getGameLink';
 import { ZgTransferBackReq, ZgTransferBackRes } from './types/transferBack';
+import { ZgTransferCheckReq, ZgTransferCheckRes } from './types/transferCheck';
 import { ZgTransferToReq, ZgTransferToRes } from './types/transferTo';
 
 @Injectable()
@@ -171,8 +172,41 @@ export class ZgService {
     return res.url;
   }
 
-  transferCheck(trans_id: string) {
-    return TransferStatus.SUCCESS;
+  async transferCheck(trans_id: string) {
+    const record = await this.prisma.walletRec.findFirst({
+      where: {
+        type: {
+          in: [WalletRecType.TRANS_TO_GAME, WalletRecType.TRANS_FROM_GAME],
+        },
+        source: this.platformCode,
+        relative_id: trans_id,
+      },
+      include: {
+        player: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+    const reqConfig: ZgReqBase<ZgTransferCheckReq> = {
+      method: 'POST',
+      path: '/v1/trans/verify',
+      data: {
+        agent: this.agentAcc,
+        account: record.player.username,
+        serial: trans_id,
+      },
+    };
+    const res = await this.request<ZgTransferCheckRes>(reqConfig);
+    if (res.result.code === 1) {
+      return TransferStatus.SUCCESS;
+    }
+    if (res.result.code === 6) {
+      return TransferStatus.FAILED;
+    }
+
+    return TransferStatus.PENDING;
   }
 
   async transferTo(player: Player) {
