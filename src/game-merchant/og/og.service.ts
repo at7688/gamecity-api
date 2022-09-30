@@ -30,6 +30,7 @@ import { OgTransferToReq, OgTransferToRes } from './types/transferTo';
 import { Cache } from 'cache-manager';
 import { TransferStatus } from '../transfer/enums';
 import { ResCode } from 'src/errors/enums';
+import { OgTransferCheckReq, OgTransferCheckRes } from './types/transferCheck';
 @Injectable()
 export class OgService {
   constructor(
@@ -310,7 +311,39 @@ export class OgService {
   }
 
   async transferCheck(trans_id: string) {
-    return TransferStatus.SUCCESS;
+    const record = await this.prisma.walletRec.findFirst({
+      where: {
+        type: {
+          in: [WalletRecType.TRANS_TO_GAME, WalletRecType.TRANS_FROM_GAME],
+        },
+        source: this.platformCode,
+        relative_id: trans_id,
+      },
+      include: {
+        player: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+    const reqConfig: OgReqBase<OgTransferCheckReq> = {
+      method: 'POST',
+      path: `/game-providers/${this.providerId}/confirm-transfer`,
+      params: {
+        username: record.player.username,
+        transferId: trans_id,
+      },
+    };
+    const res = await this.request<OgTransferCheckRes>(reqConfig);
+    if (res.data.message === 'Transfer not found.') {
+      return TransferStatus.FAILED;
+    }
+    if (res.status === 'success') {
+      return TransferStatus.SUCCESS;
+    }
+
+    return TransferStatus.PENDING;
   }
 
   async transferTo(player: Player) {
