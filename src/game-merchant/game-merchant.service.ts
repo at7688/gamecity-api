@@ -137,7 +137,7 @@ export class GameMerchantService {
     });
 
     if (player.balance <= 0) {
-      return;
+      return 0;
     }
 
     await this.prisma.$transaction([
@@ -150,6 +150,7 @@ export class GameMerchantService {
         status: WalletStatus.PROCESSING,
       })),
     ]);
+    return player.balance;
   }
 
   async transToSuccess(trans_id: string) {

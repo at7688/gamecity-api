@@ -11,5 +11,5 @@ export type BngTransferCheckRes = BngResBase<{
   type: string;
   amount: string;
   balance: string;
-  status: string;
+  status: 'pending' | 'transferred'; // 交易狀態 (pending:擱置 transferred:交易已完成)
 }>;

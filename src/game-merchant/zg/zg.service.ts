@@ -177,7 +177,7 @@ export class ZgService {
 
   async transferTo(player: Player) {
     const trans_id = uuidv4();
-    await this.gameMerchantService.beforeTransTo(
+    const amount = await this.gameMerchantService.beforeTransTo(
       player,
       this.platformCode,
       trans_id,
@@ -190,7 +190,7 @@ export class ZgService {
         serial: trans_id,
         agent: this.agentAcc,
         account: player.username,
-        amount: player.balance.toString(),
+        amount: amount.toString(),
         oper_type: 1,
       },
     };

@@ -214,7 +214,7 @@ export class AbService {
   async transferTo(player: Player) {
     const trans_id = this.operatorId + uuidv4().substring(0, 13);
 
-    await this.gameMerchantService.beforeTransTo(
+    const amount = await this.gameMerchantService.beforeTransTo(
       player,
       this.platformCode,
       trans_id,
@@ -226,7 +226,7 @@ export class AbService {
       data: {
         sn: trans_id,
         agent: this.agentAcc,
-        amount: player.balance,
+        amount,
         player: player.username + this.suffix,
         type: 1,
       },
