@@ -1,31 +1,48 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job, Queue } from 'bull';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { AbService } from '../ab/ab.service';
 import { TransferQueue } from '../types';
+import { TransferStatus } from './enums';
 
 @Processor('transfer')
 export class TransferProcessor {
   constructor(
+    private readonly prisma: PrismaService,
+    private readonly walletRecService: WalletRecService,
     private readonly abService: AbService,
     @InjectQueue('transfer')
     private readonly transferQueue: Queue<TransferQueue>,
   ) {}
   private readonly Logger = new Logger(TransferProcessor.name);
 
-  @Process('ab')
-  async abTransConsumer(job: Job<TransferQueue>) {
-    const trans_id = job.data.trans_id;
+  @Process('transTo')
+  async transToConsumer(job: Job<TransferQueue>) {
+    const { platform_code, trans_id } = job.data;
     let { retryTimes } = job.data;
-    this.Logger.log(`AB_TRANS_CHECKER (${trans_id})`);
-    const isPass = await this.abService.transferCheck(trans_id);
+    this.Logger.log(`TRANS_TO_CHECKER (${platform_code})`);
 
-    if (!isPass) {
+    try {
+      const status = await this.abService.transferCheck(trans_id);
+
+      if (status === TransferStatus.SUCCESS) {
+        await this.transToRetrySuccess(trans_id);
+      }
+      if (status === TransferStatus.FAILED) {
+        await this.transToRetryFailed(trans_id);
+      }
+      if (status === TransferStatus.PENDING) {
+        throw new Error('pending');
+      }
+    } catch (err) {
       if (retryTimes >= 4) {
+        await this.transToRetryFailed(trans_id);
         return;
       }
       await this.transferQueue.add(
-        'ab',
         {
           ...job.data,
           retryTimes: ++retryTimes,
@@ -35,9 +52,46 @@ export class TransferProcessor {
           // 第2次: 30分, 第3次: 60分, 第4次: 120分
         },
       );
-      return;
     }
+  }
+  async transToRetryFailed(trans_id: string) {
+    const record = await this.prisma.walletRec.findFirst({
+      where: {
+        relative_id: trans_id,
+        type: WalletRecType.TRANS_TO_GAME,
+      },
+    });
 
-    console.log(`Job Sucess!`);
+    await this.prisma.$transaction([
+      this.prisma.walletRec.updateMany({
+        where: {
+          relative_id: trans_id,
+          type: WalletRecType.TRANS_TO_GAME,
+        },
+        data: {
+          status: WalletStatus.FAILED,
+        },
+      }),
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.TRANS_TO_GAME_CANCELED,
+        player_id: record.player_id,
+        amount: Math.abs(record.amount),
+        source: record.source,
+        relative_id: trans_id,
+        note: '轉入遊戲失敗',
+      })),
+    ]);
+  }
+
+  async transToRetrySuccess(trans_id: string) {
+    await this.prisma.walletRec.updateMany({
+      where: {
+        relative_id: trans_id,
+        type: WalletRecType.TRANS_TO_GAME,
+      },
+      data: {
+        status: WalletStatus.DONE,
+      },
+    });
   }
 }

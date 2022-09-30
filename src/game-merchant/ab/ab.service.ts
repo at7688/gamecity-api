@@ -10,7 +10,7 @@ import * as qs from 'query-string';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WalletRecType } from 'src/wallet-rec/enums';
+import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
@@ -22,6 +22,8 @@ import { AbGetBalanceReq, AbGetBalanceRes } from './types/getBalance';
 import { AbGetGameLinkReq, AbGetGameLinkRes } from './types/getGameLink';
 import { AbTransferBackReq, AbTransferBackRes } from './types/transferBack';
 import { AbTransferToReq, AbTransferToRes } from './types/transferTo';
+import { ResCode } from 'src/errors/enums';
+import { TransferStatus } from '../transfer/enums';
 
 @Injectable()
 export class AbService {
@@ -203,12 +205,12 @@ export class AbService {
       },
     };
 
-    try {
-      const res = await this.request<AbTransferCheckRes>(reqConfig);
-      return res.data.transferState === 1;
-    } catch (err) {
-      return false;
-    }
+    const res = await this.request<AbTransferCheckRes>(reqConfig);
+    return {
+      0: TransferStatus.PENDING,
+      1: TransferStatus.SUCCESS,
+      2: TransferStatus.FAILED,
+    }[res.data.transferState];
   }
 
   async transferTo(_player: Player) {
@@ -229,6 +231,7 @@ export class AbService {
         amount: -player.balance,
         source: this.platformCode,
         relative_id: trans_id,
+        status: WalletStatus.PROCESSING,
       })),
     ]);
 
@@ -247,13 +250,11 @@ export class AbService {
     try {
       const res = await this.request<AbTransferToRes>(reqConfig);
 
-      throw new Error('ab transfer error testing');
-      // 紀錄轉入
-      await this.gameMerchantService.transToRec(
-        player,
-        this.platformCode,
-        player.balance,
-      );
+      try {
+        await this.gameMerchantService.transToSuccess(trans_id);
+      } catch (err) {
+        this.prisma.error(ResCode.EXCEPTION_ERR);
+      }
 
       return res;
     } catch (err) {
@@ -269,8 +270,27 @@ export class AbService {
   async transferBack(player: Player) {
     const balance = await this.getBalance(player);
 
-    if (balance > 0) {
-      const trans_id = this.operatorId + uuidv4().substring(0, 13);
+    if (balance <= 0) {
+      return this.prisma.success(0);
+    }
+
+    const trans_id = this.operatorId + uuidv4().substring(0, 13);
+
+    const reqConfig: AbReqBase<AbTransferBackReq> = {
+      method: 'POST',
+      path: '/Transfer',
+      data: {
+        sn: trans_id,
+        agent: this.agentAcc,
+        amount: balance,
+        player: player.username + this.suffix,
+        type: 0,
+      },
+    };
+
+    try {
+      await this.request<AbTransferBackRes>(reqConfig);
+
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
           type: WalletRecType.TRANS_FROM_GAME,
@@ -280,37 +300,18 @@ export class AbService {
           relative_id: trans_id,
         })),
       ]);
-      const reqConfig: AbReqBase<AbTransferBackReq> = {
-        method: 'POST',
-        path: '/Transfer',
-        data: {
-          sn: trans_id,
-          agent: this.agentAcc,
-          amount: balance,
-          player: player.username + this.suffix,
-          type: 0,
-        },
-      };
 
-      try {
-        await this.request<AbTransferBackRes>(reqConfig);
-        // 紀錄轉回
-        await this.gameMerchantService.transBackRec(
-          player,
-          this.platformCode,
-          balance,
-        );
-      } catch (err) {
-        await this.gameMerchantService.transferToErrorHandle(
-          trans_id,
-          this.platformCode,
-          player,
-        );
-        throw err;
-      }
+      await this.gameMerchantService.transBackSuccess(trans_id);
+
+      return this.prisma.success(balance);
+    } catch (err) {
+      await this.gameMerchantService.transferBackErrorHandle(
+        trans_id,
+        this.platformCode,
+        player,
+      );
+      throw err;
     }
-
-    return this.prisma.success(balance);
   }
 
   async login(player: Player) {

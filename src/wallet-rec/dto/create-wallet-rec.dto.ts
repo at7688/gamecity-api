@@ -1,4 +1,4 @@
-import { WalletRecType } from '../enums';
+import { WalletRecType, WalletStatus } from '../enums';
 
 export interface CreateWalletRecDto {
   type: WalletRecType;
@@ -11,4 +11,5 @@ export interface CreateWalletRecDto {
   note?: string;
   relative_id?: string;
   rolling_amount?: number;
+  status?: WalletStatus;
 }

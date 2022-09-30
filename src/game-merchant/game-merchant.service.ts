@@ -1,19 +1,14 @@
-import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import {
-  BadGatewayException,
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player } from '@prisma/client';
+import { Queue } from 'bull';
 import { compact } from 'lodash';
+import { ResCode } from 'src/errors/enums';
 import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WalletRecType } from 'src/wallet-rec/enums';
-import { ResCode } from 'src/errors/enums';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
+import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { TransferQueue } from './types';
-import { CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class GameMerchantService {
@@ -84,18 +79,8 @@ export class GameMerchantService {
   }
 
   async transferToErrorHandle(trans_id, platform_code: string, player: Player) {
-    await this.prisma.$transaction([
-      ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANS_TO_GAME_CANCELED,
-        player_id: player.id,
-        amount: player.balance,
-        source: platform_code,
-        relative_id: trans_id,
-        note: '轉入遊戲失敗',
-      })),
-    ]);
     await this.transferQueue.add(
-      platform_code,
+      'transTo',
       {
         platform_code,
         trans_id,
@@ -103,10 +88,10 @@ export class GameMerchantService {
         retryTimes: 1,
       },
       {
-        delay: 1000 * 60,
+        delay: 1000 * 10,
       },
     );
-    this.prisma.error(ResCode.TRANS_TO_GAME_ERR, '轉入遊戲失敗');
+    this.prisma.error(ResCode.TRANS_TO_GAME_ERR, '轉入遊戲失敗, 排程確認中');
   }
 
   async transferBackErrorHandle(
@@ -114,16 +99,16 @@ export class GameMerchantService {
     platform_code: string,
     player: Player,
   ) {
-    await this.prisma.$transaction([
-      ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANS_FROM_GAME_CANCELED,
-        player_id: player.id,
-        amount: player.balance,
-        source: platform_code,
-        relative_id: trans_id,
-        note: '遊戲轉回失敗',
-      })),
-    ]);
+    // await this.prisma.$transaction([
+    //   ...(await this.walletRecService.playerCreate({
+    //     type: WalletRecType.TRANS_FROM_GAME_CANCELED,
+    //     player_id: player.id,
+    //     amount: player.balance,
+    //     source: platform_code,
+    //     relative_id: trans_id,
+    //     note: '遊戲轉回失敗',
+    //   })),
+    // ]);
     this.prisma.error(ResCode.TRANS_FROM_GAME_ERR, '遊戲轉回失敗');
   }
 
@@ -142,35 +127,71 @@ export class GameMerchantService {
     ]);
   }
 
-  transToRec(player: Player, platform_code: string, credit: number) {
-    console.log('transToRec', credit);
-    return this.prisma.gameAccount.update({
+  async transToSuccess(trans_id: string) {
+    const record = await this.prisma.walletRec.findFirst({
+      where: {
+        relative_id: trans_id,
+        type: WalletRecType.TRANS_TO_GAME,
+      },
+    });
+
+    // 紀錄遊戲端帳號餘額
+    await this.prisma.gameAccount.update({
       where: {
         platform_code_player_id: {
-          player_id: player.id,
-          platform_code,
+          player_id: record.player_id,
+          platform_code: record.source,
         },
       },
       data: {
         credit: {
-          increment: credit,
+          increment: Math.abs(record.amount),
         },
       },
     });
+
+    // 更新錢包狀態為「完成」
+    await this.prisma.walletRec.updateMany({
+      where: {
+        relative_id: trans_id,
+        type: WalletRecType.TRANS_TO_GAME,
+      },
+      data: {
+        status: WalletStatus.DONE,
+      },
+    });
   }
-  transBackRec(player: Player, platform_code: string, credit: number) {
-    console.log('transBackRec', credit);
-    return this.prisma.gameAccount.update({
+  async transBackSuccess(trans_id: string) {
+    const record = await this.prisma.walletRec.findFirst({
+      where: {
+        relative_id: trans_id,
+        type: WalletRecType.TRANS_FROM_GAME,
+      },
+    });
+
+    // 紀錄遊戲端帳號餘額
+    await this.prisma.gameAccount.update({
       where: {
         platform_code_player_id: {
-          player_id: player.id,
-          platform_code,
+          player_id: record.player_id,
+          platform_code: record.source,
         },
       },
       data: {
         credit: {
-          decrement: credit,
+          decrement: Math.abs(record.amount),
         },
+      },
+    });
+
+    // 更新錢包狀態為「完成」
+    await this.prisma.walletRec.updateMany({
+      where: {
+        relative_id: trans_id,
+        type: WalletRecType.TRANS_FROM_GAME,
+      },
+      data: {
+        status: WalletStatus.DONE,
       },
     });
   }

@@ -153,6 +153,7 @@ export class WalletRecService {
       operator_id,
       note,
       relative_id,
+      status,
     } = data;
     const player = await this.prisma.player.findUnique({
       where: { id: player_id },
@@ -176,6 +177,7 @@ export class WalletRecService {
           note,
           relative_id,
           rolling_amount,
+          status,
         },
       }),
       this.prisma.player.update({
@@ -198,6 +200,7 @@ export class WalletRecService {
       operator_id,
       note,
       relative_id,
+      status,
     } = data;
     const agent = await this.prisma.member.findUnique({
       where: { id: agent_id },
@@ -220,6 +223,7 @@ export class WalletRecService {
           operator_id,
           note,
           relative_id,
+          status,
         },
       }),
       this.prisma.member.update({

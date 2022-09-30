@@ -217,6 +217,8 @@ model WalletRec {
   note           String?
   relative_id    String?
   rolling_amount Float?
+
+  status Int @default(1) // 正常 處理中 失敗
 }
 
 model TransferRec {

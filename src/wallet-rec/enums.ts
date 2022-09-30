@@ -26,3 +26,9 @@ export enum WalletRecType {
   GIFT_ROLLBACK = 73, // 禮包回滾(會員)
   GIFT_BACK = 74, // 禮包退回(代理)
 }
+
+export enum WalletStatus {
+  DONE = 1,
+  PROCESSING = 2,
+  FAILED = 3,
+}

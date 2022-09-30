@@ -1,3 +1,5 @@
+import { WalletRecType } from 'src/wallet-rec/enums';
+
 export interface BetRecordTicket {
   platform_code: string;
   expired_at: Date;
