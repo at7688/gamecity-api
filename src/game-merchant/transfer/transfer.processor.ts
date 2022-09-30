@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { AbService } from '../ab/ab.service';
+import { PlatformsBridgeService } from '../platforms-bridge/platforms-bridge.service';
 import { TransferQueue } from '../types';
 import { TransferStatus } from './enums';
 
@@ -13,7 +14,7 @@ export class TransferProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletRecService: WalletRecService,
-    private readonly abService: AbService,
+    private readonly bridgeService: PlatformsBridgeService,
     @InjectQueue('transfer')
     private readonly transferQueue: Queue<TransferQueue>,
   ) {}
@@ -26,7 +27,10 @@ export class TransferProcessor {
     this.Logger.log(`TRANS_TO_CHECKER (${platform_code})`);
 
     try {
-      const status = await this.abService.transferCheck(trans_id);
+      const status = await this.bridgeService.transferCheck(
+        platform_code,
+        trans_id,
+      );
 
       if (status === TransferStatus.SUCCESS) {
         await this.transToRetrySuccess(trans_id);

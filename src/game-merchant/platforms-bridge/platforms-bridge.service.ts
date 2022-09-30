@@ -103,6 +103,10 @@ export class PlatformsBridgeService {
     }
   }
 
+  transferCheck(platform_code: string, trans_id: string) {
+    return this.gameHub[platform_code].transferCheck(trans_id);
+  }
+
   async transferBack(player: Player, data: TransBackDto) {
     const { platform_code } = data;
     if (platform_code) {

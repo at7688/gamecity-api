@@ -127,6 +127,31 @@ export class GameMerchantService {
     ]);
   }
 
+  async beforeTransTo(
+    _player: Player,
+    platform_code: string,
+    trans_id: string,
+  ) {
+    const player = await this.prisma.player.findUnique({
+      where: { id: _player.id },
+    });
+
+    if (player.balance <= 0) {
+      return;
+    }
+
+    await this.prisma.$transaction([
+      ...(await this.walletRecService.playerCreate({
+        type: WalletRecType.TRANS_TO_GAME,
+        player_id: player.id,
+        amount: -player.balance,
+        source: platform_code,
+        relative_id: trans_id,
+        status: WalletStatus.PROCESSING,
+      })),
+    ]);
+  }
+
   async transToSuccess(trans_id: string) {
     const record = await this.prisma.walletRec.findFirst({
       where: {

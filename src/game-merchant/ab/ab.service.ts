@@ -1,19 +1,18 @@
-import { AbTransferCheckReq, AbTransferCheckRes } from './types/transferCheck';
-import { InjectQueue } from '@nestjs/bull';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
-import { Queue } from 'bull';
 import * as CryptoJS from 'crypto-js';
 import { format } from 'date-fns';
 import * as qs from 'query-string';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { ResCode } from 'src/errors/enums';
 import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
+import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
+import { TransferStatus } from '../transfer/enums';
 import { AbReqBase, AbResBase } from './types/base';
 import { AbCreatePlayerReq, AbCreatePlayerRes } from './types/createPlayer';
 import { AbBetRecordsReq, AbBetRecordsRes } from './types/fetchBetRecords';
@@ -21,9 +20,8 @@ import { AbGameListReq, AbGameListRes } from './types/gameList';
 import { AbGetBalanceReq, AbGetBalanceRes } from './types/getBalance';
 import { AbGetGameLinkReq, AbGetGameLinkRes } from './types/getGameLink';
 import { AbTransferBackReq, AbTransferBackRes } from './types/transferBack';
+import { AbTransferCheckReq, AbTransferCheckRes } from './types/transferCheck';
 import { AbTransferToReq, AbTransferToRes } from './types/transferTo';
-import { ResCode } from 'src/errors/enums';
-import { TransferStatus } from '../transfer/enums';
 
 @Injectable()
 export class AbService {
@@ -213,27 +211,14 @@ export class AbService {
     }[res.data.transferState];
   }
 
-  async transferTo(_player: Player) {
-    const player = await this.prisma.player.findUnique({
-      where: { id: _player.id },
-    });
-
-    if (player.balance <= 0) {
-      return;
-    }
-
+  async transferTo(player: Player) {
     const trans_id = this.operatorId + uuidv4().substring(0, 13);
 
-    await this.prisma.$transaction([
-      ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANS_TO_GAME,
-        player_id: player.id,
-        amount: -player.balance,
-        source: this.platformCode,
-        relative_id: trans_id,
-        status: WalletStatus.PROCESSING,
-      })),
-    ]);
+    await this.gameMerchantService.beforeTransTo(
+      player,
+      this.platformCode,
+      trans_id,
+    );
 
     const reqConfig: AbReqBase<AbTransferToReq> = {
       method: 'POST',

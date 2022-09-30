@@ -11,6 +11,7 @@ import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
+import { TransferStatus } from '../transfer/enums';
 import { ZgReqBase, ZgResBase } from './types/base';
 import { ZgCreatePlayerReq, ZgCreatePlayerRes } from './types/createPlayer';
 import { ZgBetRecordsReq, ZgBetRecordsRes } from './types/fetchBetRecords';
@@ -71,6 +72,16 @@ export class ZgService {
           res.data,
         );
       }
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'SUCCESS',
+          path,
+          method,
+          sendData: data,
+          resData: res.data as unknown as Prisma.InputJsonObject,
+        },
+      });
       return res.data;
     } catch (err) {
       await this.prisma.merchantLog.create({
@@ -160,24 +171,17 @@ export class ZgService {
     return res.url;
   }
 
-  async transferTo(_player: Player) {
-    const player = await this.prisma.player.findUnique({
-      where: { id: _player.id },
-    });
+  transferCheck(trans_id: string) {
+    return TransferStatus.SUCCESS;
+  }
 
-    if (player.balance <= 0) {
-      return;
-    }
+  async transferTo(player: Player) {
     const trans_id = uuidv4();
-    await this.prisma.$transaction([
-      ...(await this.walletRecService.playerCreate({
-        type: WalletRecType.TRANS_TO_GAME,
-        player_id: player.id,
-        amount: -player.balance,
-        source: this.platformCode,
-        relative_id: trans_id,
-      })),
-    ]);
+    await this.gameMerchantService.beforeTransTo(
+      player,
+      this.platformCode,
+      trans_id,
+    );
 
     const reqConfig: ZgReqBase<ZgTransferToReq> = {
       method: 'POST',
@@ -193,12 +197,12 @@ export class ZgService {
 
     try {
       const res = await this.request<ZgTransferToRes>(reqConfig);
-      // 紀錄轉入
-      await this.gameMerchantService.transToRec(
-        player,
-        this.platformCode,
-        player.balance,
-      );
+
+      try {
+        await this.gameMerchantService.transToSuccess(trans_id);
+      } catch (err) {
+        this.prisma.error(ResCode.EXCEPTION_ERR);
+      }
 
       return res;
     } catch (err) {
@@ -214,8 +218,27 @@ export class ZgService {
   async transferBack(player: Player) {
     const balance = await this.getBalance(player);
 
-    if (balance > 0) {
-      const trans_id = uuidv4();
+    if (balance <= 0) {
+      return this.prisma.success(0);
+    }
+
+    const trans_id = uuidv4();
+
+    const reqConfig: ZgReqBase<ZgTransferBackReq> = {
+      method: 'POST',
+      path: '/v1/trans/transfer',
+      data: {
+        serial: trans_id,
+        agent: this.agentAcc,
+        account: player.username,
+        amount: balance.toString(),
+        oper_type: 0,
+      },
+    };
+
+    try {
+      await this.request<ZgTransferBackRes>(reqConfig);
+
       await this.prisma.$transaction([
         ...(await this.walletRecService.playerCreate({
           type: WalletRecType.TRANS_FROM_GAME,
@@ -225,38 +248,18 @@ export class ZgService {
           relative_id: trans_id,
         })),
       ]);
-      const reqConfig: ZgReqBase<ZgTransferBackReq> = {
-        method: 'POST',
-        path: '/v1/trans/transfer',
-        data: {
-          serial: trans_id,
-          agent: this.agentAcc,
-          account: player.username,
-          amount: balance.toString(),
-          oper_type: 0,
-        },
-      };
 
-      try {
-        await this.request<ZgTransferBackRes>(reqConfig);
-      } catch (err) {
-        await this.gameMerchantService.transferToErrorHandle(
-          trans_id,
-          this.platformCode,
-          player,
-        );
-        throw err;
-      }
+      await this.gameMerchantService.transBackSuccess(trans_id);
+
+      return this.prisma.success(balance);
+    } catch (err) {
+      await this.gameMerchantService.transferBackErrorHandle(
+        trans_id,
+        this.platformCode,
+        player,
+      );
+      throw err;
     }
-
-    // 紀錄轉回
-    await this.gameMerchantService.transBackRec(
-      player,
-      this.platformCode,
-      balance,
-    );
-
-    return this.prisma.success(balance);
   }
 
   async login(game_id: string, player: Player) {
