@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { GameCategory } from 'src/game/enums';
 import { TransferStatus } from '../transfer/enums';
 import { ResCode } from 'src/errors/enums';
+import { GrTransferCheckReq, GrTransferCheckRes } from './types/transferCheck';
 
 @Injectable()
 export class GrService {
@@ -175,7 +176,38 @@ export class GrService {
   }
 
   async transferCheck(trans_id: string) {
-    return TransferStatus.SUCCESS;
+    const record = await this.prisma.walletRec.findFirst({
+      where: {
+        type: {
+          in: [WalletRecType.TRANS_TO_GAME, WalletRecType.TRANS_FROM_GAME],
+        },
+        source: this.platformCode,
+        relative_id: trans_id,
+      },
+      include: {
+        player: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+    const reqConfig: GrReqBase<GrTransferCheckReq> = {
+      method: 'POST',
+      path: '/api/platform/check_order_exist_v3',
+      data: {
+        account: `${record.player.username}@${this.suffix}`,
+        order_id: trans_id,
+      },
+    };
+    const res = await this.request<GrTransferCheckRes>(reqConfig);
+
+    return {
+      0: [TransferStatus.FAILED],
+      1: [TransferStatus.PENDING],
+      2: [TransferStatus.SUCCESS],
+      3: [TransferStatus.FAILED],
+    }[res.data.order_state];
   }
 
   async transferTo(player: Player) {
