@@ -53,28 +53,44 @@ export class WmService {
       },
     };
 
-    const res = await axios.request<T>(axiosConfig);
+    try {
+      const res = await axios.request<T>(axiosConfig);
 
-    if (![0, 107].includes(res.data.errorCode)) {
-      await this.gameMerchantService.requestErrorHandle(
-        this.platformCode,
-        path,
-        method,
-        data,
-        res.data,
-      );
+      if (![0, 107].includes(res.data.errorCode)) {
+        await this.gameMerchantService.requestErrorHandle(
+          this.platformCode,
+          path,
+          method,
+          data,
+          res.data,
+        );
+      }
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'SUCCESS',
+          path,
+          method,
+          sendData: data,
+          resData: res.data as unknown as Prisma.InputJsonObject,
+        },
+      });
+      return res.data;
+    } catch (err) {
+      await this.prisma.merchantLog.create({
+        data: {
+          merchant_code: this.platformCode,
+          action: 'ERROR',
+          path,
+          method,
+          sendData: data,
+          resData: err.response.data || JSON.parse(err.message),
+        },
+      });
+      console.log('Error :' + err.message);
+      console.log('Error Info:' + JSON.stringify(err.response.data));
+      this.prisma.error(ResCode.EXCEPTION_ERR);
     }
-    await this.prisma.merchantLog.create({
-      data: {
-        merchant_code: this.platformCode,
-        action: 'SUCCESS',
-        path,
-        method,
-        sendData: data,
-        resData: res.data as unknown as Prisma.InputJsonObject,
-      },
-    });
-    return res.data;
   }
 
   async createPlayer(player: Player) {
@@ -201,6 +217,7 @@ export class WmService {
       this.platformCode,
       trans_id,
     );
+    if (amount === 0) return;
 
     const reqConfig: WmReqBase<WmTransferToReq> = {
       method: 'POST',

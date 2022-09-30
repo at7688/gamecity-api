@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { AbService } from '../ab/ab.service';
+import { GameMerchantService } from '../game-merchant.service';
 import { PlatformsBridgeService } from '../platforms-bridge/platforms-bridge.service';
 import { TransferQueue } from '../types';
 import { TransferStatus } from './enums';
@@ -15,6 +16,7 @@ export class TransferProcessor {
     private readonly prisma: PrismaService,
     private readonly walletRecService: WalletRecService,
     private readonly bridgeService: PlatformsBridgeService,
+    private readonly merchantService: GameMerchantService,
     @InjectQueue('transfer')
     private readonly transferQueue: Queue<TransferQueue>,
   ) {}
@@ -88,14 +90,6 @@ export class TransferProcessor {
   }
 
   async transToRetrySuccess(trans_id: string) {
-    await this.prisma.walletRec.updateMany({
-      where: {
-        relative_id: trans_id,
-        type: WalletRecType.TRANS_TO_GAME,
-      },
-      data: {
-        status: WalletStatus.DONE,
-      },
-    });
+    await this.merchantService.transToSuccess(trans_id);
   }
 }

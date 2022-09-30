@@ -101,6 +101,7 @@ export class BngService {
       });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
+      this.prisma.error(ResCode.EXCEPTION_ERR);
     }
   }
 
@@ -196,6 +197,7 @@ export class BngService {
       this.platformCode,
       trans_id,
     );
+    if (amount === 0) return;
 
     const reqConfig: BngReqBase<BngTransferToReq> = {
       method: 'POST',

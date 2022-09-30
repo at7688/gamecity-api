@@ -126,6 +126,7 @@ export class AbService {
       });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
+      this.prisma.error(ResCode.EXCEPTION_ERR);
     }
   }
 
@@ -204,6 +205,9 @@ export class AbService {
     };
 
     const res = await this.request<AbTransferCheckRes>(reqConfig);
+    if (res.resultCode === 'TRANS_NOT_EXIST') {
+      return TransferStatus.FAILED;
+    }
     return {
       0: TransferStatus.PENDING,
       1: TransferStatus.SUCCESS,
@@ -219,6 +223,7 @@ export class AbService {
       this.platformCode,
       trans_id,
     );
+    if (amount === 0) return;
 
     const reqConfig: AbReqBase<AbTransferToReq> = {
       method: 'POST',

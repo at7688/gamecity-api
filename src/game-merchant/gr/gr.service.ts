@@ -83,6 +83,7 @@ export class GrService {
       });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
+      this.prisma.error(ResCode.EXCEPTION_ERR);
     }
   }
 
@@ -217,6 +218,7 @@ export class GrService {
       this.platformCode,
       trans_id,
     );
+    if (amount === 0) return;
 
     const reqConfig: GrReqBase<GrTransferToReq> = {
       method: 'POST',

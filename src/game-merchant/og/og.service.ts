@@ -98,6 +98,7 @@ export class OgService {
       });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
+      this.prisma.error(ResCode.EXCEPTION_ERR);
     }
   }
   async recordRequest<T>(reqConfig: OgReqBase) {
@@ -145,6 +146,7 @@ export class OgService {
       });
       console.log('Error :' + err.message);
       console.log('Error Info:' + JSON.stringify(err.response.data));
+      this.prisma.error(ResCode.EXCEPTION_ERR);
     }
   }
 
@@ -353,6 +355,7 @@ export class OgService {
       this.platformCode,
       trans_id,
     );
+    if (amount === 0) return;
 
     const reqConfig: OgReqBase<OgTransferToReq> = {
       method: 'POST',

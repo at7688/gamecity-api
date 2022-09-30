@@ -90,13 +90,9 @@ export class PlatformsBridgeService {
       await this.transferBack(player, {}); // WM測試機會失敗(因為轉額上限)
       const { platform_code, game_code } = data;
       if (['ab', 'og'].includes(platform_code)) {
-        return this.prisma.success(
-          await this.gameHub[platform_code].login(player),
-        );
+        return this.gameHub[platform_code].login(player);
       } else {
-        return this.prisma.success(
-          await this.gameHub[platform_code].login(game_code, player),
-        );
+        return this.gameHub[platform_code].login(game_code, player);
       }
     } catch (err) {
       throw err;
@@ -128,7 +124,7 @@ export class PlatformsBridgeService {
     return this.prisma.success(
       platforms.map((t, i) => ({
         code: t.platform_code,
-        balance: result[i].balance,
+        credit: result[i].credit,
       })),
     );
   }
