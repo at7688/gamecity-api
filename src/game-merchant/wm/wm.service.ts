@@ -22,6 +22,7 @@ import { WmBetRecordsReq, WmBetRecordsRes } from './types/fetchBetRecords';
 import { WmGetBalanceReq, WmGetBalanceRes } from './types/getBalance';
 import { WmGetGameLinkReq, WmGetGameLinkRes } from './types/getGameLink';
 import { WmTransferBackReq, WmTransferBackRes } from './types/transferBack';
+import { WmTransferCheckReq, WmTransferCheckRes } from './types/transferCheck';
 import { WmTransferToReq, WmTransferToRes } from './types/transferTo';
 
 @Injectable()
@@ -173,7 +174,23 @@ export class WmService {
   }
 
   async transferCheck(trans_id: string) {
-    return TransferStatus.SUCCESS;
+    const reqConfig: WmReqBase<WmTransferCheckReq> = {
+      method: 'POST',
+      path: '',
+      data: {
+        cmd: 'GetMemberTradeReport',
+        order: trans_id,
+      },
+    };
+    const res = await this.request<WmTransferCheckRes>(reqConfig);
+
+    if (res.errorCode === 107) {
+      return TransferStatus.FAILED;
+    }
+    if (res.errorCode === 0) {
+      return TransferStatus.SUCCESS;
+    }
+    return TransferStatus.PENDING;
   }
 
   async transferTo(player: Player) {

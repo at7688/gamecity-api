@@ -1,13 +1,16 @@
 import { WmResBase } from './base';
 
 export interface WmTransferCheckReq {
-  agent: string;
-  account: string;
-  serial: string;
+  cmd: 'GetMemberTradeReport';
+  order: string;
 }
 
-export interface WmTransferCheckRes extends WmResBase {
-  serial: string;
-  trans_id: string;
-  amount: string;
-}
+export type WmTransferCheckRes = WmResBase<{
+  orderid: string;
+  addtime: string;
+  money: string;
+  op_code: 121 | 122; // 加点(121)扣点(122)
+  subtotal: string;
+  ordernum: string;
+  user: string;
+} | null>;
