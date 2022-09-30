@@ -21,6 +21,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { GameCategory } from 'src/game/enums';
 import { ResCode } from 'src/errors/enums';
 import { TransferStatus } from '../transfer/enums';
+import { BwinTransferCheckRes } from './types/transferCheck';
 @Injectable()
 export class BwinService {
   constructor(
@@ -175,7 +176,17 @@ export class BwinService {
   }
 
   async transferCheck(trans_id: string) {
-    return TransferStatus.SUCCESS;
+    const reqConfig: BwinReqBase = {
+      method: 'GET',
+      path: `/api/v1/profile/transactions?id=${trans_id}`,
+    };
+    const res = await this.request<BwinTransferCheckRes>(reqConfig);
+
+    if (res.data.length) {
+      return TransferStatus.SUCCESS;
+    }
+
+    return TransferStatus.FAILED;
   }
 
   async transferTo(player: Player) {
