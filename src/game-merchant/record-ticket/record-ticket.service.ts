@@ -15,6 +15,9 @@ export class RecordTicketService {
     const ticket = await this.prisma.betRecordTicket.findFirst({
       where: {
         platform_code,
+        valid_at: {
+          lt: new Date(),
+        },
         expired_at: {
           gte: new Date(),
         },
@@ -22,21 +25,34 @@ export class RecordTicketService {
     });
 
     if (!ticket) {
-      this.prisma.error(ResCode.OVER_FETCH_LIMIT, '超過搜尋次數上限');
+      this.prisma.error(
+        ResCode.OVER_FETCH_LIMIT,
+        `超過搜尋次數上限(${platform_code})`,
+      );
     }
+    const { kept_days, max_seconds } = ticket;
 
-    if (start <= subDays(new Date(), 90)) {
-      this.prisma.error(ResCode.FETCH_RANGE_ERR, '開始時間超過允許區間');
+    if (start <= subDays(new Date(), kept_days)) {
+      this.prisma.error(
+        ResCode.FETCH_RANGE_ERR,
+        `僅可搜尋${kept_days}日內數據(${platform_code})`,
+      );
     }
 
     if (end <= start) {
-      this.prisma.error(ResCode.FETCH_RANGE_ERR, '搜尋時間錯誤');
+      this.prisma.error(
+        ResCode.FETCH_RANGE_ERR,
+        `搜尋時間錯誤(${platform_code})`,
+      );
     }
 
     const diffSeconds = differenceInSeconds(end, start);
 
-    if (diffSeconds > ticket.max_range) {
-      this.prisma.error(ResCode.FETCH_RANGE_ERR, '搜尋區間錯誤');
+    if (diffSeconds > max_seconds) {
+      this.prisma.error(
+        ResCode.FETCH_RANGE_ERR,
+        `最大的搜尋區間為${max_seconds}秒(${platform_code})`,
+      );
     }
 
     await this.prisma.betRecordTicket.delete({

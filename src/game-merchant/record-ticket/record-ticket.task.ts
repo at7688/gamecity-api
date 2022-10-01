@@ -1,3 +1,4 @@
+import { subMinutes } from 'date-fns';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -12,7 +13,7 @@ export class RecordTicketTask {
     await this.prisma.betRecordTicket.deleteMany({
       where: {
         expired_at: {
-          lt: new Date(),
+          lt: subMinutes(new Date(), 1),
         },
       },
     });

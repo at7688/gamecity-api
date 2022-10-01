@@ -11,6 +11,7 @@ import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
+import { RecordTicketService } from '../record-ticket/record-ticket.service';
 import { TransferStatus } from '../transfer/enums';
 import { ZgReqBase, ZgResBase } from './types/base';
 import { ZgCreatePlayerReq, ZgCreatePlayerRes } from './types/createPlayer';
@@ -28,6 +29,7 @@ export class ZgService {
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
+    private readonly ticketService: RecordTicketService,
   ) {}
   platformCode = 'zg';
   apiUrl = 'https://api.sandsys.pw';
@@ -337,6 +339,8 @@ export class ZgService {
   }
 
   async fetchBetRecords(start: Date, end: Date) {
+    await this.ticketService.useTicket(this.platformCode, start, end);
+
     const reqConfig: ZgReqBase<ZgBetRecordsReq> = {
       method: 'POST',
       path: '/v1/record/get_bet_records',

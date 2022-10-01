@@ -14,24 +14,24 @@ export class AbTaskService {
   private readonly Logger = new Logger(AbTaskService.name);
 
   @Cron(CronExpression.EVERY_MINUTE)
-  async fetchGameList() {
-    const startAt = subMinutes(new Date(), 2);
-    const endAt = new Date();
-    await this.abService.fetchBetRecords(startAt, endAt, true);
-
-    this.Logger.debug('AB_FETCH_BET_RECORDS');
+  async createTicket() {
+    this.Logger.warn('AB_CREATE_TICKETS');
+    await this.prisma.betRecordTicket.createMany({
+      data: [...Array(10)].map((t) => ({
+        platform_code: this.abService.platformCode,
+        max_seconds: 60 * 60, // 1hr
+        kept_days: 90,
+        valid_at: addMinutes(new Date(), 1),
+        expired_at: addMinutes(new Date(), 2),
+      })),
+    });
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
-  async createTicket() {
-    await this.prisma.betRecordTicket.createMany({
-      data: [...Array(8)].map((t) => ({
-        platform_code: this.abService.platformCode,
-        max_range: 60 * 60, // 1hr
-        in_days: 90,
-        expired_at: addMinutes(new Date(), 1),
-      })),
-    });
-    this.Logger.warn('AB_CREATE_TICKETS');
+  async fetchGameList() {
+    this.Logger.debug('AB_FETCH_BET_RECORDS');
+    const startAt = subMinutes(new Date(), 2);
+    const endAt = new Date();
+    await this.abService.fetchBetRecords(startAt, endAt, true);
   }
 }
