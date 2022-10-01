@@ -8,7 +8,7 @@ export class RecordTicketTask {
   constructor(private readonly prisma: PrismaService) {}
   private readonly Logger = new Logger(RecordTicketTask.name);
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async cleanExpiredTickets() {
     await this.prisma.betRecordTicket.deleteMany({
       where: {

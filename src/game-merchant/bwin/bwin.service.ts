@@ -22,12 +22,14 @@ import { GameCategory } from 'src/game/enums';
 import { ResCode } from 'src/errors/enums';
 import { TransferStatus } from '../transfer/enums';
 import { BwinTransferCheckRes } from './types/transferCheck';
+import { RecordTicketService } from '../record-ticket/record-ticket.service';
 @Injectable()
 export class BwinService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
+    private readonly ticketService: RecordTicketService,
   ) {}
   platformCode = 'bwin';
   apiUrl = 'https://api-stage.at888888.com/service';
@@ -308,6 +310,7 @@ export class BwinService {
   }
 
   async fetchBetRecords(start: Date, end: Date) {
+    await this.ticketService.useTicket(this.platformCode, start, end);
     const query = qs.stringify({
       start: getUnixTime(start) * 1000,
       end: getUnixTime(end) * 1000,
