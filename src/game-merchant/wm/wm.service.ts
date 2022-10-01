@@ -58,6 +58,11 @@ export class WmService {
     try {
       const res = await axios.request<T>(axiosConfig);
 
+      if (res.data.errorCode === 911) {
+        await this.gameMerchantService.maintenance(this.platformCode);
+        this.prisma.error(ResCode.MAINTENANCE);
+      }
+
       if (![0, 107].includes(res.data.errorCode)) {
         await this.gameMerchantService.requestErrorHandle(
           this.platformCode,

@@ -51,7 +51,10 @@ export class GrService {
     };
     try {
       const res = await axios.request<T>(axiosConfig);
-      // console.log(res.data);
+      if (res.data.code === '111090014') {
+        await this.gameMerchantService.maintenance(this.platformCode);
+        this.prisma.error(ResCode.MAINTENANCE);
+      }
       if (res.data.status === 'N') {
         await this.gameMerchantService.requestErrorHandle(
           this.platformCode,

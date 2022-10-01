@@ -4,6 +4,7 @@ import { Player } from '@prisma/client';
 import { Queue } from 'bull';
 import { compact } from 'lodash';
 import { ResCode } from 'src/errors/enums';
+import { GamePlatformStatus } from 'src/game-platform/enums';
 import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
@@ -19,6 +20,17 @@ export class GameMerchantService {
     @InjectQueue('transfer')
     private readonly transferQueue: Queue<TransferQueue>,
   ) {}
+
+  async maintenance(platform_code: string) {
+    await this.prisma.gamePlatform.update({
+      where: {
+        code: platform_code,
+      },
+      data: {
+        status: GamePlatformStatus.MAINTENANCE,
+      },
+    });
+  }
 
   async validateGame(platform_code: string, game_code: string) {
     const game = await this.prisma.game.findUnique({

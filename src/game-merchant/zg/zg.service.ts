@@ -66,6 +66,10 @@ export class ZgService {
     try {
       const res = await axios.request<T>(axiosConfig);
       // console.log(res.data);
+      if (res.data.result.msg === 'UNDER MAINTENANCE') {
+        await this.gameMerchantService.maintenance(this.platformCode);
+        this.prisma.error(ResCode.MAINTENANCE);
+      }
       if (res.data.result.code !== 1) {
         await this.gameMerchantService.requestErrorHandle(
           this.platformCode,

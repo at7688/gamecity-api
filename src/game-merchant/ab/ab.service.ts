@@ -95,6 +95,11 @@ export class AbService {
     try {
       const res = await axios.request<T>(axiosConfig);
 
+      if (res.data.resultCode === 'SYSTEM_MAINTENANCE') {
+        await this.gameMerchantService.maintenance(this.platformCode);
+        this.prisma.error(ResCode.MAINTENANCE);
+      }
+
       if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {
         await this.gameMerchantService.requestErrorHandle(
           this.platformCode,

@@ -70,6 +70,10 @@ export class BngService {
     try {
       const res = await axios.request<T>(axiosConfig);
       // console.log(res.data);
+      if (res.data.status.code === 4001) {
+        await this.gameMerchantService.maintenance(this.platformCode);
+        this.prisma.error(ResCode.MAINTENANCE);
+      }
       if (res.data.status.code !== 1000) {
         await this.gameMerchantService.requestErrorHandle(
           this.platformCode,

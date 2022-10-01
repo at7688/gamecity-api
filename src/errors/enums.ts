@@ -14,6 +14,7 @@ export enum ResCode {
   GAME_MERCHANT_ERR = 'PY0501', // 遊戲商回傳錯誤
   TRANS_TO_GAME_ERR = 'PY0502', // 遊戲商轉入錯誤
   TRANS_FROM_GAME_ERR = 'PY0503', // 遊戲商轉入錯誤
+  MAINTENANCE = 'PY0504', // 遊戲商維護中
 
   OVER_FETCH_LIMIT = 'PY0601', // 搜尋次數已超過遊戲商上限
   FETCH_RANGE_ERR = 'PY0602', // 搜尋時間超過限制
