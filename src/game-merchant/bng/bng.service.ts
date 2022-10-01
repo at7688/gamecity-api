@@ -16,6 +16,7 @@ import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
+import { RecordTicketService } from '../record-ticket/record-ticket.service';
 import { TransferStatus } from '../transfer/enums';
 import { BngReqBase, BngResBase } from './types/base';
 import { BngCreatePlayerReq, BngCreatePlayerRes } from './types/createPlayer';
@@ -36,6 +37,7 @@ export class BngService {
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
+    private readonly ticketService: RecordTicketService,
   ) {}
   platformCode = 'bng';
 
@@ -331,6 +333,7 @@ export class BngService {
   }
 
   async fetchBetRecords(start: Date, end: Date) {
+    await this.ticketService.useTicket(this.platformCode, start, end);
     const reqConfig: BngReqBase<BngBetRecordsReq> = {
       method: 'POST',
       path: '/record/get_game_histories',
