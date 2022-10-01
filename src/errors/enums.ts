@@ -15,6 +15,9 @@ export enum ResCode {
   TRANS_TO_GAME_ERR = 'PY0502', // 遊戲商轉入錯誤
   TRANS_FROM_GAME_ERR = 'PY0503', // 遊戲商轉入錯誤
 
+  OVER_FETCH_LIMIT = 'PY0601', // 搜尋次數已超過遊戲商上限
+  FETCH_RANGE_ERR = 'PY0602', // 搜尋時間超過限制
+
   DATA_DUPICATED = 'AL0100', // 資料重複(代碼/帳號)
 
   BALANCE_NOT_ENOUGH = 'AL0200', // 餘額不足

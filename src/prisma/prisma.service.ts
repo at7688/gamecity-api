@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { ResCode } from 'src/errors/enums';
@@ -14,6 +14,7 @@ export class PrismaService extends PrismaClient {
       },
     });
   }
+  private readonly Logger = new Logger(PrismaService.name);
 
   listFormat<T, R extends object, E extends object>({
     items,
@@ -30,6 +31,7 @@ export class PrismaService extends PrismaClient {
   }
 
   error(code: ResCode, msg?: string) {
+    this.Logger.error(msg);
     throw new BadRequestException({ code, msg: msg || null });
   }
   success(data?: any, msg?: string) {

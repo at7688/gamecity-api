@@ -27,6 +27,8 @@ import { WmTaskService } from './wm/wm.task.service';
 import { ZgController } from './zg/zg.controller';
 import { ZgService } from './zg/zg.service';
 import { ZgTaskService } from './zg/zg.task.service';
+import { RecordTicketService } from './record-ticket/record-ticket.service';
+import { RecordTicketTask } from './record-ticket/record-ticket.task';
 
 @Module({
   imports: [
@@ -64,6 +66,8 @@ import { ZgTaskService } from './zg/zg.task.service';
     GrTaskService,
     PlatformsBridgeService,
     TransferProcessor,
+    RecordTicketService,
+    RecordTicketTask,
   ],
 })
 export class GameMerchantModule {}

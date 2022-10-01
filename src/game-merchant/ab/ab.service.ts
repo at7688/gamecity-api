@@ -12,6 +12,7 @@ import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
+import { RecordTicketService } from '../record-ticket/record-ticket.service';
 import { TransferStatus } from '../transfer/enums';
 import { AbReqBase, AbResBase } from './types/base';
 import { AbCreatePlayerReq, AbCreatePlayerRes } from './types/createPlayer';
@@ -29,6 +30,7 @@ export class AbService {
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
+    private readonly ticketService: RecordTicketService,
   ) {}
 
   platformCode = 'ab';
@@ -121,7 +123,7 @@ export class AbService {
           path,
           method,
           sendData: data,
-          resData: err.response.data || JSON.parse(err.message),
+          resData: err.response.data || err.message,
         },
       });
       console.log('Error :' + err.message);
@@ -343,6 +345,8 @@ export class AbService {
   }
 
   async fetchBetRecords(start: Date, end: Date, isTask?: boolean) {
+    await this.ticketService.useTicket(this.platformCode, start, end);
+
     const reqConfig: AbReqBase<AbBetRecordsReq> = {
       method: 'POST',
       path: '/PagingQueryBetRecords',

@@ -755,6 +755,14 @@ model Gift {
   recieved_at DateTime? @db.Timestamptz(6)
 }
 
+model BetRecordTicket {
+  id Int @id @default(autoincrement())
+  max_range Int // 最大搜尋範圍(分)
+  in_days Int // 幾日內數據
+  expired_at DateTime @db.Timestamptz(6)
+  platform_code String
+}
+
 model BetRecord {
   id              String        @id @default(cuid())
   bet_no          String

@@ -84,7 +84,7 @@ export class WmService {
           path,
           method,
           sendData: data,
-          resData: err.response.data || JSON.parse(err.message),
+          resData: err.response.data || err.message,
         },
       });
       console.log('Error :' + err.message);

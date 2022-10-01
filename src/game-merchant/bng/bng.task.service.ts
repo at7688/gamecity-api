@@ -14,6 +14,6 @@ export class BngTaskService {
       subMinutes(new Date(), 2),
       new Date(),
     );
-    this.Logger.debug('BNG_FETCH_BET_RECORDS(EVERY_MINUTE)');
+    this.Logger.debug('BNG_FETCH_BET_RECORDS');
   }
 }

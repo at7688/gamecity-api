@@ -11,6 +11,6 @@ export class ZgTaskService {
   @Cron(CronExpression.EVERY_MINUTE)
   async fetchGameList() {
     await this.zgService.fetchBetRecords(subMinutes(new Date(), 2), new Date());
-    this.Logger.debug('ZG_FETCH_BET_RECORDS(EVERY_MINUTE)');
+    this.Logger.debug('ZG_FETCH_BET_RECORDS');
   }
 }

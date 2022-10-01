@@ -14,6 +14,6 @@ export class BwinTaskService {
       subMinutes(new Date(), 2),
       new Date(),
     );
-    this.Logger.debug('BWIN_FETCH_BET_RECORDS(EVERY_MINUTE)');
+    this.Logger.debug('BWIN_FETCH_BET_RECORDS');
   }
 }
