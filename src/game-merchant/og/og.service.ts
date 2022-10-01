@@ -31,12 +31,14 @@ import { Cache } from 'cache-manager';
 import { TransferStatus } from '../transfer/enums';
 import { ResCode } from 'src/errors/enums';
 import { OgTransferCheckReq, OgTransferCheckRes } from './types/transferCheck';
+import { RecordTicketService } from '../record-ticket/record-ticket.service';
 @Injectable()
 export class OgService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
+    private readonly ticketService: RecordTicketService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   platformCode = 'og';
@@ -477,6 +479,7 @@ export class OgService {
   }
 
   async fetchBetRecords(start: Date, end: Date) {
+    await this.ticketService.useTicket(this.platformCode, start, end);
     const reqConfig: OgReqBase<OgBetRecordsReq> = {
       method: 'POST',
       path: 'transaction',

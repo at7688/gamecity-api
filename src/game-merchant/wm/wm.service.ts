@@ -6,7 +6,7 @@ import {
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
-import { format } from 'date-fns';
+import { addSeconds, format } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { ResCode } from 'src/errors/enums';
 import { GameCategory } from 'src/game/enums';
@@ -15,6 +15,7 @@ import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
+import { RecordTicketService } from '../record-ticket/record-ticket.service';
 import { TransferStatus } from '../transfer/enums';
 import { WmReqBase, WmResBase } from './types/base';
 import { WmCreatePlayerReq, WmCreatePlayerRes } from './types/createPlayer';
@@ -31,6 +32,7 @@ export class WmService {
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
+    private readonly ticketService: RecordTicketService,
   ) {}
   platformCode = 'wm';
   apiUrl = 'https://api.a45.me/api/public/Gateway.php';
@@ -331,6 +333,12 @@ export class WmService {
   }
 
   async fetchBetRecords(start: Date, end: Date) {
+    await this.ticketService.useTicket(
+      this.platformCode,
+      start,
+      end,
+      addSeconds(new Date(), 30),
+    );
     const reqConfig: WmReqBase<WmBetRecordsReq> = {
       method: 'POST',
       path: '',

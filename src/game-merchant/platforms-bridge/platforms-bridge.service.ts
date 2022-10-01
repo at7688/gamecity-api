@@ -10,6 +10,7 @@ import { WmService } from '../wm/wm.service';
 import { ZgService } from '../zg/zg.service';
 import { GetBalanceDto } from './dto/get-balance-dto';
 import { LoginGameDto } from './dto/login-game-dto';
+import { SearchBetRecordsDto } from './dto/search-bet-records';
 import { SearchGameDto } from './dto/search-game-dto';
 import { TransBackDto } from './dto/trans-back-dto';
 
@@ -83,6 +84,17 @@ export class PlatformsBridgeService {
       items: await this.prisma.game.findMany(findManyArgs),
       count: await this.prisma.game.count({ where: findManyArgs.where }),
     });
+  }
+
+  async fetchBetRecords(search: SearchBetRecordsDto) {
+    const { platform_code, start_at, end_at } = search;
+
+    const result = await this.gameHub[platform_code].fetchBetRecords(
+      start_at,
+      end_at,
+    );
+
+    return this.prisma.success(result);
   }
 
   async login(player: Player, data: LoginGameDto) {

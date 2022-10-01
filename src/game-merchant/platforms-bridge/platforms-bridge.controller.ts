@@ -7,6 +7,7 @@ import { Platforms } from 'src/metas/platforms.meta';
 import { LoginGameDto } from './dto/login-game-dto';
 import { TransBackDto } from './dto/trans-back-dto';
 import { GetBalanceDto } from './dto/get-balance-dto';
+import { SearchBetRecordsDto } from './dto/search-bet-records';
 
 @Controller('client/game')
 @Platforms([PlatformType.PLAYER])
@@ -15,6 +16,10 @@ export class PlatformsBridgeController {
     private readonly platformsBridgeService: PlatformsBridgeService,
   ) {}
 
+  @Post('betRecords')
+  fetchBetRecords(@Body() search: SearchBetRecordsDto) {
+    return this.platformsBridgeService.fetchBetRecords(search);
+  }
   @Post('list')
   gameList(@Body() search: SearchGameDto) {
     return this.platformsBridgeService.gameList(search);

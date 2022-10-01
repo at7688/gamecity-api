@@ -21,6 +21,7 @@ import { GameCategory } from 'src/game/enums';
 import { TransferStatus } from '../transfer/enums';
 import { ResCode } from 'src/errors/enums';
 import { GrTransferCheckReq, GrTransferCheckRes } from './types/transferCheck';
+import { RecordTicketService } from '../record-ticket/record-ticket.service';
 
 @Injectable()
 export class GrService {
@@ -28,6 +29,7 @@ export class GrService {
     private readonly prisma: PrismaService,
     private readonly gameMerchantService: GameMerchantService,
     private readonly walletRecService: WalletRecService,
+    private readonly ticketService: RecordTicketService,
   ) {}
   platformCode = 'gr';
   apiUrl = 'https://grtestbackend.richgaming.net';
@@ -334,6 +336,7 @@ export class GrService {
   }
 
   async fetchBetRecords(start: Date, end: Date) {
+    await this.ticketService.useTicket(this.platformCode, start, end);
     const reqConfig: GrReqBase<GrBetRecordsReq> = {
       method: 'POST',
       path: '/api/platform/get_all_bet_details',

@@ -11,16 +11,28 @@ export class RecordTicketService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async useTicket(platform_code: string, start: Date, end: Date) {
+  async useTicket(
+    platform_code: string,
+    start: Date,
+    end: Date,
+    next_valid_at?: Date,
+  ) {
     const ticket = await this.prisma.betRecordTicket.findFirst({
       where: {
         platform_code,
         valid_at: {
           lt: new Date(),
         },
-        expired_at: {
-          gte: new Date(),
-        },
+        OR: [
+          {
+            expired_at: {
+              gte: new Date(),
+            },
+          },
+          {
+            expired_at: null,
+          },
+        ],
       },
     });
 
@@ -55,11 +67,22 @@ export class RecordTicketService {
       );
     }
 
-    await this.prisma.betRecordTicket.delete({
-      where: {
-        id: ticket.id,
-      },
-    });
+    if (next_valid_at) {
+      await this.prisma.betRecordTicket.update({
+        where: {
+          id: ticket.id,
+        },
+        data: {
+          valid_at: next_valid_at,
+        },
+      });
+    } else {
+      await this.prisma.betRecordTicket.delete({
+        where: {
+          id: ticket.id,
+        },
+      });
+    }
 
     return ticket;
   }
