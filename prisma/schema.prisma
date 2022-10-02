@@ -422,11 +422,29 @@ model GameCategory {
 
 model Maintenance {
   id            Int           @id @default(autoincrement())
-  target_type   Int // 主站 遊戲商
+  type   Int // 主站 遊戲商
+
   platform      GamePlatform? @relation(fields: [platform_code], references: [code])
   platform_code String?
   start_at      DateTime?     @db.Timestamptz()
   end_at        DateTime?     @db.Timestamptz()
+  repeat_start_at DateTime?     @db.Timestamptz()
+  repeat_end_at DateTime?     @db.Timestamptz()
+
+  is_repeat Boolean @default(true)
+  is_active Boolean @default(true)
+
+  note String?
+
+  records MaintenanceRec[]
+}
+
+model MaintenanceRec {
+  id Int @id @default(autoincrement())
+  start_at      DateTime?     @db.Timestamptz()
+  end_at        DateTime?     @db.Timestamptz()
+  maintenance Maintenance @relation(fields: [maintenance_id], references: [id])
+  maintenance_id Int
 }
 
 // model GamePlatformRec {
@@ -450,6 +468,7 @@ model GamePlatform {
   maintenance   Maintenance[]
 
   record_check_at DateTime? @db.Timestamptz()
+
 
 }
 
@@ -804,6 +823,7 @@ model BetRatioRec {
 
   @@unique([agent_id, bet_id])
 }
+
 
 model GameAccount {
   id            Int          @id @default(autoincrement())

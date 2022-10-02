@@ -11,3 +11,10 @@ export const numArrToBooleanSearch = (nums: number[]) => {
 export const numToBooleanSearch = (num: number) => {
   return { 0: undefined, 1: true, 2: false }[num];
 };
+
+export const dateToCron = (date: Date) => {
+  const minutes = date.getMinutes();
+  const hours = date.getHours();
+  const day = date.getDay();
+  return `${minutes} ${hours} * * ${day}`;
+};

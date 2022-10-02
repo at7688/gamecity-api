@@ -4,7 +4,6 @@ import { Job, Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import { AbService } from '../ab/ab.service';
 import { GameMerchantService } from '../game-merchant.service';
 import { PlatformsBridgeService } from '../platforms-bridge/platforms-bridge.service';
 import { TransferQueue } from '../types';

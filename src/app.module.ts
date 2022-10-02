@@ -57,6 +57,7 @@ import { GiftModule } from './gift/gift.module';
 import { ApplicantModule } from './applicant/applicant.module';
 import { PromoCodeModule } from './promo-code/promo-code.module';
 import { BullModule } from '@nestjs/bull';
+import { MaintenanceModule } from './maintenance/maintenance.module';
 
 @Module({
   imports: [
@@ -128,6 +129,7 @@ import { BullModule } from '@nestjs/bull';
         port: 6379,
       },
     }),
+    MaintenanceModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
