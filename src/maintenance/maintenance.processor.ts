@@ -27,17 +27,17 @@ export class MaintenanceProcessor {
   }
   @Process(GAME_MAINTENANCE_END)
   gameMaintenanceEnd(job: Job<Maintenance>) {
-    this.Logger.debug(job.progress.name);
+    this.Logger.debug(GAME_MAINTENANCE_END);
     console.log(job.data);
   }
   @Process(MAIN_MAINTENANCE_START)
   mainMaintenanceStart(job: Job<Maintenance>) {
-    this.Logger.debug(job.progress.name);
+    this.Logger.debug(MAIN_MAINTENANCE_START);
     console.log(job.data);
   }
   @Process(MAIN_MAINTENANCE_END)
   mainMaintenanceEnd(job: Job<Maintenance>) {
-    this.Logger.debug(job.progress.name);
+    this.Logger.debug(MAIN_MAINTENANCE_END);
     console.log(job.data);
   }
 }

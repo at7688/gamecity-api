@@ -25,6 +25,11 @@ export class MaintenanceController {
     return this.maintenanceService.findAll();
   }
 
+  @Post('clean')
+  clean() {
+    return this.maintenanceService.clean();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.maintenanceService.findOne(+id);

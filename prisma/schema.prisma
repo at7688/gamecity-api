@@ -433,6 +433,7 @@ model Maintenance {
 
   is_repeat Boolean @default(true)
   is_active Boolean @default(true)
+  job_ids String[]
 
   note String?
 
