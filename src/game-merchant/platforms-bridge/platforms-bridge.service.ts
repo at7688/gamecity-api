@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
+import { format } from 'date-fns';
+import { ResCode } from 'src/errors/enums';
+import { MaintenanceStatus } from 'src/maintenance/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbService } from '../ab/ab.service';
 import { BngService } from '../bng/bng.service';
@@ -98,6 +101,19 @@ export class PlatformsBridgeService {
   }
 
   async login(player: Player, data: LoginGameDto) {
+    // 確認維護狀態
+    const record = await this.prisma.maintenance.findFirst({
+      where: {
+        platform_code: data.platform_code,
+        status: MaintenanceStatus.IN_PROGRESS,
+      },
+    });
+    if (record) {
+      this.prisma.error(
+        ResCode.MAINTENANCE,
+        `遊戲維護中(至${format(record.end_at, 'HH:mm')})`,
+      );
+    }
     try {
       await this.transferBack(player, {}); // WM測試機會失敗(因為轉額上限)
       const { platform_code, game_code } = data;
