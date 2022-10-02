@@ -433,9 +433,10 @@ model Maintenance {
 
   is_repeat Boolean @default(true)
   is_active Boolean @default(true)
-  job_ids String[]
+  status Int @default(1) // 已排程 進行中 已完成 已終止
 
   note String?
+
 
   records MaintenanceRec[]
 }

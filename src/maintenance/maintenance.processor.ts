@@ -1,3 +1,4 @@
+import { MaintenanceService } from './maintenance.service';
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Maintenance } from '@prisma/client';
@@ -9,26 +10,40 @@ import {
   MAIN_MAINTENANCE_END,
   MAIN_MAINTENANCE_START,
 } from './cosnts';
+import { MaintenanceStatus } from './enums';
 
 @Processor('maintenance')
 export class MaintenanceProcessor {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly maintenanceService: MaintenanceService,
     @InjectQueue('maintenance')
-    private readonly maintenanceQueue: Queue<Maintenance>,
+    private readonly maintenanceQueue: Queue<number>,
   ) {}
 
   private readonly Logger = new Logger(MaintenanceProcessor.name);
 
   @Process(GAME_MAINTENANCE_START)
-  gameMaintenanceStart(job: Job<Maintenance>) {
+  async gameMaintenanceStart(job: Job<number>) {
     this.Logger.debug(GAME_MAINTENANCE_START);
-    console.log(job.data);
+    await this.prisma.maintenance.update({
+      where: { id: job.data },
+      data: {
+        status: MaintenanceStatus.IN_PROGRESS,
+      },
+    });
+    return 'ok';
   }
   @Process(GAME_MAINTENANCE_END)
-  gameMaintenanceEnd(job: Job<Maintenance>) {
+  async gameMaintenanceEnd(job: Job<number>) {
     this.Logger.debug(GAME_MAINTENANCE_END);
-    console.log(job.data);
+    await this.prisma.maintenance.update({
+      where: { id: job.data },
+      data: {
+        status: MaintenanceStatus.DONE,
+      },
+    });
+    return 'ok';
   }
   @Process(MAIN_MAINTENANCE_START)
   mainMaintenanceStart(job: Job<Maintenance>) {

@@ -1,3 +1,4 @@
+import { JobStatus } from 'bull';
 import {
   Controller,
   Get,
@@ -25,6 +26,11 @@ export class MaintenanceController {
     return this.maintenanceService.findAll();
   }
 
+  @Post('jobs')
+  findJobs(@Body('status') status: JobStatus[]) {
+    return this.maintenanceService.findJobs(status);
+  }
+
   @Post('clean')
   clean() {
     return this.maintenanceService.clean();
@@ -33,14 +39,6 @@ export class MaintenanceController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.maintenanceService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateMaintenanceDto: UpdateMaintenanceDto,
-  ) {
-    return this.maintenanceService.update(+id, updateMaintenanceDto);
   }
 
   @Delete(':id')

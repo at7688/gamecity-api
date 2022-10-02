@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
 import Bull, { Job, JobStatus, Queue } from 'bull';
+import { groupBy } from 'lodash';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { dateToCron } from 'src/utils';
@@ -20,7 +21,7 @@ export class MaintenanceService {
   constructor(
     private readonly prisma: PrismaService,
     @InjectQueue('maintenance')
-    private readonly maintenanceQueue: Queue<string>,
+    private readonly maintenanceQueue: Queue<number>,
   ) {}
 
   async create(data: CreateMaintenanceDto) {
@@ -43,47 +44,6 @@ export class MaintenanceService {
       }
     }
 
-    let jobs: Job<string>[];
-
-    if (type === MaintenanceType.GAME) {
-      jobs = await Promise.all([
-        this.maintenanceQueue.add(GAME_MAINTENANCE_START, platform_code, {
-          repeat: {
-            cron: CronExpression.EVERY_10_SECONDS,
-            startDate: repeat_start_at,
-            endDate: repeat_end_at,
-            limit: !is_repeat ? 1 : undefined,
-          },
-        }),
-        // this.maintenanceQueue.add(GAME_MAINTENANCE_END, platform_code, {
-        //   repeat: {
-        //     cron: dateToCron(end_at),
-        //     startDate: repeat_start_at,
-        //     endDate: repeat_end_at,
-        //     limit: !is_repeat ? 1 : undefined,
-        //   },
-        // }),
-      ]);
-    } else {
-      jobs = await Promise.all([
-        this.maintenanceQueue.add(MAIN_MAINTENANCE_START, '', {
-          repeat: {
-            cron: dateToCron(start_at),
-            startDate: repeat_start_at,
-            endDate: repeat_end_at,
-            limit: !is_repeat ? 1 : undefined,
-          },
-        }),
-        this.maintenanceQueue.add(MAIN_MAINTENANCE_END, '', {
-          repeat: {
-            cron: dateToCron(end_at),
-            startDate: repeat_start_at,
-            endDate: repeat_end_at,
-            limit: !is_repeat ? 1 : undefined,
-          },
-        }),
-      ]);
-    }
     const record = await this.prisma.maintenance.create({
       data: {
         type,
@@ -93,75 +53,12 @@ export class MaintenanceService {
         repeat_start_at,
         repeat_end_at,
         is_repeat,
-        job_ids: jobs.map((t) => t.id.toString().split(':')[1]),
       },
     });
-    return this.prisma.success(record);
-  }
-
-  async findAll() {
-    const records = await this.prisma.maintenance.findMany();
-
-    return records;
-  }
-
-  async findJobs(status: JobStatus[]) {
-    const jobs = await this.maintenanceQueue.getJobs(status);
-
-    return jobs;
-  }
-
-  async clean() {
-    const jobs = await this.maintenanceQueue.getJobs(['delayed']);
-    await Promise.all(
-      jobs.map((t) => this.maintenanceQueue.removeJobs(t.id.toString())),
-    );
-    return this.prisma.success(jobs);
-  }
-
-  async findOne(id: number) {
-    const job = await this.maintenanceQueue.getJob(
-      'repeat:d55563db7cf4cf51badf97527037592e:1664688980000',
-    );
-    return { data: job.data, opts: job.opts, id: job.id };
-  }
-
-  async update(id: number, data: UpdateMaintenanceDto) {
-    // 正在跑排程的不可更新
-    const {
-      type,
-      platform_code,
-      start_at,
-      end_at,
-      repeat_start_at,
-      repeat_end_at,
-      is_repeat,
-    } = data;
-
-    const oldRecord = await this.prisma.maintenance.findUnique({
-      where: { id },
-    });
-
-    await Promise.all(
-      oldRecord.job_ids.map((id) =>
-        this.maintenanceQueue.removeJobs(`*${id}*`),
-      ),
-    );
 
     if (type === MaintenanceType.GAME) {
-      const platform = await this.prisma.gamePlatform.findUnique({
-        where: { code: platform_code },
-      });
-      if (!platform) {
-        this.prisma.error(ResCode.NOT_FOUND, '無此遊戲平台');
-      }
-    }
-
-    let jobs: Job<string>[];
-
-    if (type === MaintenanceType.GAME) {
-      jobs = await Promise.all([
-        this.maintenanceQueue.add(GAME_MAINTENANCE_START, platform_code, {
+      await Promise.all([
+        this.maintenanceQueue.add(GAME_MAINTENANCE_START, record.id, {
           repeat: {
             cron: dateToCron(start_at),
             startDate: repeat_start_at,
@@ -169,7 +66,7 @@ export class MaintenanceService {
             limit: !is_repeat ? 1 : undefined,
           },
         }),
-        this.maintenanceQueue.add(GAME_MAINTENANCE_END, platform_code, {
+        this.maintenanceQueue.add(GAME_MAINTENANCE_END, record.id, {
           repeat: {
             cron: dateToCron(end_at),
             startDate: repeat_start_at,
@@ -179,8 +76,8 @@ export class MaintenanceService {
         }),
       ]);
     } else {
-      jobs = await Promise.all([
-        this.maintenanceQueue.add(MAIN_MAINTENANCE_START, '', {
+      await Promise.all([
+        this.maintenanceQueue.add(MAIN_MAINTENANCE_START, record.id, {
           repeat: {
             cron: dateToCron(start_at),
             startDate: repeat_start_at,
@@ -188,7 +85,7 @@ export class MaintenanceService {
             limit: !is_repeat ? 1 : undefined,
           },
         }),
-        this.maintenanceQueue.add(MAIN_MAINTENANCE_END, '', {
+        this.maintenanceQueue.add(MAIN_MAINTENANCE_END, record.id, {
           repeat: {
             cron: dateToCron(end_at),
             startDate: repeat_start_at,
@@ -198,33 +95,52 @@ export class MaintenanceService {
         }),
       ]);
     }
-    const record = await this.prisma.maintenance.update({
-      where: {
-        id,
-      },
-      data: {
-        type,
-        platform_code,
-        start_at,
-        end_at,
-        repeat_start_at,
-        repeat_end_at,
-        is_repeat,
-        job_ids: jobs.map((t) => t.id.toString().split(':')[1]),
-      },
-    });
 
     return this.prisma.success(record);
   }
 
-  async remove(id: number) {
-    const record = await this.prisma.maintenance.delete({
-      where: { id },
-    });
+  async findAll() {
+    const records = await this.prisma.maintenance.findMany();
+    const jobs = await this.maintenanceQueue.getJobs(['delayed', 'completed']);
+    const jobsMap = groupBy(jobs, (t) => t.data);
+
+    return this.prisma.success(
+      records.map((t) => ({ ...t, jobs: jobsMap[t.id] })),
+    );
+  }
+
+  async findJobs(status: JobStatus[]) {
+    const jobs = await this.maintenanceQueue.getJobs(status);
+
+    return this.prisma.success(jobs);
+  }
+
+  async clean() {
+    const jobs = await this.maintenanceQueue.getJobs(['delayed', 'completed']);
     await Promise.all(
-      record.job_ids.map((id) => this.maintenanceQueue.removeJobs(`*${id}*`)),
+      jobs.map((t) => this.maintenanceQueue.removeJobs(t.id.toString())),
+    );
+    return this.prisma.success(jobs);
+  }
+
+  async findOne(id: number) {
+    const record = await this.prisma.maintenance.findUnique({ where: { id } });
+    const jobs = await this.maintenanceQueue.getJobs(['delayed', 'completed']);
+    const filterdJobs = jobs.filter((t) => t.data === id);
+    return this.prisma.success({ ...record, jobs: filterdJobs });
+  }
+
+  async remove(id: number) {
+    const jobs = await this.maintenanceQueue.getJobs(['delayed', 'completed']);
+    const filterdJobIds = jobs.filter((t) => t.data === id).map((t) => t.id);
+    await Promise.all(
+      filterdJobIds.map((id) =>
+        this.maintenanceQueue.removeJobs(id.toString()),
+      ),
     );
 
-    return this.prisma.success(record);
+    await this.prisma.maintenance.delete({ where: { id } });
+
+    return this.prisma.success(filterdJobIds);
   }
 }
