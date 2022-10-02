@@ -72,7 +72,7 @@ export class BngService {
       // console.log(res.data);
       if (res.data.status.code === 4001) {
         await this.gameMerchantService.maintenance(this.platformCode);
-        this.prisma.error(ResCode.MAINTENANCE);
+        this.prisma.error(ResCode.GAME_MAINTENANCE);
       }
       if (res.data.status.code !== 1000) {
         await this.gameMerchantService.requestErrorHandle(

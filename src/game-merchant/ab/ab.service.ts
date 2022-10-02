@@ -97,7 +97,7 @@ export class AbService {
 
       if (res.data.resultCode === 'SYSTEM_MAINTENANCE') {
         await this.gameMerchantService.maintenance(this.platformCode);
-        this.prisma.error(ResCode.MAINTENANCE);
+        this.prisma.error(ResCode.GAME_MAINTENANCE);
       }
 
       if (!['OK', 'PLAYER_EXIST'].includes(res.data.resultCode)) {

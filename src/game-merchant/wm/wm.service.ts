@@ -60,7 +60,7 @@ export class WmService {
 
       if (res.data.errorCode === 911) {
         await this.gameMerchantService.maintenance(this.platformCode);
-        this.prisma.error(ResCode.MAINTENANCE);
+        this.prisma.error(ResCode.GAME_MAINTENANCE);
       }
 
       if (![0, 107].includes(res.data.errorCode)) {

@@ -15,13 +15,14 @@ import {
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
 import { MaintenanceType } from './enums';
+import { MaintenanceQueue } from './types';
 
 @Injectable()
 export class MaintenanceService {
   constructor(
     private readonly prisma: PrismaService,
     @InjectQueue('maintenance')
-    private readonly maintenanceQueue: Queue<number>,
+    private readonly maintenanceQueue: Queue<MaintenanceQueue>,
   ) {}
 
   async create(data: CreateMaintenanceDto) {
@@ -58,41 +59,57 @@ export class MaintenanceService {
 
     if (type === MaintenanceType.GAME) {
       await Promise.all([
-        this.maintenanceQueue.add(GAME_MAINTENANCE_START, record.id, {
-          repeat: {
-            cron: dateToCron(start_at),
-            startDate: repeat_start_at,
-            endDate: repeat_end_at,
-            limit: !is_repeat ? 1 : undefined,
+        this.maintenanceQueue.add(
+          GAME_MAINTENANCE_START,
+          { record_id: record.id, platform_code },
+          {
+            repeat: {
+              cron: dateToCron(start_at),
+              startDate: repeat_start_at,
+              endDate: repeat_end_at,
+              limit: !is_repeat ? 1 : undefined,
+            },
           },
-        }),
-        this.maintenanceQueue.add(GAME_MAINTENANCE_END, record.id, {
-          repeat: {
-            cron: dateToCron(end_at),
-            startDate: repeat_start_at,
-            endDate: repeat_end_at,
-            limit: !is_repeat ? 1 : undefined,
+        ),
+        this.maintenanceQueue.add(
+          GAME_MAINTENANCE_END,
+          { record_id: record.id, platform_code },
+          {
+            repeat: {
+              cron: dateToCron(end_at),
+              startDate: repeat_start_at,
+              endDate: repeat_end_at,
+              limit: !is_repeat ? 1 : undefined,
+            },
           },
-        }),
+        ),
       ]);
     } else {
       await Promise.all([
-        this.maintenanceQueue.add(MAIN_MAINTENANCE_START, record.id, {
-          repeat: {
-            cron: dateToCron(start_at),
-            startDate: repeat_start_at,
-            endDate: repeat_end_at,
-            limit: !is_repeat ? 1 : undefined,
+        this.maintenanceQueue.add(
+          MAIN_MAINTENANCE_START,
+          { record_id: record.id, platform_code },
+          {
+            repeat: {
+              cron: dateToCron(start_at),
+              startDate: repeat_start_at,
+              endDate: repeat_end_at,
+              limit: !is_repeat ? 1 : undefined,
+            },
           },
-        }),
-        this.maintenanceQueue.add(MAIN_MAINTENANCE_END, record.id, {
-          repeat: {
-            cron: dateToCron(end_at),
-            startDate: repeat_start_at,
-            endDate: repeat_end_at,
-            limit: !is_repeat ? 1 : undefined,
+        ),
+        this.maintenanceQueue.add(
+          MAIN_MAINTENANCE_END,
+          { record_id: record.id, platform_code },
+          {
+            repeat: {
+              cron: dateToCron(end_at),
+              startDate: repeat_start_at,
+              endDate: repeat_end_at,
+              limit: !is_repeat ? 1 : undefined,
+            },
           },
-        }),
+        ),
       ]);
     }
 
@@ -126,13 +143,15 @@ export class MaintenanceService {
   async findOne(id: number) {
     const record = await this.prisma.maintenance.findUnique({ where: { id } });
     const jobs = await this.maintenanceQueue.getJobs(['delayed', 'completed']);
-    const filterdJobs = jobs.filter((t) => t.data === id);
+    const filterdJobs = jobs.filter((t) => t.data.record_id === id);
     return this.prisma.success({ ...record, jobs: filterdJobs });
   }
 
   async remove(id: number) {
     const jobs = await this.maintenanceQueue.getJobs(['delayed', 'completed']);
-    const filterdJobIds = jobs.filter((t) => t.data === id).map((t) => t.id);
+    const filterdJobIds = jobs
+      .filter((t) => t.data.record_id === id)
+      .map((t) => t.id);
     await Promise.all(
       filterdJobIds.map((id) =>
         this.maintenanceQueue.removeJobs(id.toString()),

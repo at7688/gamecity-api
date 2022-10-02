@@ -68,7 +68,7 @@ export class ZgService {
       // console.log(res.data);
       if (res.data.result.msg === 'UNDER MAINTENANCE') {
         await this.gameMerchantService.maintenance(this.platformCode);
-        this.prisma.error(ResCode.MAINTENANCE);
+        this.prisma.error(ResCode.GAME_MAINTENANCE);
       }
       if (res.data.result.code !== 1) {
         await this.gameMerchantService.requestErrorHandle(

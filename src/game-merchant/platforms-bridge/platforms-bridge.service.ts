@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import { format } from 'date-fns';
 import { ResCode } from 'src/errors/enums';
+import { GamePlatformStatus } from 'src/game-platform/enums';
 import { MaintenanceStatus } from 'src/maintenance/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AbService } from '../ab/ab.service';
@@ -102,17 +103,16 @@ export class PlatformsBridgeService {
 
   async login(player: Player, data: LoginGameDto) {
     // 確認維護狀態
-    const record = await this.prisma.maintenance.findFirst({
+    const record = await this.prisma.gamePlatform.findFirst({
       where: {
-        platform_code: data.platform_code,
-        status: MaintenanceStatus.IN_PROGRESS,
+        code: data.platform_code,
       },
     });
-    if (record) {
-      this.prisma.error(
-        ResCode.MAINTENANCE,
-        `遊戲維護中(至${format(record.end_at, 'HH:mm')})`,
-      );
+    if (record.status === GamePlatformStatus.MAINTENANCE) {
+      this.prisma.error(ResCode.GAME_MAINTENANCE, '遊戲維護中');
+    }
+    if (record.status === GamePlatformStatus.OFFLINE) {
+      this.prisma.error(ResCode.GAME_OFFLINE, '遊戲未開放');
     }
     try {
       await this.transferBack(player, {}); // WM測試機會失敗(因為轉額上限)
