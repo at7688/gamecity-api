@@ -9,3 +9,9 @@ export enum GameCategory {
   LOTTERY = 'LOTTERY',
   STREET = 'STREET',
 }
+
+export enum GameStatus {
+  ONLINE = 1,
+  OFFLINE = 2,
+  MAINTENANCE = 3,
+}

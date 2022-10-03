@@ -19,10 +19,15 @@ export class CreateMaintenanceDto {
   @IsNotEmpty()
   type: MaintenanceType;
 
-  @ValidateIf((t) => t.type === MaintenanceType.GAME)
+  @ValidateIf((t) => t.type === MaintenanceType.GAME_PLATFORM)
   @IsString()
   @IsNotEmpty()
   platform_code: string;
+
+  @ValidateIf((t) => t.type === MaintenanceType.GAME)
+  @IsString()
+  @IsNotEmpty()
+  game_id: string;
 
   @IsNotEmpty()
   @Transform(({ value }) => new Date(value))

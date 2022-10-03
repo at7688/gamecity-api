@@ -2,7 +2,7 @@ import { UpdateGamePlatformDto } from './dto/update-game-platform.dto';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchGamePlatformsDto } from './dto/search-game-platforms.dto';
-import { MaintenanceStatus } from 'src/maintenance/enums';
+import { MaintenanceStatus, MaintenanceType } from 'src/maintenance/enums';
 
 @Injectable()
 export class GamePlatformService {
@@ -15,6 +15,7 @@ export class GamePlatformService {
         maintenance: {
           where: {
             is_repeat: true,
+            type: MaintenanceType.GAME_PLATFORM,
             repeat_end_at: { gt: new Date() },
             status: { not: MaintenanceStatus.DONE },
           },

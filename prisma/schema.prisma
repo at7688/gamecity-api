@@ -426,6 +426,8 @@ model Maintenance {
 
   platform      GamePlatform? @relation(fields: [platform_code], references: [code])
   platform_code String?
+  game      Game? @relation(fields: [game_id], references: [id])
+  game_id String?
   start_at      DateTime?     @db.Timestamptz()
   end_at        DateTime?     @db.Timestamptz()
   repeat_start_at DateTime?     @db.Timestamptz()
@@ -435,24 +437,7 @@ model Maintenance {
   status Int @default(1) // 已排程 進行中 已完成
   note String?
 
-
-  records MaintenanceRec[]
 }
-
-model MaintenanceRec {
-  id Int @id @default(autoincrement())
-  start_at      DateTime?     @db.Timestamptz()
-  end_at        DateTime?     @db.Timestamptz()
-  maintenance Maintenance @relation(fields: [maintenance_id], references: [id])
-  maintenance_id Int
-}
-
-// model GamePlatformRec {
-//   platform GamePlatform @relation(fields: [platform_code], references: [code])
-//   platform_code String
-//   created_at  DateTime   @default(now()) @db.Timestamptz(6)
-//   updated_at  DateTime?  @updatedAt @db.Timestamptz(6)
-// }
 
 model GamePlatform {
   code   String @id
@@ -485,7 +470,11 @@ model Game {
   category      GameCategory? @relation(fields: [category_code], references: [code])
   category_code String?
 
+  status Int    @default(1) // 啟用 停用 維護中
+
   nums_rolling Float @default(1)
+
+  maintenance Maintenance[]
 
   @@unique([code, platform_code])
 }
