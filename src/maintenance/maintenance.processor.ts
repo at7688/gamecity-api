@@ -27,8 +27,9 @@ export class MaintenanceProcessor {
 
   @Process(GAME_MAINTENANCE_START)
   async gameMaintenanceStart(job: Job<MaintenanceQueue>) {
+    const { platform_code, record_id } = job.data;
     const gamePlatform = await this.prisma.gamePlatform.findUnique({
-      where: { code: job.data.platform_code },
+      where: { code: platform_code },
     });
     if (gamePlatform.status === GamePlatformStatus.OFFLINE) {
       return;
@@ -36,14 +37,14 @@ export class MaintenanceProcessor {
     this.Logger.debug(GAME_MAINTENANCE_START);
     await Promise.all([
       this.prisma.maintenance.update({
-        where: { id: job.data.record_id },
+        where: { id: record_id },
         data: {
           status: MaintenanceStatus.IN_PROGRESS,
         },
       }),
       this.prisma.gamePlatform.update({
         where: {
-          code: job.data.platform_code,
+          code: platform_code,
         },
         data: {
           status: GamePlatformStatus.MAINTENANCE,
@@ -55,24 +56,34 @@ export class MaintenanceProcessor {
   }
   @Process(GAME_MAINTENANCE_END)
   async gameMaintenanceEnd(job: Job<MaintenanceQueue>) {
+    const { platform_code, record_id } = job.data;
     const gamePlatform = await this.prisma.gamePlatform.findUnique({
-      where: { code: job.data.platform_code },
+      where: { code: platform_code },
     });
     if (gamePlatform.status === GamePlatformStatus.OFFLINE) {
       return;
     }
 
+    // 查看是否還有下一次的排程
+    const delayedJobs = await this.maintenanceQueue.getJobs(['delayed']);
+    const filterdJobs = delayedJobs.filter(
+      (t) => t.data.record_id === record_id,
+    );
+
     this.Logger.debug(GAME_MAINTENANCE_END);
     await Promise.all([
       this.prisma.maintenance.update({
-        where: { id: job.data.record_id },
+        where: { id: record_id },
         data: {
-          status: MaintenanceStatus.DONE,
+          status:
+            filterdJobs.length > 0
+              ? MaintenanceStatus.SCHEDULED
+              : MaintenanceStatus.DONE,
         },
       }),
       this.prisma.gamePlatform.update({
         where: {
-          code: job.data.platform_code,
+          code: platform_code,
         },
         data: {
           status: GamePlatformStatus.ONLINE,
