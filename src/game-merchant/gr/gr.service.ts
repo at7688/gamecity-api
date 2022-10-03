@@ -123,7 +123,7 @@ export class GrService {
       method: 'POST',
       path: '/api/platform/kick_user_by_account',
       data: {
-        account: player.username,
+        account: `${player.username}@${this.suffix}`,
       },
     };
 

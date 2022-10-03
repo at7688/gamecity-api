@@ -8,6 +8,7 @@ import { LoginGameDto } from './dto/login-game-dto';
 import { TransBackDto } from './dto/trans-back-dto';
 import { GetBalanceDto } from './dto/get-balance-dto';
 import { SearchBetRecordsDto } from './dto/search-bet-records';
+import { LogoutGameDto } from './dto/logout-game-dto';
 
 @Controller('client/game')
 @Platforms([PlatformType.PLAYER])
@@ -28,6 +29,11 @@ export class PlatformsBridgeController {
   @Post('login')
   login(@Body() data: LoginGameDto, @User() player: Player) {
     return this.platformsBridgeService.login(player, data);
+  }
+
+  @Post('logout')
+  logout(@Body() data: LogoutGameDto) {
+    return this.platformsBridgeService.logout(data);
   }
 
   @Post('transBack')

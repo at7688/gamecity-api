@@ -14,6 +14,7 @@ import { WmService } from '../wm/wm.service';
 import { ZgService } from '../zg/zg.service';
 import { GetBalanceDto } from './dto/get-balance-dto';
 import { LoginGameDto } from './dto/login-game-dto';
+import { LogoutGameDto } from './dto/logout-game-dto';
 import { SearchBetRecordsDto } from './dto/search-bet-records';
 import { SearchGameDto } from './dto/search-game-dto';
 import { TransBackDto } from './dto/trans-back-dto';
@@ -125,6 +126,12 @@ export class PlatformsBridgeService {
     } catch (err) {
       throw err;
     }
+  }
+
+  async logout(data: LogoutGameDto) {
+    const { platform_code, username } = data;
+    const player = await this.prisma.player.findUnique({ where: { username } });
+    return this.gameHub[platform_code].logout(player);
   }
 
   transferCheck(platform_code: string, trans_id: string) {
