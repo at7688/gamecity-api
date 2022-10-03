@@ -373,6 +373,13 @@ model Vip {
   withdraw_fee   Float @default(0)
 }
 
+model SmsMerchant {
+  code String @id
+  name String
+  config Json?
+  is_active Boolean @default(true)
+}
+
 model LoginRec {
   id            Int          @id @default(autoincrement())
   admin_user_id String?

@@ -58,6 +58,7 @@ import { ApplicantModule } from './applicant/applicant.module';
 import { PromoCodeModule } from './promo-code/promo-code.module';
 import { BullModule } from '@nestjs/bull';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import { SmsMerchantModule } from './sms-merchant/sms-merchant.module';
 
 @Module({
   imports: [
@@ -130,6 +131,7 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
       },
     }),
     MaintenanceModule,
+    SmsMerchantModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
