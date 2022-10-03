@@ -862,6 +862,11 @@ model PlayerTag {
   @@unique([player_id, type])
 }
 
+model SysConfig {
+  code String @id
+  value String
+}
+
 enum PlatformType {
   ADMIN
   AGENT

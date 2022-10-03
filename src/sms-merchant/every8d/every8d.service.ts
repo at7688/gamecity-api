@@ -9,6 +9,7 @@ import { Every8dReqBase, Every8dResBase, EVERY8D_TOKEN } from './types/base';
 import { Every8dGetCreditReq, Every8dGetCreditRes } from './types/getCredit';
 import { Every8dGetTokenReq, Every8dGetTokenRes } from './types/getToken';
 import * as FormData from 'form-data';
+import { Every8dSendSmsReq, Every8dSendSmsRes } from './types/sendSms';
 
 export class Every8dService {
   constructor(
@@ -122,5 +123,24 @@ export class Every8dService {
     const number = await this.request<Every8dGetCreditRes>(reqConfig);
     console.log(number);
     return this.prisma.success(number);
+  }
+
+  async sendSms(content: string, phones: string[]) {
+    const token = await this.cacheManager.get(EVERY8D_TOKEN);
+    if (!token) {
+      await this.getToken();
+    }
+    const reqConfig: Every8dReqBase<Every8dSendSmsReq> = {
+      method: 'POST',
+      path: '/API21/HTTP/SendSMS.ashx',
+      form: {
+        SB: '簡訊驗證',
+        MSG: content,
+        DEST: phones.join(','),
+      },
+    };
+    await this.request<Every8dSendSmsRes>(reqConfig);
+
+    return this.prisma.success();
   }
 }

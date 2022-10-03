@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "SysConfig" ALTER COLUMN "value" SET DATA TYPE TEXT;
