@@ -7,16 +7,19 @@ import {
 } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
+import { Cache } from 'cache-manager';
 import { format } from 'date-fns';
 import * as FormData from 'form-data';
-import * as qs from 'query-string';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { ResCode } from 'src/errors/enums';
 import { GameCategory } from 'src/game/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { v4 as uuidv4 } from 'uuid';
 import { GameMerchantService } from '../game-merchant.service';
+import { RecordTicketService } from '../record-ticket/record-ticket.service';
+import { TransferStatus } from '../transfer/enums';
 import { OgReqBase, OgResBase, OG_API_TOKEN } from './types/base';
 import { OgCreatePlayerReq, OgCreatePlayerRes } from './types/createPlayer';
 import { OgBetRecordsReq, OgBetRecordsRes } from './types/fetchBetRecords';
@@ -26,13 +29,8 @@ import { OgGetBalanceReq, OgGetBalanceRes } from './types/getBalance';
 import { OgGetGameKeyReq, OgGetGameKeyRes } from './types/getGameKey';
 import { OgGetGameLinkReq, OgGetGameLinkRes } from './types/getGameLink';
 import { OgTransferBackReq, OgTransferBackRes } from './types/transferBack';
-import { OgTransferToReq, OgTransferToRes } from './types/transferTo';
-import { Cache } from 'cache-manager';
-import { TransferStatus } from '../transfer/enums';
-import { ResCode } from 'src/errors/enums';
 import { OgTransferCheckReq, OgTransferCheckRes } from './types/transferCheck';
-import { RecordTicketService } from '../record-ticket/record-ticket.service';
-import { OgLogoutReq, OgLogoutRes } from './types/logout';
+import { OgTransferToReq, OgTransferToRes } from './types/transferTo';
 @Injectable()
 export class OgService {
   constructor(
@@ -164,9 +162,7 @@ export class OgService {
     };
 
     const res = await this.request<OgGetApiTokenRes>(reqConfig);
-    if (!res) {
-      throw new BadGatewayException('取得API TOKEN失敗');
-    }
+
     await this.cacheManager.set(OG_API_TOKEN, res.data.token);
     return res.data;
   }

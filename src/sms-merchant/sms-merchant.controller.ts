@@ -10,10 +10,14 @@ import {
 import { SmsMerchantService } from './sms-merchant.service';
 import { CreateSmsMerchantDto } from './dto/create-sms-merchant.dto';
 import { UpdateSmsMerchantDto } from './dto/update-sms-merchant.dto';
+import { Every8dService } from './every8d/every8d.service';
 
 @Controller('smsMerchant')
 export class SmsMerchantController {
-  constructor(private readonly smsMerchantService: SmsMerchantService) {}
+  constructor(
+    private readonly smsMerchantService: SmsMerchantService,
+    private readonly every8dService: Every8dService,
+  ) {}
 
   @Post('create')
   create(@Body() createSmsMerchantDto: CreateSmsMerchantDto) {
@@ -25,10 +29,10 @@ export class SmsMerchantController {
     return this.smsMerchantService.findAll();
   }
 
-  @Get(':code')
-  findOne(@Param('code') code: string) {
-    return this.smsMerchantService.findOne(code);
-  }
+  // @Get(':code')
+  // findOne(@Param('code') code: string) {
+  //   return this.smsMerchantService.findOne(code);
+  // }
 
   @Post('update')
   update(@Body() updateSmsMerchantDto: UpdateSmsMerchantDto) {
@@ -38,5 +42,10 @@ export class SmsMerchantController {
   @Delete(':code')
   remove(@Param('code') code: string) {
     return this.smsMerchantService.remove(code);
+  }
+
+  @Get('getCredit')
+  getCredit() {
+    return this.every8dService.getCredit();
   }
 }
