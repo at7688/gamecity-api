@@ -24,6 +24,11 @@ export class AbController {
     return this.abService.login(player);
   }
 
+  @Post('logout')
+  logout(@User() player: Player) {
+    return this.abService.logout(player);
+  }
+
   @Get('balance')
   getPlayer(@User() player: Player) {
     return this.abService.getBalance(player);

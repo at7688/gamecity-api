@@ -6,7 +6,7 @@ import {
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
-import { addSeconds, format } from 'date-fns';
+import { addSeconds, format, getUnixTime } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { ResCode } from 'src/errors/enums';
 import { GameCategory } from 'src/game/enums';
@@ -22,6 +22,7 @@ import { WmCreatePlayerReq, WmCreatePlayerRes } from './types/createPlayer';
 import { WmBetRecordsReq, WmBetRecordsRes } from './types/fetchBetRecords';
 import { WmGetBalanceReq, WmGetBalanceRes } from './types/getBalance';
 import { WmGetGameLinkReq, WmGetGameLinkRes } from './types/getGameLink';
+import { WmLogoutReq, WmLogoutRes } from './types/logout';
 import { WmTransferBackReq, WmTransferBackRes } from './types/transferBack';
 import { WmTransferCheckReq, WmTransferCheckRes } from './types/transferCheck';
 import { WmTransferToReq, WmTransferToRes } from './types/transferTo';
@@ -130,6 +131,23 @@ export class WmService {
         password,
       },
     });
+
+    return this.prisma.success();
+  }
+
+  async logout(player?: Player) {
+    const reqConfig: WmReqBase<WmLogoutReq> = {
+      method: 'POST',
+      path: '',
+      data: {
+        cmd: 'LogoutGame',
+        user: player?.username,
+        timestamp: getUnixTime(new Date()),
+        syslang: 0,
+      },
+    };
+
+    await this.request<WmLogoutRes>(reqConfig);
 
     return this.prisma.success();
   }

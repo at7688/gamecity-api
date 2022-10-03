@@ -24,6 +24,7 @@ import { BngBetRecordsReq, BngBetRecordsRes } from './types/fetchBetRecords';
 import { BngGameListReq, BngGameListRes } from './types/gameList';
 import { BngGetBalanceReq, BngGetBalanceRes } from './types/getBalance';
 import { BngGetGameLinkReq, BngGetGameLinkRes } from './types/getGameLink';
+import { BngLogoutReq, BngLogoutRes } from './types/logout';
 import { BngTransferBackReq, BngTransferBackRes } from './types/transferBack';
 import {
   BngTransferCheckReq,
@@ -122,22 +123,33 @@ export class BngService {
       },
     };
 
-    try {
-      await this.request<BngCreatePlayerRes>(reqConfig);
+    await this.request<BngCreatePlayerRes>(reqConfig);
 
-      // 新增廠商對應遊戲帳號
-      await this.prisma.gameAccount.create({
-        data: {
-          platform_code: this.platformCode,
-          player_id: player.id,
-          account: player.username,
-        },
-      });
+    // 新增廠商對應遊戲帳號
+    await this.prisma.gameAccount.create({
+      data: {
+        platform_code: this.platformCode,
+        player_id: player.id,
+        account: player.username,
+      },
+    });
 
-      return this.prisma.success();
-    } catch (err) {
-      throw new BadRequestException(err);
-    }
+    return this.prisma.success();
+  }
+
+  async logout(player: Player) {
+    const reqConfig: BngReqBase<BngLogoutReq> = {
+      method: 'POST',
+      path: '/agent/user_logout',
+      data: {
+        account_id: this.accountId,
+        username: player.username,
+      },
+    };
+
+    await this.request<BngLogoutRes>(reqConfig);
+
+    return this.prisma.success();
   }
 
   async getGameList() {
@@ -186,13 +198,9 @@ export class BngService {
       },
     };
 
-    try {
-      const res = await this.request<BngGetGameLinkRes>(reqConfig);
+    const res = await this.request<BngGetGameLinkRes>(reqConfig);
 
-      return res.data.game_url;
-    } catch (err) {
-      throw new BadRequestException(err);
-    }
+    return res.data.game_url;
   }
 
   async transferTo(player: Player) {

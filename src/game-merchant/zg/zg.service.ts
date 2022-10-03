@@ -19,6 +19,7 @@ import { ZgBetRecordsReq, ZgBetRecordsRes } from './types/fetchBetRecords';
 import { ZgGameListRes } from './types/gameList';
 import { ZgGetBalanceReq, ZgGetBalanceRes } from './types/getBalance';
 import { ZgGetGameLinkReq, ZgGetGameLinkRes } from './types/getGameLink';
+import { ZgLogoutReq, ZgLogoutRes } from './types/logout';
 import { ZgTransferBackReq, ZgTransferBackRes } from './types/transferBack';
 import { ZgTransferCheckReq, ZgTransferCheckRes } from './types/transferCheck';
 import { ZgTransferToReq, ZgTransferToRes } from './types/transferTo';
@@ -128,6 +129,21 @@ export class ZgService {
         account: `${player.username}@${this.suffix}`,
       },
     });
+
+    return this.prisma.success();
+  }
+
+  async logout(player?: Player) {
+    const reqConfig: ZgReqBase<ZgLogoutReq> = {
+      method: 'POST',
+      path: '/v1/member/logout',
+      data: {
+        agent: this.agentAcc,
+        account: player.username,
+      },
+    };
+
+    await this.request<ZgLogoutRes>(reqConfig);
 
     return this.prisma.success();
   }

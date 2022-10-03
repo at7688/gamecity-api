@@ -24,6 +24,11 @@ export class GrController {
     return this.grService.login(game_id, player);
   }
 
+  @Post('logout')
+  logout(@User() player: Player) {
+    return this.grService.logout(player);
+  }
+
   @Get('balance')
   getPlayer(@User() player: Player) {
     return this.grService.getBalance(player);

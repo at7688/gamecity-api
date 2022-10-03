@@ -24,6 +24,11 @@ export class ZgController {
     return this.zgService.login(game_id, player);
   }
 
+  @Post('logout')
+  logout(@User() player: Player) {
+    return this.zgService.logout(player);
+  }
+
   @Get('balance')
   getPlayer(@User() player: Player) {
     return this.zgService.getBalance(player);

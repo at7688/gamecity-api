@@ -23,6 +23,7 @@ import { ResCode } from 'src/errors/enums';
 import { TransferStatus } from '../transfer/enums';
 import { BwinTransferCheckRes } from './types/transferCheck';
 import { RecordTicketService } from '../record-ticket/record-ticket.service';
+import { BwinLogoutReq, BwinLogoutRes } from './types/logout';
 @Injectable()
 export class BwinService {
   constructor(
@@ -110,6 +111,20 @@ export class BwinService {
         account: player.username,
       },
     });
+
+    return this.prisma.success();
+  }
+
+  async logout(player: Player) {
+    const reqConfig: BwinReqBase<BwinLogoutReq> = {
+      method: 'POST',
+      path: '/api/v1/players/logout',
+      data: {
+        player: player.username,
+      },
+    };
+
+    await this.request<BwinLogoutRes>(reqConfig);
 
     return this.prisma.success();
   }

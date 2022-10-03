@@ -20,6 +20,7 @@ import { AbBetRecordsReq, AbBetRecordsRes } from './types/fetchBetRecords';
 import { AbGameListReq, AbGameListRes } from './types/gameList';
 import { AbGetBalanceReq, AbGetBalanceRes } from './types/getBalance';
 import { AbGetGameLinkReq, AbGetGameLinkRes } from './types/getGameLink';
+import { AbLogoutReq, AbLogoutRes } from './types/logout';
 import { AbTransferBackReq, AbTransferBackRes } from './types/transferBack';
 import { AbTransferCheckReq, AbTransferCheckRes } from './types/transferCheck';
 import { AbTransferToReq, AbTransferToRes } from './types/transferTo';
@@ -157,6 +158,20 @@ export class AbService {
         account: player.username,
       },
     });
+
+    return this.prisma.success();
+  }
+
+  async logout(player: Player) {
+    const reqConfig: AbReqBase<AbLogoutReq> = {
+      method: 'POST',
+      path: '/Logout',
+      data: {
+        player: player.username + this.suffix,
+      },
+    };
+
+    await this.request<AbLogoutRes>(reqConfig);
 
     return this.prisma.success();
   }

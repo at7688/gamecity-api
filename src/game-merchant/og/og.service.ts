@@ -32,6 +32,7 @@ import { TransferStatus } from '../transfer/enums';
 import { ResCode } from 'src/errors/enums';
 import { OgTransferCheckReq, OgTransferCheckRes } from './types/transferCheck';
 import { RecordTicketService } from '../record-ticket/record-ticket.service';
+import { OgLogoutReq, OgLogoutRes } from './types/logout';
 @Injectable()
 export class OgService {
   constructor(
@@ -184,11 +185,7 @@ export class OgService {
       },
     };
 
-    const res = await this.request<OgCreatePlayerRes>(reqConfig);
-
-    if (!res) {
-      throw new BadRequestException('帳號新增失敗');
-    }
+    await this.request<OgCreatePlayerRes>(reqConfig);
 
     // 新增廠商對應遊戲帳號
     await this.prisma.gameAccount.create({
@@ -198,6 +195,23 @@ export class OgService {
         account: player.username,
       },
     });
+
+    return this.prisma.success();
+  }
+
+  async logout(player: Player) {
+    // OG無此功能, 僅有封鎖
+
+    // const reqConfig: OgReqBase<OgLogoutReq> = {
+    //   method: 'POST',
+    //   path: '/players/status',
+    //   data: {
+    //     username: player.username,
+    //     status: 'blocked',
+    //   },
+    // };
+
+    // await this.request<OgLogoutRes>(reqConfig);
 
     return this.prisma.success();
   }

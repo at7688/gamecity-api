@@ -24,6 +24,11 @@ export class BwinController {
     return this.bwinService.login(game_id, player);
   }
 
+  @Post('logout')
+  logout(@User() player: Player) {
+    return this.bwinService.logout(player);
+  }
+
   @Get('balance')
   getPlayer(@User() player: Player) {
     return this.bwinService.getBalance(player);

@@ -24,6 +24,11 @@ export class BngController {
     return this.bngService.login(game_id, player);
   }
 
+  @Post('logout')
+  logout(@User() player: Player) {
+    return this.bngService.logout(player);
+  }
+
   @Get('balance')
   getPlayer(@User() player: Player) {
     return this.bngService.getBalance(player);

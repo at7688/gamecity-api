@@ -24,6 +24,16 @@ export class WmController {
     return this.wmService.login(game_id, player);
   }
 
+  @Post('logout')
+  logout(@User() player: Player) {
+    return this.wmService.logout(player);
+  }
+
+  @Post('logoutAll')
+  logoutAll() {
+    return this.wmService.logout();
+  }
+
   @Get('balance')
   getPlayer(@User() player: Player) {
     return this.wmService.getBalance(player);

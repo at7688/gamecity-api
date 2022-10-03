@@ -22,6 +22,7 @@ import { TransferStatus } from '../transfer/enums';
 import { ResCode } from 'src/errors/enums';
 import { GrTransferCheckReq, GrTransferCheckRes } from './types/transferCheck';
 import { RecordTicketService } from '../record-ticket/record-ticket.service';
+import { GrLogoutReq, GrLogoutRes } from './types/logout';
 
 @Injectable()
 export class GrService {
@@ -113,6 +114,20 @@ export class GrService {
         account: `${player.username}@${this.suffix}`,
       },
     });
+
+    return this.prisma.success();
+  }
+
+  async logout(player: Player) {
+    const reqConfig: GrReqBase<GrLogoutReq> = {
+      method: 'POST',
+      path: '/api/platform/kick_user_by_account',
+      data: {
+        account: player.username,
+      },
+    };
+
+    await this.request<GrLogoutRes>(reqConfig);
 
     return this.prisma.success();
   }
