@@ -59,6 +59,8 @@ import { PromoCodeModule } from './promo-code/promo-code.module';
 import { BullModule } from '@nestjs/bull';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { SmsMerchantModule } from './sms-merchant/sms-merchant.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { SmsModule } from './sms/sms.module';
 
 @Module({
   imports: [
@@ -68,6 +70,7 @@ import { SmsMerchantModule } from './sms-merchant/sms-merchant.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    EventEmitterModule.forRoot(),
     AnnouncementModule,
     OperationRecModule,
     PermissionModule,
@@ -132,6 +135,7 @@ import { SmsMerchantModule } from './sms-merchant/sms-merchant.module';
     }),
     MaintenanceModule,
     SmsMerchantModule,
+    SmsModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

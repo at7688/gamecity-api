@@ -7,5 +7,6 @@ import { Every8dTask } from './every8d/every8d.task';
 @Module({
   controllers: [SmsMerchantController],
   providers: [SmsMerchantService, Every8dService, Every8dTask],
+  exports: [SmsMerchantService],
 })
 export class SmsMerchantModule {}

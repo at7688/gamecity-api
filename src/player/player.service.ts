@@ -1,5 +1,10 @@
 import { RegisterPlayerDto } from './dto/register-player.dto';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  CACHE_MANAGER,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
@@ -16,13 +21,16 @@ import { playerList } from './raw/playerList';
 import { SubAgent, subAgents } from './raw/subAgents';
 import { TargetType } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class PlayerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly memberService: MemberService,
+    private readonly eventEmitter: EventEmitter2,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
 
@@ -36,7 +44,22 @@ export class PlayerService {
   }
 
   async register(data: RegisterPlayerDto) {
-    const { password, username, nickname, invited_code, phone, email } = data;
+    const {
+      password,
+      username,
+      nickname,
+      invited_code,
+      phone_code,
+      phone,
+      email,
+    } = data;
+
+    const code = await this.cacheManager.get<string>(phone);
+
+    if (phone_code !== code) {
+      this.prisma.error(ResCode.PHONE_CODE_ERR, '手機驗證碼錯誤');
+    }
+
     const hash = await argon2.hash(password);
 
     const invitedPromo = await this.prisma.promoCode.findFirst({
@@ -57,7 +80,7 @@ export class PlayerService {
     });
 
     try {
-      await this.prisma.player.create({
+      const player = await this.prisma.player.create({
         data: {
           username,
           nickname,
@@ -77,6 +100,7 @@ export class PlayerService {
               : undefined,
         },
       });
+      this.eventEmitter.emit('player.register', player);
     } catch (err) {
       this.prisma.error(ResCode.DB_ERR, JSON.stringify(err));
     }

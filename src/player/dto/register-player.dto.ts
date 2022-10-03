@@ -18,8 +18,12 @@ export class RegisterPlayerDto {
   invited_code: string;
 
   @IsString()
-  @IsOptional()
-  phone?: string;
+  @IsNotEmpty()
+  phone_code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
 
   @IsEmail()
   @IsOptional()

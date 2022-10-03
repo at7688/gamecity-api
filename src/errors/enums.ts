@@ -19,6 +19,7 @@ export enum ResCode {
 
   OVER_FETCH_LIMIT = 'PY0601', // 搜尋次數已超過遊戲商上限
   FETCH_RANGE_ERR = 'PY0602', // 搜尋時間超過限制
+  PHONE_CODE_ERR = 'PY0701', // 簡訊驗證碼錯誤
 
   DATA_DUPICATED = 'AL0100', // 資料重複(代碼/帳號)
 

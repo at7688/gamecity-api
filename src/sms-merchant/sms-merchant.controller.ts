@@ -1,18 +1,9 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
-import { SmsMerchantService } from './sms-merchant.service';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CreateSmsMerchantDto } from './dto/create-sms-merchant.dto';
+import { GetSmsCreditDto } from './dto/get-sms-credit.dto';
 import { UpdateSmsMerchantDto } from './dto/update-sms-merchant.dto';
 import { Every8dService } from './every8d/every8d.service';
-import { SendSmsDto } from './dto/send-sms.dto';
-import { GetSmsCreditDto } from './dto/get-sms-credit.dto';
+import { SmsMerchantService } from './sms-merchant.service';
 
 @Controller('smsMerchant')
 export class SmsMerchantController {
@@ -49,11 +40,5 @@ export class SmsMerchantController {
   @Get('getCredit')
   getCredit(@Body() data: GetSmsCreditDto) {
     return this.smsMerchantService.getCredit(data.merchant_code);
-  }
-
-  @Post('sendSms')
-  sendSms(@Body() data: SendSmsDto) {
-    const { content, phones } = data;
-    return this.smsMerchantService.sendSms(content, phones);
   }
 }
