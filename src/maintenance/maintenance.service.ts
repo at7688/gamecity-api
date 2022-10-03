@@ -2,10 +2,11 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
 import Bull, { Job, JobStatus, Queue } from 'bull';
+import { format } from 'date-fns';
 import { groupBy } from 'lodash';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { dateToCron } from 'src/utils';
+import { dateToCron, dateToScheduleTips } from 'src/utils';
 import {
   GAME_MAINTENANCE_END,
   GAME_MAINTENANCE_START,
@@ -54,6 +55,7 @@ export class MaintenanceService {
         repeat_start_at,
         repeat_end_at,
         is_repeat,
+        note: `${dateToScheduleTips(start_at)}~${dateToScheduleTips(end_at)}`,
       },
     });
 

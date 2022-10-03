@@ -7,5 +7,4 @@ export enum MaintenanceStatus {
   SCHEDULED = 1,
   IN_PROGRESS = 2,
   DONE = 3,
-  CLOSED = 4,
 }

@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 export const numArrToBooleanSearch = (nums: number[]) => {
   return nums.includes(1) && nums.includes(2)
     ? undefined
@@ -17,4 +19,8 @@ export const dateToCron = (date: Date) => {
   const hours = date.getHours();
   const day = date.getDay();
   return `${minutes} ${hours} * * ${day}`;
+};
+
+export const dateToScheduleTips = (date: Date) => {
+  return format(date, '(EEE)HH:mm');
 };

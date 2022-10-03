@@ -432,9 +432,7 @@ model Maintenance {
   repeat_end_at DateTime?     @db.Timestamptz()
 
   is_repeat Boolean @default(true)
-  is_active Boolean @default(true)
-  status Int @default(1) // 已排程 進行中 已完成 已終止
-
+  status Int @default(1) // 已排程 進行中 已完成
   note String?
 
 
