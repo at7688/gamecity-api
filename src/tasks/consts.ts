@@ -1,0 +1,1 @@
+const CLEAN_LOGON_REC = 'CLEAN_LOGON_REC';
