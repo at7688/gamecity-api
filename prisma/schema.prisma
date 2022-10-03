@@ -386,6 +386,8 @@ model LoginRec {
   admin_user    AdminUser?   @relation(fields: [admin_user_id], references: [id])
   agent         Member?      @relation(fields: [agent_id], references: [id])
   player        Player?      @relation(fields: [player_id], references: [id])
+
+  token String?
 }
 
 model Banner {

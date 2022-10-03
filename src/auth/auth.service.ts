@@ -164,6 +164,26 @@ export class AuthService {
     }
   }
 
+  async logout(user: Player | LoginUser) {
+    const record = await this.prisma.loginRec.findFirst({
+      where: {
+        OR: [
+          { admin_user_id: user.id },
+          { player_id: user.id },
+          { agent_id: user.id },
+        ],
+      },
+      orderBy: {
+        login_at: 'desc',
+      },
+    });
+    await this.prisma.loginRec.update({
+      where: { id: record.id },
+      data: { token: null },
+    });
+    return this.prisma.success();
+  }
+
   async loginErrHandler({ user, password, ip, ...params }: LoginHandlerParams) {
     // 獲取帳戶失敗
     if (!user) {
@@ -198,6 +218,7 @@ export class AuthService {
           ip,
           nums_failed: 0,
           platform: this.platform,
+          token,
         },
       });
 

@@ -37,9 +37,9 @@ export class AuthController {
   }
 
   @Post('logout')
-  @Public()
-  async logout(@Req() req) {
-    return this.prisma.success();
+  @Platforms([PlatformType.ADMIN, PlatformType.AGENT, PlatformType.PLAYER])
+  async logout(@User() user: LoginUser | Player) {
+    return this.authService.logout(user);
   }
 
   @Get('me')
