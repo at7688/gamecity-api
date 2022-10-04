@@ -9,6 +9,7 @@ import { Player } from '@prisma/client';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { WithdrawStatus } from './enums';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class WithdrawClientService {
@@ -33,7 +34,7 @@ export class WithdrawClientService {
       },
     });
     if (!playerCard) {
-      throw new BadRequestException('卡片不可用');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '卡片不可用');
     }
 
     // 若有審核中的提領單則駁回
@@ -46,7 +47,7 @@ export class WithdrawClientService {
       },
     });
     if (withdraws.length) {
-      throw new BadRequestException('不可重複申請提領');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '不可重複申請提領');
     }
 
     // 查詢VIP等級的提領限制
@@ -57,10 +58,16 @@ export class WithdrawClientService {
     });
 
     if (amount > vip.withdraw_max) {
-      throw new BadRequestException(`最高提領限額為${vip.withdraw_max}元`);
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
+        `最高提領限額為${vip.withdraw_max}元`,
+      );
     }
     if (amount < vip.withdraw_min) {
-      throw new BadRequestException(`最低提領限額為${vip.withdraw_min}元`);
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
+        `最低提領限額為${vip.withdraw_min}元`,
+      );
     }
 
     // 依照VIP等級查詢此提領單的手續費%數

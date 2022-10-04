@@ -6,13 +6,18 @@ import {
   Post,
 } from '@nestjs/common';
 import { MerchantCode } from '@prisma/client';
+import { ResCode } from 'src/errors/enums';
 import { Public } from 'src/metas/public.meta';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { MerchantOrderService } from './merchant-order.service';
 import { QiyuService } from './qiyu.service';
 
 @Controller('order')
 export class MerchantOrderController {
-  constructor(private readonly qiyuService: QiyuService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly qiyuService: QiyuService,
+  ) {}
 
   @Post('notify/:code')
   @Public()
@@ -21,7 +26,6 @@ export class MerchantOrderController {
       case MerchantCode.QIYU:
         return this.qiyuService.notify(body);
     }
-
-    throw new BadGatewayException('Notify Error');
+    this.prisma.error(ResCode.NOT_FOUND, '無此廠商代碼');
   }
 }

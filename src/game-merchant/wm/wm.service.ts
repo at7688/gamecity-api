@@ -119,7 +119,7 @@ export class WmService {
     const res = await this.request<WmCreatePlayerRes>(reqConfig);
 
     if (!res) {
-      throw new BadGatewayException('新增帳號失敗');
+      this.prisma.error(ResCode.GAME_MERCHANT_ERR, '新增帳號失敗');
     }
 
     // 新增廠商對應遊戲帳號
@@ -208,7 +208,7 @@ export class WmService {
     const res = await this.request<WmGetGameLinkRes>(reqConfig);
 
     if (!res) {
-      throw new BadRequestException('獲取遊戲連結失敗');
+      this.prisma.error(ResCode.GAME_MERCHANT_ERR, '獲取遊戲連結失敗');
     }
 
     return res.result;

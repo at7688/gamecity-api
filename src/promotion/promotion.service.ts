@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
+import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
@@ -29,7 +30,7 @@ export class PromotionService {
       valid_bet,
     } = data;
     if (schedule_type !== ScheduleType.FOREVER && end_at < new Date()) {
-      throw new BadRequestException('結束時間不可小於當前時間');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '結束時間不可小於當前時間');
     }
     return this.prisma.promotion.create({
       data: {

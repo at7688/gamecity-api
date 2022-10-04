@@ -19,7 +19,10 @@ export enum ResCode {
 
   OVER_FETCH_LIMIT = 'PY0601', // 搜尋次數已超過遊戲商上限
   FETCH_RANGE_ERR = 'PY0602', // 搜尋時間超過限制
-  PHONE_CODE_ERR = 'PY0701', // 簡訊驗證碼錯誤
+  INVALID_PHONE_CODE = 'PY0701', // 簡訊驗證碼錯誤
+  INVALID_PASSWORD = 'PY0702', // 簡訊驗證碼錯誤
+
+  PAYMENT_MERCHANT_ERR = 'PY0800', // 金流商回傳錯誤
 
   DATA_DUPICATED = 'AL0100', // 資料重複(代碼/帳號)
 
@@ -31,9 +34,10 @@ export enum ResCode {
   EMPTY_VAL = 'AL0040', // 不可為空
   DB_ERR = 'AL0050', // DB錯誤
   FORMAT_ERR = 'AL0060', // 格式驗證錯誤
-  FIELD_NOT_VALID = 'AL0060', // 欄位驗證錯誤
+  FIELD_NOT_VALID = 'AL0061', // 欄位驗證錯誤
 
   OVER_AGENT_LIMIT = 'AL0070', // 超過代理洗碼設定限制
+  BLOCKED_ACCOUNT = 'AL0080', // 帳號已被封鎖
 
   NO_AUTH = 'AL0090', // TOKEN錯誤
   EXCEPTION_ERR = 'AL9999', // 未知例外錯誤

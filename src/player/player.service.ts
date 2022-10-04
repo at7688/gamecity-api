@@ -72,7 +72,7 @@ export class PlayerService {
     const code = await this.cacheManager.get<string>(phone);
 
     if (phone_code !== code) {
-      this.prisma.error(ResCode.PHONE_CODE_ERR, '手機驗證碼錯誤');
+      this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
     }
 
     const hash = await argon2.hash(password);
@@ -137,7 +137,7 @@ export class PlayerService {
         subAgents(user.id),
       );
       if (agents.findIndex((t) => t.id === agent_id) === -1) {
-        throw new BadRequestException('無此下線');
+        this.prisma.error(ResCode.FIELD_NOT_VALID, '無此下線');
       }
     }
 

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { TargetType } from 'src/enums';
+import { ResCode } from 'src/errors/enums';
 import { MemberService } from 'src/member/member.service';
 import { SubAgent, subAgents } from 'src/player/raw/subAgents';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -133,7 +134,7 @@ export class InboxService {
   async create(data: CreateInboxDto, user: LoginUser) {
     const toMembers = await this.checkCreateTargets(data, user);
     if (toMembers.length === 0) {
-      throw new BadRequestException('發信對象為空');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '發信對象為空');
     }
     return this.prisma.inboxRec.create({
       data: {
@@ -247,7 +248,7 @@ export class InboxService {
       where: { id },
     });
     if (target.to_member_id !== user.id) {
-      throw new BadRequestException('非信件接收者');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '非信件接收者');
     }
     return this.prisma.inbox.update({
       where: { id },

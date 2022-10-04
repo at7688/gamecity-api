@@ -12,6 +12,7 @@ import { Reflector } from '@nestjs/core';
 import { Permission, PlatformType } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { Observable } from 'rxjs';
+import { ResCode } from 'src/errors/enums';
 import { IS_PUBLIC, PLATFORMS } from 'src/meta-consts';
 import { PrismaService } from 'src/prisma/prisma.service';
 

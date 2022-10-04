@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AdminUser, Member, Menu, Player, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { Cache } from 'cache-manager';
+import { ResCode } from 'src/errors/enums';
 import { playerRolling } from 'src/player/raw/playerRolling';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
@@ -160,39 +161,24 @@ export class AuthService {
     // 密碼驗證
     const isPasswordValid = await argon2.verify(password, input_password);
     if (!isPasswordValid) {
-      throw new BadRequestException('bad password');
+      this.prisma.error(ResCode.INVALID_PASSWORD, 'bad password');
     }
   }
 
-  async logout(user: Player | LoginUser) {
-    const record = await this.prisma.loginRec.findFirst({
-      where: {
-        OR: [
-          { admin_user_id: user.id },
-          { player_id: user.id },
-          { agent_id: user.id },
-        ],
-      },
-      orderBy: {
-        login_at: 'desc',
-      },
-    });
-    await this.prisma.loginRec.update({
-      where: { id: record.id },
-      data: { token: null },
-    });
+  async logout(token: string) {
+    await this.cacheManager.del(`token:${token}`);
     return this.prisma.success();
   }
 
   async loginErrHandler({ user, password, ip, ...params }: LoginHandlerParams) {
     // 獲取帳戶失敗
     if (!user) {
-      throw new BadRequestException('user is not exist');
+      this.prisma.error(ResCode.NOT_FOUND, '使用者不存在');
     }
 
     // 帳戶已封鎖，禁止登入
     if (user.is_blocked) {
-      throw new BadRequestException('帳戶已鎖定');
+      this.prisma.error(ResCode.BLOCKED_ACCOUNT, '帳戶已鎖定');
     }
     // 密碼驗證
     await this.passwordValidate(user.password, password);
@@ -204,6 +190,8 @@ export class AuthService {
         sub: user.id,
         platform: this.platform,
       });
+
+      await this.cacheManager.set(`token:${token}`, user.username);
 
       // 登入成功紀錄
       await this.prisma.loginRec.create({
@@ -218,7 +206,6 @@ export class AuthService {
           ip,
           nums_failed: 0,
           platform: this.platform,
-          token,
         },
       });
 

@@ -11,6 +11,7 @@ import { AppModule } from './app.module';
 import * as requestIp from 'request-ip';
 import { ResCode } from './errors/enums';
 import { take } from 'lodash';
+import { HttpExceptionFilter } from './filters/http-exception.filter';
 const port = process.env.PORT || 8080;
 
 async function bootstrap() {

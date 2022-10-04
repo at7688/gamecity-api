@@ -1,8 +1,18 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Headers,
+  Post,
+  Req,
+  UseFilters,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PlatformType, Player } from '@prisma/client';
 import { Request } from 'express';
 import { User } from 'src/decorators/user.decorator';
+import { HttpExceptionFilter } from 'src/filters/http-exception.filter';
 import { Platforms } from 'src/metas/platforms.meta';
 import { Public } from 'src/metas/public.meta';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -38,8 +48,8 @@ export class AuthController {
 
   @Post('logout')
   @Platforms([PlatformType.ADMIN, PlatformType.AGENT, PlatformType.PLAYER])
-  async logout(@User() user: LoginUser | Player) {
-    return this.authService.logout(user);
+  async logout(@Headers('Authorization') Authorization: string) {
+    return this.authService.logout(Authorization.replace('Bearer ', ''));
   }
 
   @Get('me')

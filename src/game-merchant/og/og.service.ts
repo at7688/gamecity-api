@@ -259,7 +259,7 @@ export class OgService {
 
     const res = await this.request<OgGameListRes>(reqConfig);
     if (!res) {
-      throw new BadGatewayException('遊戲列表撈取失敗');
+      this.prisma.error(ResCode.GAME_MERCHANT_ERR, '遊戲列表撈取失敗');
     }
     await Promise.all(
       res.data.games.map((t, i) => {
@@ -300,7 +300,7 @@ export class OgService {
     const res = await this.request<OgGetGameKeyRes>(reqConfig);
 
     if (!res) {
-      throw new BadRequestException('獲取遊戲金鑰失敗');
+      this.prisma.error(ResCode.GAME_MERCHANT_ERR, '獲取遊戲金鑰失敗');
     }
 
     return res.data.key;
@@ -318,7 +318,7 @@ export class OgService {
     const res = await this.request<OgGetGameLinkRes>(reqConfig);
 
     if (!res) {
-      throw new BadRequestException('獲取遊戲連結失敗');
+      this.prisma.error(ResCode.GAME_MERCHANT_ERR, '獲取遊戲連結失敗');
     }
 
     return res.data.url;
@@ -483,7 +483,7 @@ export class OgService {
     };
     const res = await this.request<OgGetBalanceRes>(reqConfig);
     if (!res) {
-      throw new BadRequestException('獲取餘額失敗');
+      this.prisma.error(ResCode.GAME_MERCHANT_ERR, '獲取餘額失敗');
     }
     return +res.data.balance;
   }

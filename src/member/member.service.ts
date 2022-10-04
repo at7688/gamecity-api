@@ -49,7 +49,7 @@ export class MemberService {
           (t) => t.id === parent_id,
         );
         if (!parent) {
-          throw new BadRequestException('上層錯誤');
+          this.prisma.error(ResCode.FIELD_NOT_VALID, '上層錯誤');
         }
       } else {
         parent = user;
@@ -266,17 +266,23 @@ export class MemberService {
         },
       });
       if (!parentDuty) {
-        throw new BadRequestException('請先設定上層負擔');
+        this.prisma.error(ResCode.FIELD_NOT_VALID, '請先設定上層負擔');
       }
       maxDuty.fee = parentDuty.fee_duty;
       maxDuty.promotion = parentDuty.promotion_duty;
     }
 
     if (fee_duty > maxDuty.fee) {
-      throw new BadRequestException(`手續費負擔不可超過${maxDuty.fee}`);
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
+        `手續費負擔不可超過${maxDuty.fee}`,
+      );
     }
     if (promotion_duty > maxDuty.promotion) {
-      throw new BadRequestException(`優惠負擔不可超過${maxDuty.promotion}`);
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
+        `優惠負擔不可超過${maxDuty.promotion}`,
+      );
     }
 
     return this.prisma.agentDuty.upsert({

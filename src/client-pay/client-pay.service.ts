@@ -14,6 +14,7 @@ import { getCurrentPayways } from './raw/getCurrentPayways';
 import { CreateBankOrderDto } from './dto/create-bank-order.dto';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ClientPayService {
@@ -49,7 +50,7 @@ export class ClientPayService {
       },
     });
     if (!playerCard) {
-      throw new BadRequestException('卡片不可用');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '卡片不可用');
     }
 
     // 取得當前輪替的卡片們
@@ -59,7 +60,7 @@ export class ClientPayService {
 
     // 若無限額內可用卡片則提示錯誤
     if (cards.length === 0) {
-      throw new BadRequestException('暫無提供儲值，請聯繫客服');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '暫無提供儲值，請聯繫客服');
     }
 
     // 取得當前運作的卡片
@@ -112,7 +113,7 @@ export class ClientPayService {
     );
 
     if (tools.length === 0) {
-      throw new BadRequestException('無可用支付');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '無可用支付');
     }
 
     console.log(tools);
@@ -141,15 +142,21 @@ export class ClientPayService {
 
     // 若該輪替工具下無該付款方式，則提示
     if (!payway) {
-      throw new BadRequestException('無此付款方式，請重新選擇');
+      this.prisma.error(ResCode.FIELD_NOT_VALID, '無此付款方式，請重新選擇');
     }
 
     // 確認儲值金額是否符合支付方式的單筆儲值條件
     if (amount > payway.deposit_max) {
-      throw new BadRequestException(`超過單筆儲值上限${payway.deposit_max}`);
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
+        `超過單筆儲值上限${payway.deposit_max}`,
+      );
     }
     if (amount < payway.deposit_min) {
-      throw new BadRequestException(`最低儲值金額為${payway.deposit_min}`);
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
+        `最低儲值金額為${payway.deposit_min}`,
+      );
     }
     // 計算手續費負擔
     let fee = 0;
@@ -216,7 +223,7 @@ export class ClientPayService {
           status: PaymentDepositStatus.REJECTED,
         },
       });
-      throw new BadRequestException('金流建單失敗');
+      this.prisma.error(ResCode.EXCEPTION_ERR, '金流建單失敗');
     }
   }
 

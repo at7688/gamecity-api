@@ -13,6 +13,7 @@ import { MD5 } from 'crypto-js';
 import { getUnixTime } from 'date-fns';
 import { Request } from 'express';
 import { orderBy } from 'lodash';
+import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from '../wallet-rec/wallet-rec.service';
@@ -77,17 +78,14 @@ export class QiyuService {
 
     request.pay_md5_sign = this.getSign(request, hash_key);
 
-    console.log(this.apiUrl, request);
-
     const res = await axios.post<QIYU_OrderRes>(this.apiUrl, request);
     if (res.data.code !== 0) {
-      console.log(res.data);
-      throw new BadGatewayException('金流交易錯誤');
+      this.prisma.error(ResCode.PAYMENT_MERCHANT_ERR, '金流交易錯誤');
     }
     const d = res.data.data;
 
     if (d.real_price !== d.bill_price) {
-      throw new BadRequestException('訂單金額不符合');
+      this.prisma.error(ResCode.PAYMENT_MERCHANT_ERR, '訂單金額不符合');
     }
 
     const order = await this.prisma.paymentDepositRec.update({
@@ -185,7 +183,7 @@ export class QiyuService {
       return 'OK';
     } catch (err) {
       console.log(err);
-      throw new BadRequestException('Error');
+      this.prisma.error(ResCode.PAYMENT_MERCHANT_ERR);
     }
   }
 }

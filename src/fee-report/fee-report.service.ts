@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ResCode } from 'src/errors/enums';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -20,7 +21,7 @@ export class FeeReportService {
         where: { username: agent_username },
       });
       if (!agent) {
-        throw new BadRequestException('無此代理');
+        this.prisma.error(ResCode.NOT_FOUND, '無此代理');
       }
       playersByAgent = await this.prisma.$queryRaw<SubPlayer[]>(
         subPlayers(agent.id),

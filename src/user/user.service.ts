@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, AdminUser, LoginRec } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
@@ -28,7 +29,7 @@ export class UserService {
       },
     });
     if (!user) {
-      throw new NotFoundException();
+      this.prisma.error(ResCode.NOT_FOUND);
     }
     return user;
   }

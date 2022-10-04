@@ -43,7 +43,7 @@ export class GameMerchantService {
     });
 
     if (!game) {
-      throw new BadRequestException(`無此遊戲 [${game_code}]`);
+      this.prisma.error(ResCode.NOT_FOUND, `無此遊戲 [${game_code}]`);
     }
     return game;
   }

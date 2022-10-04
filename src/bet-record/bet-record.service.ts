@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { ResCode } from 'src/errors/enums';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
@@ -40,7 +41,7 @@ export class BetRecordService {
         where: { username: agent_username },
       });
       if (!agent) {
-        throw new BadRequestException('無此代理');
+        this.prisma.error(ResCode.NOT_FOUND, '無此代理');
       }
       playersByAgent = await this.prisma.$queryRaw<SubPlayer[]>(
         subPlayers(agent.id),

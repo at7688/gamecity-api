@@ -143,10 +143,10 @@ import { SysConfigModule } from './sys-config/sys-config.module';
 
   providers: [
     AppService,
-    // {
-    //   provide: APP_FILTER,
-    //   useClass: HttpExceptionFilter,
-    // },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
     BankService,
   ],
   // exports: [AppService],

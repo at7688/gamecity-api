@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { PlatformType } from '@prisma/client';
+import { Cache } from 'cache-manager';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -11,6 +13,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -27,17 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     exp: number;
   }) {
     const { sub: id } = payload;
-    const record = await this.prisma.loginRec.findFirst({
-      where: {
-        OR: [{ admin_user_id: id }, { player_id: id }, { agent_id: id }],
-      },
-      orderBy: {
-        login_at: 'desc',
-      },
-    });
-    if (!record.token) {
-      this.prisma.error(ResCode.NO_AUTH, '無效TOKEN');
-    }
+
     if (payload.platform === PlatformType.AGENT) {
       return this.prisma.member.findUnique({
         where: { id },

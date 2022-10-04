@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateGameRatioDto } from './dto/create-game-ratio.dto';
 import { SearchGameRatiosDto } from './dto/search-game-ratios.dto';
 import { UpdateGameRatioDto } from './dto/update-game-ratio.dto';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable()
 export class GameRatioService {
@@ -52,7 +53,10 @@ export class GameRatioService {
     };
     // 有上層代理 但未設置
     if (parent && !parent.game_ratios[0]) {
-      throw new BadRequestException(`請先設定上層代理佔成 (${game_code})`);
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
+        `請先設定上層代理佔成 (${game_code})`,
+      );
     }
     // 有上層代理，最高不能超過該代理佔成
     if (parent && parent.game_ratios[0]) {
@@ -64,17 +68,20 @@ export class GameRatioService {
     console.log(data);
     console.log(max);
     if (ratio > max.ratio) {
-      throw new BadRequestException(
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
         `(${game_code})輸贏佔成不可超過${max.ratio}`,
       );
     }
     if (water_duty > max.water_duty) {
-      throw new BadRequestException(
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
         `(${game_code})退水負擔不可超過${max.water_duty}`,
       );
     }
     if (water > max.water) {
-      throw new BadRequestException(
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
         `(${game_code})退水紅利不可超過${max.water}`,
       );
     }

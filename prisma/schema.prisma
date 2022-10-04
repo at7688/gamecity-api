@@ -867,6 +867,15 @@ model SysConfig {
   value String
 }
 
+// model AuthToken {
+//   type Int // 管端 代理端 會員
+//   relative_id String @id
+//   token String
+//   created_at    DateTime         @default(now()) @db.Timestamptz()
+//   ip String?
+//   in_active Boolean @default(true)
+// }
+
 enum PlatformType {
   ADMIN
   AGENT

@@ -1,6 +1,7 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job, Queue } from 'bull';
+import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
@@ -40,7 +41,7 @@ export class TransferProcessor {
         await this.transToRetryFailed(trans_id);
       }
       if (status === TransferStatus.PENDING) {
-        throw new Error('pending');
+        this.prisma.error(ResCode.GAME_MERCHANT_ERR, 'pending');
       }
     } catch (err) {
       if (retryTimes >= 4) {

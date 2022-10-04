@@ -5,50 +5,35 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
+import { ResCode } from 'src/errors/enums';
 
-interface StandardError {
-  statusCode: number;
-  message: string | string[];
-  error: string;
+interface ErrorResBase {
+  code: string;
+  msg: string;
 }
-@Catch()
+
+@Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
-  catch(err: unknown, host: ArgumentsHost) {
+  catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = '';
-    let info = err;
-    console.log(err);
+    const status = exception.getStatus();
+    const res = exception.getResponse() as ErrorResBase;
 
-    if (err instanceof HttpException) {
-      statusCode = err.getStatus();
-      const response = err.getResponse() as StandardError;
-      message =
-        typeof response.message === 'string'
-          ? response.message
-          : response.message[0] || err.message;
-      info = null;
+    if (status === HttpStatus.FORBIDDEN) {
+      response.status(status).json({
+        code: ResCode.NO_AUTH,
+        msg: res?.msg || 'Invalid Token',
+      });
+    } else if (status === HttpStatus.BAD_REQUEST) {
+      response.status(status).json(res);
     } else {
-      if (err instanceof Prisma.PrismaClientKnownRequestError) {
-        const errMsgMap = {
-          P2002: `${err.meta.target} dupicated`,
-          P2025: err.meta.cause,
-        };
-
-        statusCode = HttpStatus.UNPROCESSABLE_ENTITY;
-        message = errMsgMap[err.code] || '';
-      }
+      response.status(status).json({
+        code: ResCode.EXCEPTION_ERR,
+        msg: 'Exception Error',
+      });
     }
-    console.log(err);
-    response.status(statusCode).json({
-      statusCode,
-      path: request.url,
-      message,
-      info,
-    });
   }
 }

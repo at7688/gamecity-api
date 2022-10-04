@@ -8,11 +8,16 @@ import {
 } from '@nestjs/common';
 import { AdminUser, Member } from '@prisma/client';
 import { map, Observable } from 'rxjs';
+import { ResCode } from 'src/errors/enums';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { OperationRecService } from '../operation-rec/operation-rec.service';
 
 @Injectable()
 export class OperationInterceptor implements NestInterceptor {
-  constructor(private operationRecService: OperationRecService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private operationRecService: OperationRecService,
+  ) {}
   async intercept(
     context: ExecutionContext,
     next: CallHandler<any>,
@@ -40,7 +45,7 @@ export class OperationInterceptor implements NestInterceptor {
             });
           } catch (err) {
             console.log(err);
-            throw new InternalServerErrorException('紀錄寫入錯誤');
+            this.prisma.error(ResCode.DB_ERR, '紀錄寫入錯誤');
           }
         }
 
