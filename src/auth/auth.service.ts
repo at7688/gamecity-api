@@ -1,3 +1,4 @@
+import { AGENT_MULTI_LOGIN } from './../sys-config/consts';
 import {
   BadRequestException,
   CACHE_MANAGER,
@@ -12,6 +13,7 @@ import { Cache } from 'cache-manager';
 import { ResCode } from 'src/errors/enums';
 import { playerRolling } from 'src/player/raw/playerRolling';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ADMIN_MULTI_LOGIN } from 'src/sys-config/consts';
 import { LoginUser } from 'src/types';
 import { LoginDto } from './dto/login.dto';
 import { JwtParams } from './types';
@@ -165,8 +167,15 @@ export class AuthService {
     }
   }
 
-  async logout(token: string) {
-    await this.cacheManager.del(`token:${token}`);
+  async logout(user: LoginUser | Player, token: string) {
+    const tokens = await this.cacheManager.get<string[]>(
+      `token:${user.username}`,
+    );
+    await this.cacheManager.set(
+      `token:${user.username}`,
+      tokens.filter((t) => t !== token),
+    );
+
     return this.prisma.success();
   }
 
@@ -191,7 +200,34 @@ export class AuthService {
         platform: this.platform,
       });
 
-      await this.cacheManager.set(`token:${token}`, user.username);
+      let tokens =
+        (await this.cacheManager.get<string[]>(`token:${user.username}`)) || [];
+
+      const isAdmin = 'admin_role_id' in user;
+      const isAgent = 'layer' in user;
+      const isPlayer = 'vip_id' in user;
+
+      if (isPlayer) {
+        // 玩家固定僅限一組登入Token
+        tokens = [token];
+      } else {
+        const config = await this.prisma.sysConfig.findUnique({
+          where: {
+            code: isAdmin ? ADMIN_MULTI_LOGIN : AGENT_MULTI_LOGIN,
+          },
+        });
+        if (config.value === 'yes') {
+          tokens.push(token);
+          // 紀錄筆數超過10筆，則先進先出刪掉前面的紀錄
+          if (tokens.length > 10) {
+            tokens.shift();
+          }
+        } else {
+          tokens = [token];
+        }
+      }
+
+      await this.cacheManager.set(`token:${user.username}`, tokens);
 
       // 登入成功紀錄
       await this.prisma.loginRec.create({

@@ -30,13 +30,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (isPublic) {
       return true;
     }
-    const req = ctx.switchToHttp().getRequest();
-    const token = req.headers.authorization.replace('Bearer ', '');
-    const username = await this.cacheManager.get(`token:${token}`);
-
-    if (!username) {
-      return false;
-    }
     return super.canActivate(ctx) as Promise<boolean>;
   }
 

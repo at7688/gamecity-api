@@ -23,6 +23,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const res = exception.getResponse() as ErrorResBase;
 
     if (status === HttpStatus.FORBIDDEN) {
+      console.log(res);
       response.status(status).json({
         code: ResCode.NO_AUTH,
         msg: res?.msg || 'Invalid Token',

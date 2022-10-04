@@ -48,8 +48,11 @@ export class AuthController {
 
   @Post('logout')
   @Platforms([PlatformType.ADMIN, PlatformType.AGENT, PlatformType.PLAYER])
-  async logout(@Headers('Authorization') Authorization: string) {
-    return this.authService.logout(Authorization.replace('Bearer ', ''));
+  async logout(
+    @User() user: LoginUser | Player,
+    @Headers('Authorization') Authorization: string,
+  ) {
+    return this.authService.logout(user, Authorization.replace('Bearer ', ''));
   }
 
   @Get('me')
