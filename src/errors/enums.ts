@@ -33,6 +33,8 @@ export enum ResCode {
   FORMAT_ERR = 'AL0060', // 格式驗證錯誤
   FIELD_NOT_VALID = 'AL0060', // 欄位驗證錯誤
 
+  OVER_AGENT_LIMIT = 'AL0070', // 超過代理洗碼設定限制
+
   NO_AUTH = 'AL0090', // TOKEN錯誤
   EXCEPTION_ERR = 'AL9999', // 未知例外錯誤
 }

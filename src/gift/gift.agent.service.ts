@@ -16,6 +16,17 @@ export class GiftAgentService {
 
   async create(data: CreateGiftDto, agent: Member) {
     const { username, amount, nums_rolling } = data;
+    // 查詢是否超過「代理最大可設置的洗碼倍數」
+    const config = await this.prisma.sysConfig.findUnique({
+      where: { code: 'AGENT_GIFT_MAX_ROLLING' },
+    });
+    if (nums_rolling > +config.value) {
+      this.prisma.error(
+        ResCode.OVER_AGENT_LIMIT,
+        `最高洗碼設定上限為${config.value}倍`,
+      );
+    }
+
     const player = await this.prisma.player.findFirst({
       where: {
         id: {
