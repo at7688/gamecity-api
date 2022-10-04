@@ -11,9 +11,4 @@ export class AppController {
   root() {
     return 'PPAP';
   }
-  @Get('testing')
-  @Public()
-  testing() {
-    return this.appService.testing();
-  }
 }

@@ -8,13 +8,4 @@ export class AppService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {}
-
-  async testing() {
-    const config = await this.prisma.sysConfig.findUnique({
-      where: {
-        code: 'REGISTER_REQUIRED',
-      },
-    });
-    return JSON.parse(config.value);
-  }
 }

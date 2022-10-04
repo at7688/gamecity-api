@@ -5,6 +5,12 @@ import { Cache } from 'cache-manager';
 import { keyBy } from 'lodash';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SmsMerchantService } from 'src/sms-merchant/sms-merchant.service';
+import {
+  PHONE_CODE_EXPIRED_MINUTES,
+  PHONE_CODE_TEMPLATE,
+  SITE_NAME,
+  SITE_URL,
+} from 'src/sys-config/consts';
 
 @Injectable()
 export class SmsService {
@@ -22,10 +28,10 @@ export class SmsService {
     const configMap = keyBy(configs, (t) => t.code);
     const phoneCode = Math.floor(Math.random() * Math.pow(10, 4)).toString();
     await this.cacheManager.set(phone, phoneCode.toString());
-    const template = configMap['PHONE_CODE_TEMPLATE'].value;
-    const siteName = configMap['SITE_NAME'].value;
-    const siteUrl = configMap['SITE_URL'].value;
-    const expiredMinutes = +configMap['PHONE_CODE_EXPIRED_MINUTES'].value;
+    const template = configMap[PHONE_CODE_TEMPLATE].value;
+    const siteName = configMap[SITE_NAME].value;
+    const siteUrl = configMap[SITE_URL].value;
+    const expiredMinutes = +configMap[PHONE_CODE_EXPIRED_MINUTES].value;
 
     await this.smsMerchantService.sendSms(
       template

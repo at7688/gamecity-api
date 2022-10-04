@@ -23,6 +23,7 @@ import { TargetType } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cache } from 'cache-manager';
+import { REGISTER_REQUIRED } from 'src/sys-config/consts';
 
 @Injectable()
 export class PlayerService {
@@ -56,7 +57,7 @@ export class PlayerService {
     } = data;
 
     const config = await this.prisma.sysConfig.findUnique({
-      where: { code: 'REGISTER_REQUIRED' },
+      where: { code: REGISTER_REQUIRED },
     });
 
     const requiredFields = config.value.split(',');

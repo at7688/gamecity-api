@@ -3,6 +3,7 @@ import { Member } from '@prisma/client';
 import { ResCode } from 'src/errors/enums';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AGENT_GIFT_MAX_ROLLING } from 'src/sys-config/consts';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { CreateGiftDto } from './dto/create-gift.dto';
 import { GiftStatus, GiftType } from './enums';
@@ -18,7 +19,7 @@ export class GiftAgentService {
     const { username, amount, nums_rolling } = data;
     // 查詢是否超過「代理最大可設置的洗碼倍數」
     const config = await this.prisma.sysConfig.findUnique({
-      where: { code: 'AGENT_GIFT_MAX_ROLLING' },
+      where: { code: AGENT_GIFT_MAX_ROLLING },
     });
     if (nums_rolling > +config.value) {
       this.prisma.error(

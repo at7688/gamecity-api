@@ -4,6 +4,7 @@ import { Player, Prisma } from '@prisma/client';
 import { Cache } from 'cache-manager';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SMS_MERCHANT } from 'src/sys-config/consts';
 import { CreateSmsMerchantDto } from './dto/create-sms-merchant.dto';
 import { UpdateSmsMerchantDto } from './dto/update-sms-merchant.dto';
 import { Every8dService } from './every8d/every8d.service';
@@ -65,7 +66,7 @@ export class SmsMerchantService {
 
   async sendSms(content: string, phones: string[]) {
     const config = await this.prisma.sysConfig.findUnique({
-      where: { code: 'SMS_MERCHANT' },
+      where: { code: SMS_MERCHANT },
     });
 
     if (!config) {
