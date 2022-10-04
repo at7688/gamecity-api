@@ -52,7 +52,21 @@ export class PlayerService {
       phone_code,
       phone,
       email,
+      line_id,
     } = data;
+
+    const config = await this.prisma.sysConfig.findUnique({
+      where: { code: 'REGISTER_REQUIRED' },
+    });
+
+    const requiredFields = config.value.split(',');
+
+    if (requiredFields.includes('LINE') && !line_id) {
+      this.prisma.error(ResCode.FIELD_NOT_VALID, 'LineID為必填');
+    }
+    if (requiredFields.includes('EMAIL') && !email) {
+      this.prisma.error(ResCode.FIELD_NOT_VALID, 'Email為必填');
+    }
 
     const code = await this.cacheManager.get<string>(phone);
 

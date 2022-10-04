@@ -1,4 +1,6 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
+import { Queue } from 'bull';
 import { endOfMonth, startOfMonth, subDays } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { ResCode } from 'src/errors/enums';
@@ -12,7 +14,11 @@ import { vipList } from './raw/vipList';
 
 @Injectable()
 export class VipService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @InjectQueue('vip')
+    private readonly vipQueue: Queue<string>,
+  ) {}
   create(data: CreateVipDto) {
     return this.prisma.vip.create({
       data,
@@ -124,5 +130,8 @@ export class VipService {
     }
 
     return this.prisma.success(result);
+  }
+  getVipQueue() {
+    return this.vipQueue.getJobs(['delayed']);
   }
 }

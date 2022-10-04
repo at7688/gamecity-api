@@ -16,12 +16,12 @@ import { SetGameWaterDto } from './dto/set-game-water.dto';
 export class VipController {
   constructor(private readonly vipService: VipService) {}
 
-  @Post()
+  @Post('create')
   create(@Body() createVipDto: CreateVipDto) {
     return this.vipService.create(createVipDto);
   }
 
-  @Get()
+  @Get('list')
   findAll() {
     return this.vipService.conditionCheck();
   }
@@ -31,7 +31,7 @@ export class VipController {
     return this.vipService.options();
   }
 
-  @Get(':id')
+  @Get('view/:id')
   findOne(@Param('id') id: string) {
     return this.vipService.findOne(id);
   }
@@ -49,5 +49,10 @@ export class VipController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.vipService.remove(id);
+  }
+
+  @Get('queue')
+  getVipQueue() {
+    return this.vipService.getVipQueue();
   }
 }

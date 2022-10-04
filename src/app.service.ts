@@ -9,7 +9,12 @@ export class AppService {
     private readonly configService: ConfigService,
   ) {}
 
-  getConfigVar(): string {
-    return this.configService.get('FOO');
+  async testing() {
+    const config = await this.prisma.sysConfig.findUnique({
+      where: {
+        code: 'REGISTER_REQUIRED',
+      },
+    });
+    return JSON.parse(config.value);
   }
 }

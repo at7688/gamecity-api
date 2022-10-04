@@ -28,4 +28,8 @@ export class RegisterPlayerDto {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @IsString()
+  @IsOptional()
+  line_id?: string;
 }
