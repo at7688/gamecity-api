@@ -10,11 +10,14 @@ import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
 import { WithdrawStatus } from './enums';
 import { ResCode } from 'src/errors/enums';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { WithdrawPayload } from 'src/socket/types';
 
 @Injectable({ scope: Scope.REQUEST })
 export class WithdrawClientService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
     @Inject(REQUEST) private request: Request,
   ) {}
 
@@ -92,6 +95,11 @@ export class WithdrawClientService {
         withdraw_fee,
       },
     });
+
+    this.eventEmitter.emit('withdraw', {
+      username: this.player.username,
+      amount,
+    } as WithdrawPayload);
 
     return this.prisma.success();
   }

@@ -17,6 +17,7 @@ import { ADMIN_MULTI_LOGIN } from 'src/sys-config/consts';
 import { LoginUser } from 'src/types';
 import { LoginDto } from './dto/login.dto';
 import { JwtParams } from './types';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 export type MenuWithSubMenu = Menu & {
   sub_menus: Menu[];
@@ -51,6 +52,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   platform = this.configService.get('PLATFORM');

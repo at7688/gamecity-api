@@ -8,12 +8,15 @@ import { CreatePBankcardDto } from './dto/create-p-bankcard.dto';
 import { UpdatePBankcardDto } from './dto/update-p-bankcard.dto';
 import { Request } from 'express';
 import { User } from 'src/decorators/user.decorator';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlayerCardPayload } from 'src/socket/types';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PBankcardClientService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
     @Inject(REQUEST) private request: Request,
   ) {}
   platform = this.configService.get('PLATFORM');
@@ -27,7 +30,7 @@ export class PBankcardClientService {
     const defaultCards = await this.prisma.playerCard.findMany({
       where: { player_id: this.player.id, is_default: true },
     });
-    return this.prisma.playerCard.create({
+    await this.prisma.playerCard.create({
       data: {
         bank_code,
         branch,
@@ -38,14 +41,22 @@ export class PBankcardClientService {
         player_id: this.player.id,
       },
     });
+
+    this.eventEmitter.emit('bankcard', {
+      username: this.player.username,
+      info: `(${bank_code})${account} ${name}`,
+    } as PlayerCardPayload);
+
+    return this.prisma.success();
   }
 
-  findAll() {
-    return this.prisma.playerCard.findMany({
+  async findAll() {
+    const list = await this.prisma.playerCard.findMany({
       where: {
         player_id: this.player.id,
       },
     });
+    return this.prisma.success(list);
   }
 
   update(id: string, data: UpdatePBankcardDto) {

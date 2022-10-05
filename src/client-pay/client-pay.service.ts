@@ -15,6 +15,8 @@ import { CreateBankOrderDto } from './dto/create-bank-order.dto';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { ResCode } from 'src/errors/enums';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DepositPayload } from 'src/socket/types';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ClientPayService {
@@ -22,6 +24,7 @@ export class ClientPayService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly orderService: MerchantOrderService,
+    private readonly eventEmitter: EventEmitter2,
     @Inject(REQUEST) private request: Request,
   ) {}
   platform = this.configService.get('PLATFORM');
@@ -30,12 +33,13 @@ export class ClientPayService {
     return this.request.user as Player;
   }
 
-  bankcards() {
-    return this.prisma.playerCard.findMany({
+  async bankcards() {
+    const list = await this.prisma.playerCard.findMany({
       where: {
         player_id: this.player.id,
       },
     });
+    return this.prisma.success(list);
   }
 
   async createBankOrder(data: CreateBankOrderDto) {
@@ -85,7 +89,7 @@ export class ClientPayService {
     }
 
     //  新增儲值
-    return this.prisma.bankDepositRec.create({
+    await this.prisma.bankDepositRec.create({
       select: {
         id: true,
         amount: true,
@@ -98,6 +102,13 @@ export class ClientPayService {
         player_card_id,
       },
     });
+
+    this.eventEmitter.emit('deposit', {
+      username: this.player.username,
+      amount,
+    } as DepositPayload);
+
+    return this.prisma.success();
   }
 
   async createPaymentOrder(data: CreatePaymentOrderDto) {

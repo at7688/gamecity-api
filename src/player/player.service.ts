@@ -24,6 +24,7 @@ import { ResCode } from 'src/errors/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cache } from 'cache-manager';
 import { REGISTER_REQUIRED } from 'src/sys-config/consts';
+import { RegisterPayload } from 'src/socket/types';
 
 @Injectable()
 export class PlayerService {
@@ -71,9 +72,9 @@ export class PlayerService {
 
     const code = await this.cacheManager.get<string>(phone);
 
-    if (phone_code !== code) {
-      this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
-    }
+    // if (phone_code !== code) {
+    //   this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
+    // }
 
     const hash = await argon2.hash(password);
 
@@ -81,6 +82,18 @@ export class PlayerService {
       where: {
         type: TargetType.PLAYER,
         code: invited_code,
+      },
+      include: {
+        parent: {
+          select: {
+            username: true,
+          },
+        },
+        inviter: {
+          select: {
+            username: true,
+          },
+        },
       },
     });
     if (!invitedPromo) {
@@ -94,6 +107,17 @@ export class PlayerService {
       orderBy: { name: 'asc' },
     });
 
+    const dupicatedPhone = await this.prisma.player.findFirst({
+      where: {
+        contact: {
+          phone,
+        },
+      },
+    });
+    if (dupicatedPhone) {
+      this.prisma.error(ResCode.DUPICATED_PHONE, '手機號碼重複');
+    }
+
     try {
       const player = await this.prisma.player.create({
         data: {
@@ -104,19 +128,21 @@ export class PlayerService {
           password: hash,
           vip_id: vip?.id,
           invited_code,
-          contact:
-            phone || email
-              ? {
-                  create: {
-                    phone,
-                    email: email || null,
-                  },
-                }
-              : undefined,
+          contact: {
+            create: {
+              phone,
+              email: email || null,
+            },
+          },
         },
       });
-      this.eventEmitter.emit('player.register', player);
+      this.eventEmitter.emit('register', {
+        username: player.username,
+        agent: invitedPromo.parent.username,
+        inviter: invitedPromo.inviter?.username || null,
+      } as RegisterPayload);
     } catch (err) {
+      console.log(err);
       this.prisma.error(ResCode.DB_ERR, JSON.stringify(err));
     }
 

@@ -1,3 +1,4 @@
+import { OnEvent } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import {
   ConnectedSocket,
@@ -11,6 +12,13 @@ import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Server, Socket } from 'socket.io';
 import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  DepositPayload,
+  PlayerCardPayload,
+  PromotionApplyPayload,
+  RegisterPayload,
+  WithdrawPayload,
+} from './types';
 
 @WebSocketGateway({
   cors: {
@@ -29,11 +37,36 @@ export class SocketGateway {
     this.server.emit('message', 'hello');
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  async pushMessage(socket) {
-    const player = await this.prisma.player.findFirst();
-    this.server.emit('message', player.username);
+  @OnEvent('register')
+  playerRegister(payload: RegisterPayload) {
+    this.server.emit('register', payload);
   }
+
+  @OnEvent('deposit')
+  deposit(payload: DepositPayload) {
+    this.server.emit('deposit', payload);
+  }
+
+  @OnEvent('withdraw')
+  withdraw(payload: WithdrawPayload) {
+    this.server.emit('withdraw', payload);
+  }
+
+  @OnEvent('bankcard')
+  playerCard(payload: PlayerCardPayload) {
+    this.server.emit('bankcard', payload);
+  }
+
+  @OnEvent('applyPromo')
+  promotionApply(payload: PromotionApplyPayload) {
+    this.server.emit('applyPromo', payload);
+  }
+
+  // @Cron(CronExpression.EVERY_10_SECONDS)
+  // async pushMessage(socket) {
+  //   const player = await this.prisma.player.findFirst();
+  //   this.server.emit('message', player.username);
+  // }
 
   @SubscribeMessage('events')
   findAll(
@@ -41,14 +74,8 @@ export class SocketGateway {
     @ConnectedSocket() client: Socket,
   ): Observable<WsResponse<number>> {
     console.log(data);
-    client.emit('foo', 'bar');
     return from([1, 2, 3]).pipe(
       map((item) => ({ event: 'events', data: item })),
     );
-  }
-
-  @SubscribeMessage('identity')
-  async identity(@MessageBody() data: number): Promise<number> {
-    return data;
   }
 }

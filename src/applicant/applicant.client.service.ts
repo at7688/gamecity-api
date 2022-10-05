@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Player, Prisma } from '@prisma/client';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -7,6 +8,7 @@ import {
   ScheduleType,
   SettlementType,
 } from 'src/promotion/enums';
+import { PromotionApplyPayload } from 'src/socket/types';
 import { ApplicantService } from './applicant.service';
 import { ApplicantStatus } from './enums';
 
@@ -15,6 +17,7 @@ export class ApplicantClientService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly applicantService: ApplicantService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(promotion_id: string, player: Player) {
@@ -118,6 +121,10 @@ export class ApplicantClientService {
     ) {
       await this.applicantService.autoVerify(promotion_id, applicant.id);
     }
+    this.eventEmitter.emit('applyPromo', {
+      promotion: promotion.title,
+      username: player.username,
+    } as PromotionApplyPayload);
     return this.prisma.success();
   }
 

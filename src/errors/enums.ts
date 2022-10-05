@@ -28,6 +28,8 @@ export enum ResCode {
 
   BALANCE_NOT_ENOUGH = 'AL0200', // 餘額不足
 
+  DUPICATED_PHONE = 'AL0300', // 手機號碼重複
+
   NOT_FOUND = 'AL0010', // 查無紀錄
   DATE_ERR = 'AL0020', // 日期設定錯誤
 

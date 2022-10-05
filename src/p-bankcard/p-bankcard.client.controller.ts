@@ -18,7 +18,7 @@ import { CreatePBankcardDto } from './dto/create-p-bankcard.dto';
 import { UpdatePBankcardDto } from './dto/update-p-bankcard.dto';
 import { PBankcardClientService } from './p-bankcard.client.service';
 
-@Controller('bankcards')
+@Controller('client/bankcard')
 @Platforms([PlatformType.PLAYER])
 export class PBankcardClientController {
   constructor(
@@ -34,17 +34,17 @@ export class PBankcardClientController {
     return this.uploadsService.uploadFile(file, ImageType.PLAYER_CARD);
   }
 
-  @Post()
+  @Post('create')
   create(@Body() data: CreatePBankcardDto) {
     return this.pBankcardService.create(data);
   }
 
-  @Patch(':id/default')
+  @Patch('default/:id')
   default(@Param('id') id: string) {
     return this.pBankcardService.default(id);
   }
 
-  @Get()
+  @Post('list')
   findAll() {
     return this.pBankcardService.findAll();
   }
