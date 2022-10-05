@@ -14,6 +14,7 @@ import { getUnixTime } from 'date-fns';
 import { Request } from 'express';
 import { orderBy } from 'lodash';
 import { ResCode } from 'src/errors/enums';
+import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from '../wallet-rec/wallet-rec.service';
@@ -161,6 +162,21 @@ export class QiyuService {
         return 'OK';
       }
 
+      // 查看是否有儲值紀錄
+      const rechargedTag = await this.prisma.playerTag.findFirst({
+        where: { player_id: record.player.id, type: PlayerTagType.RECHARGED },
+      });
+
+      if (!rechargedTag) {
+        // 無儲值紀錄則將玩家打上儲值紀錄
+        await this.prisma.playerTag.create({
+          data: {
+            player_id: record.player.id,
+            type: PlayerTagType.RECHARGED,
+          },
+        });
+      }
+
       await this.prisma.$transaction([
         this.prisma.paymentDepositRec.update({
           where: { id: data.order_id },
@@ -169,6 +185,7 @@ export class QiyuService {
             finished_at: new Date(),
             status: MerchantOrderStatus.PAID,
             notify_info: data as unknown as Prisma.InputJsonObject,
+            is_first: !rechargedTag, // 無儲值紀錄則將此單標記為首儲
           },
         }),
         ...(await this.walletRecService.playerCreate({
