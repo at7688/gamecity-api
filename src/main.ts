@@ -7,12 +7,10 @@ import {
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
-import { AppModule } from './app.module';
 import * as requestIp from 'request-ip';
+import { AppModule } from './app.module';
 import { ResCode } from './errors/enums';
-import { take } from 'lodash';
-import { HttpExceptionFilter } from './filters/http-exception.filter';
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 80;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -62,6 +62,7 @@ import { SmsMerchantModule } from './sms-merchant/sms-merchant.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SmsModule } from './sms/sms.module';
 import { SysConfigModule } from './sys-config/sys-config.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -138,6 +139,7 @@ import { SysConfigModule } from './sys-config/sys-config.module';
     SmsMerchantModule,
     SmsModule,
     SysConfigModule,
+    SocketModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 
