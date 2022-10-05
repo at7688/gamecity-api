@@ -25,6 +25,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cache } from 'cache-manager';
 import { REGISTER_REQUIRED } from 'src/sys-config/consts';
 import { RegisterPayload } from 'src/socket/types';
+import { PlayerTagType } from './enums';
 
 @Injectable()
 export class PlayerService {
@@ -167,7 +168,7 @@ export class PlayerService {
       }
     }
 
-    return this.prisma.player.create({
+    await this.prisma.player.create({
       data: {
         username,
         nickname,
@@ -182,6 +183,8 @@ export class PlayerService {
         },
       },
     });
+
+    return this.prisma.success();
   }
 
   async findAll(search: SearchPlayersDto, user: LoginUser) {

@@ -176,7 +176,7 @@ model BankDepositRec {
   card           CompanyCard @relation(fields: [card_id], references: [id])
   player         Player      @relation(fields: [player_id], references: [id])
 
-  is_first Boolean @default(false) // 是否為該玩家首儲
+  is_first Boolean? // 是否為該玩家首儲
 
   promotion    Promotion? @relation(fields: [promotion_id], references: [id])
   promotion_id String?
@@ -263,7 +263,6 @@ model Player {
   bet_records      BetRecord[]
   game_accounts    GameAccount[]
 
-  withdraw_nums Int   @default(0)
   balance       Float @default(0)
 
   identity IdentityVerify?
@@ -604,7 +603,7 @@ model PaymentDepositRec {
 
   fee_info Json?
 
-  is_first Boolean @default(false) // 是否為該玩家首儲
+  is_first Boolean? // 是否為該玩家首儲
 
   promotion    Promotion? @relation(fields: [promotion_id], references: [id])
   promotion_id String?
@@ -858,6 +857,7 @@ model PlayerTag {
   player    Player @relation(fields: [player_id], references: [id])
   player_id String
   type      Int // 儲值過, 提領過, 實名認證, 手機認證
+  count Int @default(1)
 
   @@unique([player_id, type])
 }

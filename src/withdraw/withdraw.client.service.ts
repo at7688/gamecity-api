@@ -12,6 +12,7 @@ import { WithdrawStatus } from './enums';
 import { ResCode } from 'src/errors/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WithdrawPayload } from 'src/socket/types';
+import { PlayerTagType } from 'src/player/enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class WithdrawClientService {
@@ -73,12 +74,19 @@ export class WithdrawClientService {
       );
     }
 
-    // 依照VIP等級查詢此提領單的手續費%數
-    const times = this.player.withdraw_nums;
+    const withdrawTag = await this.prisma.playerTag.findFirst({
+      where: {
+        player_id: this.player.id,
+        type: PlayerTagType.WITHDRAWED,
+      },
+    });
 
+    const withdrawCount = withdrawTag?.count || 0;
+
+    // 依照VIP等級查詢此提領單的手續費%數
     let withdraw_fee = vip.withdraw_fee;
-    if (times < 3) {
-      withdraw_fee = vip[`withdraw_fee_${times}`];
+    if (withdrawTag.count < 3) {
+      withdraw_fee = vip[`withdraw_fee_${withdrawCount}`];
     }
 
     //  新增提領
@@ -125,21 +133,5 @@ export class WithdrawClientService {
         player_id: this.player.id,
       },
     });
-  }
-
-  findOne(id: string) {
-    return `This action returns a #${id} bankWithdraw`;
-  }
-
-  update(id: string, data: UpdateWithdrawDto) {
-    const { inner_note, outter_note, status } = data;
-    return this.prisma.withdrawRec.update({
-      where: { id },
-      data: { inner_note, outter_note, status },
-    });
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} bankWithdraw`;
   }
 }

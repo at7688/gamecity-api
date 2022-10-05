@@ -11,6 +11,7 @@ import { Prisma } from '@prisma/client';
 import { WithdrawStatus } from './enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
+import { PlayerTagType } from 'src/player/enums';
 
 @Injectable()
 export class WithdrawService {
@@ -69,7 +70,6 @@ export class WithdrawService {
             id: true,
             nickname: true,
             username: true,
-            withdraw_nums: true,
           },
         },
         player_card: {
@@ -121,13 +121,12 @@ export class WithdrawService {
   async update(id: string, data: UpdateWithdrawDto) {
     const { inner_note, outter_note, status, withdraw_fee } = data;
 
-    const record = await this.prisma.withdrawRec.update({
+    const record = await this.prisma.withdrawRec.findUnique({
       where: { id },
-      data: { inner_note, outter_note, status, withdraw_fee },
       include: { player_card: true },
     });
 
-    // 若狀態為已撥款，則累計進會員提領次數
+    // 若設定狀態為撥款完成，則累計進會員提領次數
     if (record.finished_at === null && status === WithdrawStatus.FINISHED) {
       this.prisma.$transaction([
         // 紀錄完成日期
@@ -137,11 +136,6 @@ export class WithdrawService {
             finished_at: new Date(),
           },
           include: { player_card: true },
-        }),
-        // 會員的出金次數加1
-        this.prisma.player.updateMany({
-          where: { withdraws: { some: { id } } },
-          data: { withdraw_nums: { increment: 1 } },
         }),
         // 錢包操作
         ...(await this.walletRecService.playerCreate({
@@ -153,6 +147,45 @@ export class WithdrawService {
           relative_id: record.id,
         })),
       ]);
+
+      // 會員的出金次數加1
+      const withdrawTag = await this.prisma.playerTag.findUnique({
+        where: {
+          player_id_type: {
+            player_id: record.player_id,
+            type: PlayerTagType.WITHDRAWED,
+          },
+        },
+      });
+
+      if (!withdrawTag) {
+        await this.prisma.playerTag.create({
+          data: {
+            player_id: record.player_id,
+            type: PlayerTagType.WITHDRAWED,
+          },
+        });
+      } else {
+        this.prisma.playerTag.update({
+          where: {
+            player_id_type: {
+              player_id: record.player_id,
+              type: PlayerTagType.WITHDRAWED,
+            },
+          },
+          data: {
+            count: {
+              increment: 1,
+            },
+          },
+        });
+      }
+    } else {
+      const record = await this.prisma.withdrawRec.update({
+        where: { id },
+        data: { inner_note, outter_note, status, withdraw_fee },
+        include: { player_card: true },
+      });
     }
     return this.prisma.success();
   }
