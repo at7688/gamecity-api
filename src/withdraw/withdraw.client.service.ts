@@ -29,6 +29,13 @@ export class WithdrawClientService {
   async create(data: CreateWithdrawDto) {
     const { amount, player_card_id } = data;
 
+    const player = await this.prisma.player.findUnique({
+      where: { id: this.player.id },
+    });
+
+    if (amount > player.balance) {
+      this.prisma.error(ResCode.BALANCE_NOT_ENOUGH, '餘額不足');
+    }
     // 驗證客戶的卡片
     const playerCard = await this.prisma.playerCard.findFirst({
       where: {
@@ -81,12 +88,13 @@ export class WithdrawClientService {
       },
     });
 
-    const withdrawCount = withdrawTag?.count || 0;
+    // +1為累計此次提領次數
+    const withdrawCount = (withdrawTag?.count || 0) + 1;
 
     // 依照VIP等級查詢此提領單的手續費%數
-    let withdraw_fee = vip.withdraw_fee;
-    if (withdrawTag.count < 3) {
-      withdraw_fee = vip[`withdraw_fee_${withdrawCount}`];
+    let fee_percent = vip.withdraw_fee;
+    if (withdrawCount <= 3) {
+      fee_percent = vip[`withdraw_fee_${withdrawCount}`];
     }
 
     //  新增提領
@@ -100,7 +108,7 @@ export class WithdrawClientService {
         amount,
         player_id: this.player.id,
         player_card_id,
-        withdraw_fee,
+        withdraw_fee: amount * fee_percent,
       },
     });
 

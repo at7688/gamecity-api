@@ -63,6 +63,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { SmsModule } from './sms/sms.module';
 import { SysConfigModule } from './sys-config/sys-config.module';
 import { SocketModule } from './socket/socket.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -140,6 +141,7 @@ import { SocketModule } from './socket/socket.module';
     SmsModule,
     SysConfigModule,
     SocketModule,
+    DashboardModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

@@ -11,6 +11,7 @@ import {
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Server, Socket } from 'socket.io';
+import { DashboardService } from 'src/dashboard/dashboard.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   DepositPayload,
@@ -26,7 +27,10 @@ import {
   },
 })
 export class SocketGateway {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dashboardService: DashboardService,
+  ) {}
 
   @WebSocketServer()
   server: Server;
@@ -62,10 +66,10 @@ export class SocketGateway {
     this.server.emit('applyPromo', payload);
   }
 
-  // @Cron(CronExpression.EVERY_10_SECONDS)
-  // async pushMessage(socket) {
-  //   const player = await this.prisma.player.findFirst();
-  //   this.server.emit('message', player.username);
+  // @Cron(CronExpression.EVERY_5_SECONDS)
+  // async pushDashboard(socket) {
+  //   const result = await this.dashboardService.getRangeCounts();
+  //   this.server.emit('dashboard', result);
   // }
 
   @SubscribeMessage('events')
