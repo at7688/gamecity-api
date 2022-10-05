@@ -22,11 +22,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const status = exception.getStatus();
     const res = exception.getResponse() as ErrorResBase;
 
-    if (status === HttpStatus.FORBIDDEN) {
+    if ([HttpStatus.FORBIDDEN, HttpStatus.UNAUTHORIZED].includes(status)) {
       console.log(res);
       response.status(status).json({
         code: ResCode.NO_AUTH,
-        msg: res?.msg || 'Invalid Token',
+        msg: res?.msg || 'Unauthorized',
       });
     } else if (status === HttpStatus.BAD_REQUEST) {
       response.status(status).json(res);

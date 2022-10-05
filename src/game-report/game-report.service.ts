@@ -115,6 +115,11 @@ export class GameReportService {
         subPlayers(agent.id),
       );
     }
+    if (parent_id) {
+      playersByAgent = await this.prisma.$queryRaw<SubPlayer[]>(
+        subPlayers(parent_id),
+      );
+    }
     const betRecords = await this.prisma.betRecord.findMany({
       select: { id: true },
       where: {
@@ -163,8 +168,10 @@ export class GameReportService {
     });
     const agent_ids = agents.map((t) => t.id);
     const bet_ids = betRecords.map((t) => t.id);
-    return bet_ids.length && agent_ids.length
+    const list = await (bet_ids.length && agent_ids.length
       ? this.prisma.$queryRaw(agentReport(agent_ids, bet_ids))
-      : [];
+      : []);
+
+    return this.prisma.success(list);
   }
 }
