@@ -16,5 +16,5 @@ export class UpdateWithdrawDto {
 
   @IsNumber()
   @IsOptional()
-  withdraw_fee?: number;
+  fee?: number;
 }

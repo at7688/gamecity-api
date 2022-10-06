@@ -12,6 +12,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PlatformType } from '@prisma/client';
 import { Platforms } from 'src/metas/platforms.meta';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { ImageType } from 'src/uploads/enums';
 import { UploadsService } from 'src/uploads/uploads.service';
 import { CreatePBankcardDto } from './dto/create-p-bankcard.dto';
@@ -24,19 +25,25 @@ export class PBankcardClientController {
   constructor(
     private readonly pBankcardService: PBankcardClientService,
     private readonly uploadsService: UploadsService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', { limits: { fileSize: 1024 * 1024 } }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.uploadsService.uploadFile(file, ImageType.PLAYER_CARD);
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    const result = await this.uploadsService.uploadFile(
+      file,
+      ImageType.PLAYER_CARD,
+    );
+    return this.prisma.success(result);
   }
 
   @Post('create')
-  create(@Body() data: CreatePBankcardDto) {
-    return this.pBankcardService.create(data);
+  async create(@Body() data: CreatePBankcardDto) {
+    await this.pBankcardService.create(data);
+    return this.prisma.success();
   }
 
   @Patch('default/:id')

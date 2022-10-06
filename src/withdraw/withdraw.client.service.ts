@@ -81,6 +81,7 @@ export class WithdrawClientService {
       );
     }
 
+    // 查詢會員出金紀錄
     const withdrawTag = await this.prisma.playerTag.findFirst({
       where: {
         player_id: this.player.id,
@@ -108,7 +109,8 @@ export class WithdrawClientService {
         amount,
         player_id: this.player.id,
         player_card_id,
-        withdraw_fee: amount * fee_percent,
+        fee: (amount * fee_percent) / 100,
+        times: withdrawCount,
       },
     });
 
@@ -135,7 +137,7 @@ export class WithdrawClientService {
           },
         },
         outter_note: true,
-        withdraw_fee: true,
+        fee: true,
       },
       where: {
         player_id: this.player.id,

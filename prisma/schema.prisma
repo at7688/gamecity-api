@@ -195,7 +195,8 @@ model WithdrawRec {
   inner_note     String?
   outter_note    String?
   player         Player     @relation(fields: [player_id], references: [id])
-  withdraw_fee   Float      @default(0)
+  fee   Float      @default(0)
+  times Int // 第X次出金
 }
 
 model WalletRec {

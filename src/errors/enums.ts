@@ -25,6 +25,7 @@ export enum ResCode {
   PAYMENT_MERCHANT_ERR = 'PY0800', // 金流商回傳錯誤
 
   DATA_DUPICATED = 'AL0100', // 資料重複(代碼/帳號)
+  DUPICATED_OPERATION = 'AL0110', // 重複操作
 
   BALANCE_NOT_ENOUGH = 'AL0200', // 餘額不足
 

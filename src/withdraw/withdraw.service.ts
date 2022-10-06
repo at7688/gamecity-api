@@ -12,6 +12,7 @@ import { WithdrawStatus } from './enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { PlayerTagType } from 'src/player/enums';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable()
 export class WithdrawService {
@@ -94,8 +95,8 @@ export class WithdrawService {
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.withdrawRec.findUnique({
+  async findOne(id: string) {
+    const record = await this.prisma.withdrawRec.findUnique({
       where: { id },
       include: {
         player: {
@@ -116,23 +117,48 @@ export class WithdrawService {
         },
       },
     });
+
+    if (!record) {
+      this.prisma.error(ResCode.NOT_FOUND, '查無紀錄');
+    }
+
+    return this.prisma.success(record);
   }
 
   async update(id: string, data: UpdateWithdrawDto) {
-    const { inner_note, outter_note, status, withdraw_fee } = data;
+    const { inner_note, outter_note, status, fee } = data;
 
     const record = await this.prisma.withdrawRec.findUnique({
       where: { id },
       include: { player_card: true },
     });
 
+    if (!record) {
+      this.prisma.error(ResCode.NOT_FOUND, '查無紀錄');
+    }
+
+    if (record.finished_at !== null) {
+      this.prisma.error(ResCode.DUPICATED_OPERATION, '重複審核');
+    }
+
+    // 查詢會員出金紀錄
+    const withdrawTag = await this.prisma.playerTag.findUnique({
+      where: {
+        player_id_type: {
+          player_id: record.player_id,
+          type: PlayerTagType.WITHDRAWED,
+        },
+      },
+    });
+
     // 若設定狀態為撥款完成，則累計進會員提領次數
-    if (record.finished_at === null && status === WithdrawStatus.FINISHED) {
+    if (status === WithdrawStatus.FINISHED) {
       this.prisma.$transaction([
         // 紀錄完成日期
         this.prisma.withdrawRec.update({
           where: { id: record.id },
           data: {
+            status: WithdrawStatus.FINISHED,
             finished_at: new Date(),
           },
           include: { player_card: true },
@@ -142,48 +168,33 @@ export class WithdrawService {
           type: WalletRecType.WITHDRAW,
           player_id: record.player_id,
           amount: -record.amount,
-          fee: record.withdraw_fee,
+          fee: fee || record.fee, // 已送單時設定的提領手續費為主，無設定則以紀錄為主
           source: `(${record.player_card.bank_code})${record.player_card.account}`,
           relative_id: record.id,
         })),
       ]);
 
-      // 會員的出金次數加1
-      const withdrawTag = await this.prisma.playerTag.findUnique({
+      // 更新會員的出金次數
+      await this.prisma.playerTag.upsert({
         where: {
           player_id_type: {
             player_id: record.player_id,
             type: PlayerTagType.WITHDRAWED,
           },
         },
+        create: {
+          player_id: record.player_id,
+          type: PlayerTagType.WITHDRAWED,
+          count: record.times,
+        },
+        update: {
+          count: record.times,
+        },
       });
-
-      if (!withdrawTag) {
-        await this.prisma.playerTag.create({
-          data: {
-            player_id: record.player_id,
-            type: PlayerTagType.WITHDRAWED,
-          },
-        });
-      } else {
-        this.prisma.playerTag.update({
-          where: {
-            player_id_type: {
-              player_id: record.player_id,
-              type: PlayerTagType.WITHDRAWED,
-            },
-          },
-          data: {
-            count: {
-              increment: 1,
-            },
-          },
-        });
-      }
     } else {
       const record = await this.prisma.withdrawRec.update({
         where: { id },
-        data: { inner_note, outter_note, status, withdraw_fee },
+        data: { inner_note, outter_note, status, fee },
         include: { player_card: true },
       });
     }

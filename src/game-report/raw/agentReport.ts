@@ -13,12 +13,12 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
     m.id,
     m.username,
     m.parent_id,
-    d.promotion_duty,
     d.fee_duty,
+    d.promotion_duty,
     (
       SELECT json_build_object(
-        'agent_duty_amount', (d.fee_duty * gf.amount / 100),
-        'gift_amount', gf.amount
+        'total', gf.amount,
+        'duty', (d.promotion_duty * gf.amount / 100)
       )
       FROM (
         SELECT SUM(g.amount) amount FROM (
@@ -35,6 +35,44 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
       JOIN "Gift" g ON g.player_id = p.id
       ) gf
     ) promotion,
+    (
+      SELECT json_build_object(
+        'total', pf.fee,
+        'duty', (d.fee_duty * pf.fee / 100)
+      ) FROM (
+        SELECT SUM(g.fee) fee
+        FROM (
+          WITH RECURSIVE subAgents AS (
+            SELECT * FROM "Member" WHERE username = m.username
+            UNION
+            SELECT m.* FROM "Member" m
+            JOIN subAgents s ON s.id = m.parent_id
+          )
+          SELECT * FROM subAgents
+        ) a
+        JOIN "Player" p ON p.agent_id = a.id
+        JOIN "PaymentDepositRec" g ON g.player_id = p.id
+      ) pf
+    ) deposit_fee,
+    (
+      SELECT json_build_object(
+        'total', wf.fee,
+        'duty', (d.fee_duty * wf.fee / 100)
+      ) FROM (
+        SELECT SUM(g.fee) fee
+        FROM (
+          WITH RECURSIVE subAgents AS (
+            SELECT * FROM "Member" WHERE username = m.username
+            UNION
+            SELECT m.* FROM "Member" m
+            JOIN subAgents s ON s.id = m.parent_id
+          )
+          SELECT * FROM subAgents
+        ) a
+        JOIN "Player" p ON p.agent_id = a.id
+        JOIN "WithdrawRec" g ON g.player_id = p.id
+      ) wf
+    ) withdraw_fee,
     (SELECT json_build_object(
       'ratio_result', p.ratio_result,
       'agent_water_comm', p.agent_water_comm,
