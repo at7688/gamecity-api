@@ -1,4 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import {
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subWeeks,
+} from 'date-fns';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getRangeCounts, RangeCountsInfo } from './raw/getRangeCounts';
 
@@ -19,16 +28,72 @@ export class DashboardService {
     const rangeCounts = await this.prisma.$queryRaw<RangeCountsInfo[]>(
       getRangeCounts(),
     );
-    return rangeCounts[0];
+    return this.prisma.success(rangeCounts[0]);
   }
-  getPlayerCount() {
+  async getPlayerCount() {
     // 總會員數
+    const count = await this.prisma.player.count();
+    return this.prisma.success(count);
   }
 
-  winloseResult() {
+  async winloseResult() {
     // 當日輸贏
+    const todayResult = await this.prisma.betRecord.aggregate({
+      where: {
+        bet_at: {
+          gte: startOfDay(new Date()),
+          lte: endOfDay(new Date()),
+        },
+      },
+      _sum: {
+        amount: true,
+        win_lose_amount: true,
+      },
+    });
     // 本週輸贏
+    const thisWeekResult = await this.prisma.betRecord.aggregate({
+      where: {
+        bet_at: {
+          gte: startOfWeek(new Date()),
+          lte: endOfWeek(new Date()),
+        },
+      },
+      _sum: {
+        amount: true,
+        win_lose_amount: true,
+      },
+    });
     // 上週輸贏
+    const lastWeekResult = await this.prisma.betRecord.aggregate({
+      where: {
+        bet_at: {
+          gte: startOfWeek(subWeeks(new Date(), 1)),
+          lte: endOfWeek(subWeeks(new Date(), 1)),
+        },
+      },
+      _sum: {
+        amount: true,
+        win_lose_amount: true,
+      },
+    });
     // 本月輸贏
+    const thisMonthResult = await this.prisma.betRecord.aggregate({
+      where: {
+        bet_at: {
+          gte: startOfMonth(new Date()),
+          lte: endOfMonth(new Date()),
+        },
+      },
+      _sum: {
+        amount: true,
+        win_lose_amount: true,
+      },
+    });
+    return this.prisma.success({
+      today: todayResult._sum,
+      thisWeek: thisWeekResult._sum,
+      lastWeek: lastWeekResult._sum,
+      thisMonth: thisMonthResult._sum,
+    });
   }
 }

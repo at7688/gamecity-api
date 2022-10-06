@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 
 @Controller('dashboard')
@@ -8,5 +8,14 @@ export class DashboardController {
   @Post('rangeCounts')
   getRangeCounts() {
     return this.dashboardService.getRangeCounts();
+  }
+  @Get('playerCount')
+  getPlayerCount() {
+    return this.dashboardService.getPlayerCount();
+  }
+
+  @Get('winlose')
+  winloseResult() {
+    return this.dashboardService.winloseResult();
   }
 }
