@@ -21,7 +21,22 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
     SELECT
       m.id,
       m.username,
-      m.parent_id,
+      m.nickname,
+      m.layer,
+      (
+          SELECT json_agg(pp) FROM (
+            WITH RECURSIVE parents AS (
+              SELECT * FROM "Member"
+              WHERE id = m.parent_id
+            UNION
+              SELECT n.* FROM "Member" n
+              JOIN parents ON parents.parent_id = n.id
+            )
+
+            SELECT id, nickname, username, layer FROM parents
+            ORDER BY layer
+          ) pp
+        ) parents,
       d.fee_duty,
       d.promotion_duty,
       (

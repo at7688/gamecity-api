@@ -5,7 +5,9 @@ import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchAgentReportDto } from './dto/search-agent-report.dto';
 import { SearchGameReportsDto } from './dto/search-game-reports.dto';
+import { SearchPlayerReportDto } from './dto/search-player-report.dto';
 import { agentReport } from './raw/agentReport';
+import { playerReport } from './raw/playerReport';
 
 @Injectable()
 export class GameReportService {
@@ -173,5 +175,11 @@ export class GameReportService {
       : []);
 
     return this.prisma.success(list);
+  }
+
+  async playerReport(search: SearchPlayerReportDto) {
+    const { start_at, end_at, username } = search;
+    const result = await this.prisma.$queryRaw(playerReport(search));
+    return this.prisma.success(result);
   }
 }
