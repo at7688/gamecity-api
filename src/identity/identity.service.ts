@@ -1,9 +1,12 @@
+import { IdentityVarifyStatus } from './enums';
 import { Injectable } from '@nestjs/common';
 import { AdminUser, Player, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateIdentityDto } from './dto/create-identity.dto';
 import { SearchIdentitiesDto } from './dto/search-identities.dto';
 import { UpdateIdentityDto } from './dto/update-identity.dto';
+import { PlayerTagType } from 'src/player/enums';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable()
 export class IdentityService {
@@ -31,6 +34,9 @@ export class IdentityService {
           },
         },
       },
+      orderBy: {
+        created_at: 'desc',
+      },
       take: +perpage,
       skip: (+page - 1) * +perpage,
     };
@@ -42,13 +48,39 @@ export class IdentityService {
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.identityVerify.findUnique({ where: { id } });
+  async findOne(id: string) {
+    const result = await this.prisma.identityVerify.findUnique({
+      where: { id },
+      include: {
+        player: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+            agent: {
+              select: { id: true, nickname: true, username: true, layer: true },
+            },
+          },
+        },
+        imgs: true,
+      },
+    });
+    return this.prisma.success(result);
   }
 
-  update(id: string, data: UpdateIdentityDto, user: AdminUser) {
+  async update(id: string, data: UpdateIdentityDto, user: AdminUser) {
     const { inner_note, outter_note, status } = data;
-    return this.prisma.identityVerify.update({
+
+    const record = await this.prisma.identityVerify.findUnique({
+      where: { id },
+    });
+
+    // 若申請單已通過或駁回，則不可再次審核
+    if (record.status > 2) {
+      this.prisma.error(ResCode.ALREADY_VARIFIED, '不可重複審核');
+    }
+
+    await this.prisma.identityVerify.update({
       where: { id },
       data: {
         status,
@@ -57,6 +89,16 @@ export class IdentityService {
         operator_id: user.id,
       },
     });
+    if (status === IdentityVarifyStatus.APPROVED) {
+      // 若為通過，則添加會員實名標籤
+      await this.prisma.playerTag.create({
+        data: {
+          player_id: record.player_id,
+          type: PlayerTagType.VERIFIED_ID,
+        },
+      });
+    }
+    return this.prisma.success();
   }
 
   remove(id: string) {

@@ -73,9 +73,9 @@ export class PlayerService {
 
     const code = await this.cacheManager.get<string>(phone);
 
-    // if (phone_code !== code) {
-    //   this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
-    // }
+    if (phone_code !== code) {
+      this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
+    }
 
     const hash = await argon2.hash(password);
 
@@ -133,6 +133,11 @@ export class PlayerService {
             create: {
               phone,
               email: email || null,
+            },
+          },
+          tags: {
+            create: {
+              type: PlayerTagType.VERIFIED_PHONE,
             },
           },
         },

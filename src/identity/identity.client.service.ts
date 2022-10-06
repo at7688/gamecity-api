@@ -2,8 +2,11 @@ import { Inject, Injectable, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { Player } from '@prisma/client';
 import { Request } from 'express';
+import { ResCode } from 'src/errors/enums';
+import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateIdentityDto } from './dto/create-identity.dto';
+import { IdentityVarifyStatus } from './enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class IdentityClientService {
@@ -15,9 +18,22 @@ export class IdentityClientService {
   get player() {
     return this.request.user as Player;
   }
-  create(data: CreateIdentityDto) {
+  async create(data: CreateIdentityDto) {
     const { id_card_num, img_ids } = data;
-    return this.prisma.identityVerify.upsert({
+
+    // 查詢是否有實名標籤
+    const idTag = await this.prisma.playerTag.findUnique({
+      where: {
+        player_id_type: {
+          player_id: this.player.id,
+          type: PlayerTagType.VERIFIED_ID,
+        },
+      },
+    });
+    if (idTag) {
+      this.prisma.success(ResCode.ALREADY_VARIFIED, '已驗證過');
+    }
+    await this.prisma.identityVerify.upsert({
       where: { player_id: this.player.id },
       create: {
         player_id: this.player.id,
@@ -28,14 +44,15 @@ export class IdentityClientService {
         id_card_num,
         imgs: { connect: img_ids.map((id) => ({ id })) },
       },
-      include: { imgs: { select: { id: true, path: true, filename: true } } },
     });
+    return this.prisma.success();
   }
 
-  findOne() {
-    return this.prisma.identityVerify.findUnique({
+  async findOne() {
+    const result = await this.prisma.identityVerify.findUnique({
       where: { player_id: this.player.id },
       include: { imgs: { select: { id: true, path: true } } },
     });
+    return this.prisma.success(result);
   }
 }

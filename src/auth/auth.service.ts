@@ -270,11 +270,11 @@ export class AuthService {
       );
       await this.cacheManager.set(user.id, permissions);
 
-      return {
+      return this.prisma.success({
         user,
         menu,
         access_token: token,
-      };
+      });
     } catch (err) {
       const login_rec = await this.prisma.loginRec.findFirst({
         where: {
