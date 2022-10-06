@@ -1,8 +1,16 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
 export class RegisterPlayerDto {
   @IsString()
   @IsNotEmpty()
+  @Matches(/^\w{5,}$/, { message: '帳號需為5個以上英數字' })
   username: string;
 
   @IsString()

@@ -4,11 +4,13 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Matches,
 } from 'class-validator';
 
 export class RegisterAgentDto {
   @IsString()
   @IsNotEmpty()
+  @Matches(/^\w{5,}$/, { message: '帳號需為5個以上英數字' })
   username: string;
 
   @IsString()
