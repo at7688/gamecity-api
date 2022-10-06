@@ -35,9 +35,9 @@ export class SmsService {
 
     await this.smsMerchantService.sendSms(
       template
-        .replace('{{siteName}}', siteName)
-        .replace('{{siteUrl}}', siteUrl)
-        .replace('{{code}}', phoneCode),
+        .replace('{siteName}', siteName)
+        .replace('{siteUrl}', siteUrl)
+        .replace('{code}', phoneCode),
       [phone],
     );
 
