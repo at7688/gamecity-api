@@ -34,6 +34,7 @@ export enum ResCode {
 
   NOT_FOUND = 'AL0010', // 查無紀錄
   DATE_ERR = 'AL0020', // 日期設定錯誤
+  LAYER_ERR = 'AL0030', // 代理階層數錯誤
 
   EMPTY_VAL = 'AL0040', // 不可為空
   DB_ERR = 'AL0050', // DB錯誤

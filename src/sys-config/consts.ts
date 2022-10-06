@@ -8,3 +8,5 @@ export const REGISTER_REQUIRED = 'REGISTER_REQUIRED'; // 玩家註冊必填欄�
 export const VIP_CHECK_SCHEDULE = 'VIP_CHECK_SCHEDULE'; // VIP等級審核排程時間
 export const ADMIN_MULTI_LOGIN = 'ADMIN_MULTI_LOGIN'; // 管端是否允許多重登入
 export const AGENT_MULTI_LOGIN = 'AGENT_MULTI_LOGIN'; // 代理端是否允許多重登入
+export const MAX_LAYER_DEPTH = 'MAX_LAYER_DEPTH'; // 最大代理階層階層數
+export const FAILED_LOGIN_LIMIT = 'FAILED_LOGIN_LIMIT'; // 登入失敗次數上限(超過則封鎖)

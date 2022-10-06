@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { VIP_CHECK_SCHEDULE } from './consts';
+import { PHONE_CODE_TEMPLATE, VIP_CHECK_SCHEDULE } from './consts';
 
 @Injectable()
 export class SysConfigService {
@@ -25,7 +25,7 @@ export class SysConfigService {
   async setSmsTemplate(content: string) {
     await this.prisma.sysConfig.update({
       where: {
-        code: 'PHONE_CODE_TEMPLATE',
+        code: PHONE_CODE_TEMPLATE,
       },
       data: {
         value: content,

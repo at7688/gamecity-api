@@ -13,7 +13,7 @@ const createMembers = async (username: string, nickname: string) => {
       password: await argon2.hash(process.env.DEFAULT_PASSWORD),
       layer,
     };
-    if (layer < +process.env.MAX_LEVEL_DEPTH) {
+    if (layer < 5) {
       data.subs = {
         connectOrCreate: {
           where: { username: username + (layer + 1) },

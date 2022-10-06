@@ -1,4 +1,4 @@
-import { AGENT_MULTI_LOGIN } from './../sys-config/consts';
+import { AGENT_MULTI_LOGIN, FAILED_LOGIN_LIMIT } from './../sys-config/consts';
 import {
   BadRequestException,
   CACHE_MANAGER,
@@ -290,8 +290,14 @@ export class AuthService {
       let failed_msg = `${err.message}, 累積失敗次數：${nums_failed}次`;
 
       // 超過失敗登入上限，封鎖帳戶
-      if (nums_failed >= +this.configService.get('FAILED_LOGIN_LIMIT')) {
-        failed_msg = `已達失敗上限，帳戶已鎖定`;
+      const failedLimit = await this.prisma.sysConfig.findUnique({
+        where: {
+          code: FAILED_LOGIN_LIMIT,
+        },
+      });
+
+      if (nums_failed > +failedLimit.value) {
+        failed_msg = '帳戶已鎖定';
 
         await this.prisma[
           { ADMIN: 'AdminUser', AGENT: 'Member', PLAYER: 'Player' }[

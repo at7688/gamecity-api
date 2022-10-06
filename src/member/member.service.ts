@@ -16,6 +16,7 @@ import { getAllSubs } from './raw/getAllSubs';
 import { getTreeNode, TreeNodeMember } from './raw/getTreeNode';
 import { ResCode } from 'src/errors/enums';
 import { TargetType } from 'src/enums';
+import { MAX_LAYER_DEPTH } from 'src/sys-config/consts';
 @Injectable()
 export class MemberService {
   constructor(
@@ -56,13 +57,29 @@ export class MemberService {
       }
     }
 
+    const layer = parent ? parent.layer + 1 : 1;
+
+    const maxLayerDepth = await this.prisma.sysConfig.findUnique({
+      where: {
+        code: MAX_LAYER_DEPTH,
+      },
+    });
+
+    // 確認階層數是否超過限制
+    if (layer > +maxLayerDepth.value) {
+      this.prisma.error(
+        ResCode.LAYER_ERR,
+        `代理階層限${maxLayerDepth.value}層`,
+      );
+    }
+
     return this.prisma.member.create({
       data: {
         nickname,
         username,
         password: hash,
         parent_id: parent?.id,
-        layer: parent ? ++parent.layer : 1,
+        layer,
         promos: {
           create: {
             type: TargetType.AGENT,
