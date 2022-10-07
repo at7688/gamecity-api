@@ -10,6 +10,7 @@ export interface WithdrawPayload {
 }
 
 export interface DepositPayload {
+  type: 'bank' | 'payment';
   username: string;
   amount: number;
 }

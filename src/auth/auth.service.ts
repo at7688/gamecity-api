@@ -371,6 +371,12 @@ export class AuthService {
         id: player.id,
       },
       include: {
+        vip: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         game_accounts: {
           select: {
             platform_code: true,

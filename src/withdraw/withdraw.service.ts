@@ -1,24 +1,23 @@
-import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
-import {
-  BadGatewayException,
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateWithdrawDto } from './dto/create-withdraw.dto';
-import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
+import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
-import { WithdrawStatus } from './enums';
-import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
-import { WalletRecType } from 'src/wallet-rec/enums';
-import { PlayerTagType } from 'src/player/enums';
 import { ResCode } from 'src/errors/enums';
+import { PlayerTagType } from 'src/player/enums';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { WithdrawPayload } from 'src/socket/types';
+import { WalletRecType } from 'src/wallet-rec/enums';
+import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { CreateWithdrawDto } from './dto/create-withdraw.dto';
+import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
+import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
+import { WithdrawStatus } from './enums';
 
 @Injectable()
 export class WithdrawService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletRecService: WalletRecService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
   create(createWithdrawDto: CreateWithdrawDto) {
     return 'This action adds a new bankWithdraw';
@@ -130,28 +129,17 @@ export class WithdrawService {
 
     const record = await this.prisma.withdrawRec.findUnique({
       where: { id },
-      include: { player_card: true },
+      include: { player_card: true, player: true },
     });
 
     if (!record) {
       this.prisma.error(ResCode.NOT_FOUND, '查無紀錄');
     }
 
-    if (record.finished_at !== null) {
-      this.prisma.error(ResCode.DUPICATED_OPERATION, '重複審核');
+    if (record.status > 2) {
+      this.prisma.error(ResCode.DUPICATED_OPERATION, '不可重複審核');
     }
 
-    // 查詢會員出金紀錄
-    const withdrawTag = await this.prisma.playerTag.findUnique({
-      where: {
-        player_id_type: {
-          player_id: record.player_id,
-          type: PlayerTagType.WITHDRAWED,
-        },
-      },
-    });
-
-    // 若設定狀態為撥款完成，則累計進會員提領次數
     if (status === WithdrawStatus.FINISHED) {
       this.prisma.$transaction([
         // 紀錄完成日期
@@ -173,6 +161,12 @@ export class WithdrawService {
           relative_id: record.id,
         })),
       ]);
+
+      // for TG通知
+      this.eventEmitter.emit('withdraw.finish', {
+        username: record.player.username,
+        amount: record.amount,
+      } as WithdrawPayload);
 
       // 更新會員的出金次數
       await this.prisma.playerTag.upsert({

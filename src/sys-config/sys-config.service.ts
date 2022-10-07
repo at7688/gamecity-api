@@ -122,7 +122,7 @@ export class SysConfigService {
         value: cron,
       },
     });
-    this.eventEmitter.emit('vip.schedule', cron);
+    this.eventEmitter.emit('vip.scheduleUpdate', cron);
     return this.prisma.success();
   }
 }

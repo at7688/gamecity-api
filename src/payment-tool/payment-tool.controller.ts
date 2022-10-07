@@ -15,18 +15,23 @@ import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
 import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
 import { ActivePaymentToolDto } from './dto/active-payment-tool.dto';
 
-@Controller('payment-tools')
+@Controller('payment-tool')
 export class PaymentToolController {
   constructor(private readonly paymentToolService: PaymentToolService) {}
 
-  @Post()
+  @Post('create')
   create(@Body() createPaymentToolDto: CreatePaymentToolDto) {
     return this.paymentToolService.create(createPaymentToolDto);
   }
 
-  @Get()
-  findAll(@Query() query: SearchPaymentToolsDto) {
-    return this.paymentToolService.findAll(query);
+  @Post('list')
+  findAll(@Body() search: SearchPaymentToolsDto) {
+    return this.paymentToolService.findAll(search);
+  }
+
+  @Patch(':id/clear')
+  clearCurrentAmount(@Param('id') id: string) {
+    return this.paymentToolService.clearCurrentAmount(id);
   }
 
   @Get(':id')

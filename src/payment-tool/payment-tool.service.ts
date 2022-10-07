@@ -59,7 +59,6 @@ export class PaymentToolService {
     const records = await this.prisma.$queryRaw(
       pagerList(getToolList(search), page, perpage),
     );
-    console.log(records);
 
     return this.prisma.listFormat({ ...records[0], search });
   }
@@ -78,6 +77,16 @@ export class PaymentToolService {
         is_active,
       },
     });
+  }
+
+  async clearCurrentAmount(id: string) {
+    await this.prisma.paymentTool.update({
+      where: { id },
+      data: {
+        accumulate_from: new Date(),
+      },
+    });
+    return this.prisma.success();
   }
 
   update(id: string, data: UpdatePaymentToolDto) {

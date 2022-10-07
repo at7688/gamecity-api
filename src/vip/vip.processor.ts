@@ -15,7 +15,7 @@ export class VipTaskService {
   ) {}
   private readonly Logger = new Logger(VipTaskService.name);
 
-  @OnEvent('vip.schedule')
+  @OnEvent('vip.scheduleUpdate')
   async checkCronUpdate(cron: string) {
     const jobs = await this.vipQueue.getJobs(['delayed']);
 

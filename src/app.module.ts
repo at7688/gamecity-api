@@ -74,7 +74,9 @@ import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({
+      wildcard: true,
+    }),
     AnnouncementModule,
     OperationRecModule,
     PermissionModule,

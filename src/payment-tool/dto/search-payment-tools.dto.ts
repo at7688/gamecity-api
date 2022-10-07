@@ -5,7 +5,6 @@ import { PaginateDto } from 'src/dto/paginate.dto';
 export class SearchPaymentToolsDto extends PaginateDto {
   @IsInt()
   @IsOptional()
-  @Transform(({ value }) => +value)
   is_active?: number = 0;
 
   @IsOptional()
@@ -22,6 +21,5 @@ export class SearchPaymentToolsDto extends PaginateDto {
 
   @IsOptional()
   @IsInt()
-  @Transform(({ value }) => +value)
   rotation_id: number;
 }

@@ -1,10 +1,4 @@
-import {
-  BadGatewayException,
-  BadRequestException,
-  Inject,
-  Injectable,
-  Scope,
-} from '@nestjs/common';
+import { Inject, Injectable, Scope } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
 import { MerchantCode, Prisma } from '@prisma/client';
@@ -14,11 +8,9 @@ import { getUnixTime } from 'date-fns';
 import { Request } from 'express';
 import { orderBy } from 'lodash';
 import { ResCode } from 'src/errors/enums';
-import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WalletRecType } from 'src/wallet-rec/enums';
-import { WalletRecService } from '../wallet-rec/wallet-rec.service';
-import { MerchantOrderStatus } from './enums';
+import { MerchantOrderService } from './merchant-order.service';
+import { OrderResponseService } from './order-response.service';
 import { QIYU_CreateOrder, QIYU_Notify, QIYU_OrderRes } from './types/qiyu';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -26,7 +18,7 @@ export class QiyuService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-    private readonly walletRecService: WalletRecService,
+    private readonly orderResponseService: OrderResponseService,
     @Inject(REQUEST) private request: Request,
   ) {}
 
@@ -140,63 +132,17 @@ export class QiyuService {
       const sign = this.getSign(data, config?.hash_key);
 
       // 驗證簽名正確性
-      // if (data.status !== '30000' || valid_sign !== sign) {
-      //   return 'ERROR';
-      // }
-
-      const record = await this.prisma.paymentDepositRec.findUnique({
-        where: { id: data.order_id },
-        include: { merchant: true, payway: true, player: true },
-      });
+      if (data.status !== '30000' || valid_sign !== sign) {
+        return 'ERROR';
+      }
 
       if (data.status !== '30000') {
-        await this.prisma.paymentDepositRec.update({
-          where: { id: data.order_id },
-          data: {
-            canceled_at: new Date(),
-            finished_at: new Date(),
-            status: MerchantOrderStatus.REJECTED,
-            notify_info: data as unknown as Prisma.InputJsonObject,
-          },
-        });
+        await this.orderResponseService.orderFailed(data.order_id, data);
         return 'OK';
       }
 
-      // 查看是否有儲值紀錄
-      const rechargedTag = await this.prisma.playerTag.findFirst({
-        where: { player_id: record.player.id, type: PlayerTagType.RECHARGED },
-      });
+      await this.orderResponseService.orderSuccess(data.order_id);
 
-      if (!rechargedTag) {
-        // 無儲值紀錄則將玩家打上儲值紀錄
-        await this.prisma.playerTag.create({
-          data: {
-            player_id: record.player.id,
-            type: PlayerTagType.RECHARGED,
-          },
-        });
-      }
-
-      await this.prisma.$transaction([
-        this.prisma.paymentDepositRec.update({
-          where: { id: data.order_id },
-          data: {
-            paid_at: new Date(),
-            finished_at: new Date(),
-            status: MerchantOrderStatus.PAID,
-            notify_info: data as unknown as Prisma.InputJsonObject,
-            is_first: !rechargedTag, // 無儲值紀錄則將此單標記為首儲
-          },
-        }),
-        ...(await this.walletRecService.playerCreate({
-          type: WalletRecType.PAYMENT_DEPOSIT,
-          player_id: record.player_id,
-          amount: record.amount,
-          fee: record.fee_on_player,
-          source: `${record.merchant.name}(${record.merchant.code})/${record.payway.name}(${record.payway.code})`,
-          relative_id: record.id,
-        })),
-      ]);
       return 'OK';
     } catch (err) {
       console.log(err);

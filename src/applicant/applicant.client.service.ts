@@ -121,7 +121,7 @@ export class ApplicantClientService {
     ) {
       await this.applicantService.autoVerify(promotion_id, applicant.id);
     }
-    this.eventEmitter.emit('applyPromo', {
+    this.eventEmitter.emit('promotion.apply', {
       promotion: promotion.title,
       username: player.username,
     } as PromotionApplyPayload);

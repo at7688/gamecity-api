@@ -1,15 +1,8 @@
-import {
-  BadGatewayException,
-  Body,
-  Controller,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Param, Post } from '@nestjs/common';
 import { MerchantCode } from '@prisma/client';
 import { ResCode } from 'src/errors/enums';
 import { Public } from 'src/metas/public.meta';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { MerchantOrderService } from './merchant-order.service';
 import { QiyuService } from './qiyu.service';
 
 @Controller('order')

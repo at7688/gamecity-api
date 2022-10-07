@@ -10,5 +10,5 @@ export class PaginateDto {
   @IsOptional()
   @IsInt()
   @Transform(({ value }) => +value)
-  perpage?: number = 10;
+  perpage?: number = 100;
 }

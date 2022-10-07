@@ -41,27 +41,27 @@ export class SocketGateway {
     this.server.emit('message', 'hello');
   }
 
-  @OnEvent('register')
+  @OnEvent('player.register')
   playerRegister(payload: RegisterPayload) {
     this.server.emit('register', payload);
   }
 
-  @OnEvent('deposit')
-  deposit(payload: DepositPayload) {
+  @OnEvent('deposit.apply.bank')
+  bankDeposit(payload: DepositPayload) {
     this.server.emit('deposit', payload);
   }
 
-  @OnEvent('withdraw')
+  @OnEvent('withdraw.apply')
   withdraw(payload: WithdrawPayload) {
     this.server.emit('withdraw', payload);
   }
 
-  @OnEvent('bankcard')
+  @OnEvent('playercard.apply')
   playerCard(payload: PlayerCardPayload) {
     this.server.emit('bankcard', payload);
   }
 
-  @OnEvent('applyPromo')
+  @OnEvent('promotion.apply')
   promotionApply(payload: PromotionApplyPayload) {
     this.server.emit('applyPromo', payload);
   }

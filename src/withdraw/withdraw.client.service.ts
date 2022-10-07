@@ -114,7 +114,7 @@ export class WithdrawClientService {
       },
     });
 
-    this.eventEmitter.emit('withdraw', {
+    this.eventEmitter.emit('withdraw.apply', {
       username: this.player.username,
       amount,
     } as WithdrawPayload);

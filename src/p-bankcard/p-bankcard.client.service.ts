@@ -42,7 +42,7 @@ export class PBankcardClientService {
       },
     });
 
-    this.eventEmitter.emit('bankcard', {
+    this.eventEmitter.emit('playercard.apply', {
       username: this.player.username,
       info: `(${bank_code})${account} ${name}`,
     } as PlayerCardPayload);

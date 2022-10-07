@@ -5,7 +5,8 @@ import { CreatePaymentDepositDto } from './dto/create-payment-deposit.dto';
 import { UpdatePaymentDepositDto } from './dto/update-payment-deposit.dto';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { Player } from '@prisma/client';
+import { Player, Prisma } from '@prisma/client';
+import { SearchPaymentDepositsDto } from './dto/search-payment-deposits.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PaymentDepositService {
@@ -31,8 +32,31 @@ export class PaymentDepositService {
     // });
   }
 
-  findAll() {
-    return this.prisma.paymentDepositRec.findMany();
+  async findAll(search: SearchPaymentDepositsDto) {
+    const { created_start_at, created_end_at, username, page, perpage } =
+      search;
+    const findManyArgs: Prisma.PaymentDepositRecFindManyArgs = {
+      where: {
+        player: {
+          username,
+        },
+        created_at: {
+          gte: created_start_at,
+          lte: created_end_at,
+        },
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      take: perpage,
+      skip: (page - 1) * perpage,
+    };
+    return this.prisma.listFormat({
+      items: await this.prisma.paymentDepositRec.findMany(findManyArgs),
+      count: await this.prisma.paymentDepositRec.count({
+        where: findManyArgs.where,
+      }),
+    });
   }
 
   findOne(id: number) {

@@ -20,11 +20,11 @@ SELECT * FROM (
 		t.is_current,
 		w.payways,
 		t.recharge_max,
-		COALESCE(total_amount, 0),
+		COALESCE(total_amount, 0) total_amount,
 		total_count,
-		COALESCE(current_amount, 0),
-		COALESCE(total_fee, 0),
-		COALESCE(total_player_fee, 0),
+		COALESCE(current_amount, 0) current_amount,
+		COALESCE(total_fee, 0) total_fee,
+		COALESCE(total_player_fee, 0) total_player_fee,
 		lastest_record
 	FROM "PaymentTool" t
 	JOIN "PaymentMerchant" m ON m.id = t.merchant_id
@@ -74,4 +74,5 @@ ${
     ? Prisma.sql`AND tool_name LIKE '%' || ${tool_name} || '%'`
     : Prisma.empty
 }
+${rotation_id ? Prisma.sql`AND rotation_id = ${rotation_id}` : Prisma.empty}
 `;

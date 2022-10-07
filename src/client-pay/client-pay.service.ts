@@ -1,24 +1,21 @@
-import { BadRequestException, Inject, Injectable, Scope } from '@nestjs/common';
+import { Inject, Injectable, Scope } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
-import { MerchantCode, Player } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Player } from '@prisma/client';
 import { add } from 'date-fns';
 import { Request } from 'express';
-import { CardInfo, getCurrentCard } from './raw/getCurrentCard';
+import { ResCode } from 'src/errors/enums';
 import { ValidStatus } from 'src/p-bankcard/enums';
+import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { ValidTool, validTools } from 'src/payment-tool/raw/validTools';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { MerchantOrderService } from './../merchant-order/merchant-order.service';
-import { CreatePaymentOrderDto } from './dto/create-payment-order.dto';
-import { getCurrentPayways } from './raw/getCurrentPayways';
-import { CreateBankOrderDto } from './dto/create-bank-order.dto';
-import { BetRecordStatus } from 'src/bet-record/enums';
-import { PaymentDepositStatus } from 'src/payment-deposit/enums';
-import { ResCode } from 'src/errors/enums';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DepositPayload } from 'src/socket/types';
-import { TelegramBotType } from 'src/telegram-bot/enums';
-import axios from 'axios';
+import { MerchantOrderService } from './../merchant-order/merchant-order.service';
+import { CreateBankOrderDto } from './dto/create-bank-order.dto';
+import { CreatePaymentOrderDto } from './dto/create-payment-order.dto';
+import { CardInfo, getCurrentCard } from './raw/getCurrentCard';
+import { getCurrentPayways } from './raw/getCurrentPayways';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ClientPayService {
@@ -105,7 +102,8 @@ export class ClientPayService {
       },
     });
 
-    this.eventEmitter.emit('deposit', {
+    this.eventEmitter.emit('deposit.apply.bank', {
+      type: 'bank',
       username: this.player.username,
       amount,
     } as DepositPayload);
@@ -128,8 +126,6 @@ export class ClientPayService {
     if (tools.length === 0) {
       this.prisma.error(ResCode.FIELD_NOT_VALID, '無可用支付');
     }
-
-    console.log(tools);
 
     let currentTool = tools.find((t) => t.is_current);
 
@@ -222,12 +218,18 @@ export class ClientPayService {
 
     try {
       if (!is_test) {
-        return await this.orderService.createOrder(
+        await this.orderService.createOrder(
           currentTool.merchant_code,
           record.id,
         );
       }
-      return { test: 'OK' };
+      this.eventEmitter.emit('deposit.apply.payment', {
+        type: 'payment',
+        username: this.player.username,
+        amount,
+      } as DepositPayload);
+
+      return this.prisma.success();
     } catch (err) {
       await this.prisma.paymentDepositRec.update({
         where: { id: record.id },
@@ -240,7 +242,10 @@ export class ClientPayService {
     }
   }
 
-  payways() {
-    return this.prisma.$queryRaw(getCurrentPayways(this.player.vip_id));
+  async payways() {
+    const result = await this.prisma.$queryRaw(
+      getCurrentPayways(this.player.vip_id),
+    );
+    return this.prisma.success(result);
   }
 }

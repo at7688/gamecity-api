@@ -58,99 +58,99 @@ export class PlayerService {
       line_id,
     } = data;
 
-    // const config = await this.prisma.sysConfig.findUnique({
-    //   where: { code: REGISTER_REQUIRED },
-    // });
+    const config = await this.prisma.sysConfig.findUnique({
+      where: { code: REGISTER_REQUIRED },
+    });
 
-    // const requiredFields = config.value.split(',');
+    const requiredFields = config.value.split(',');
 
-    // if (requiredFields.includes('LINE') && !line_id) {
-    //   this.prisma.error(ResCode.FIELD_NOT_VALID, 'LineID為必填');
-    // }
-    // if (requiredFields.includes('EMAIL') && !email) {
-    //   this.prisma.error(ResCode.FIELD_NOT_VALID, 'Email為必填');
-    // }
+    if (requiredFields.includes('LINE') && !line_id) {
+      this.prisma.error(ResCode.FIELD_NOT_VALID, 'LineID為必填');
+    }
+    if (requiredFields.includes('EMAIL') && !email) {
+      this.prisma.error(ResCode.FIELD_NOT_VALID, 'Email為必填');
+    }
 
-    // const code = await this.cacheManager.get<string>(phone);
+    const code = await this.cacheManager.get<string>(phone);
 
-    // if (phone_code !== code) {
-    //   this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
-    // }
+    if (phone_code !== code) {
+      this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
+    }
 
-    // const hash = await argon2.hash(password);
+    const hash = await argon2.hash(password);
 
-    // const invitedPromo = await this.prisma.promoCode.findFirst({
-    //   where: {
-    //     type: TargetType.PLAYER,
-    //     code: invited_code,
-    //   },
-    //   include: {
-    //     parent: {
-    //       select: {
-    //         username: true,
-    //       },
-    //     },
-    //     inviter: {
-    //       select: {
-    //         username: true,
-    //       },
-    //     },
-    //   },
-    // });
-    // if (!invitedPromo) {
-    //   this.prisma.error(ResCode.NOT_FOUND, '推薦碼不可用');
-    // }
-    // const { parent_id, inviter_id } = invitedPromo;
+    const invitedPromo = await this.prisma.promoCode.findFirst({
+      where: {
+        type: TargetType.PLAYER,
+        code: invited_code,
+      },
+      include: {
+        parent: {
+          select: {
+            username: true,
+          },
+        },
+        inviter: {
+          select: {
+            username: true,
+          },
+        },
+      },
+    });
+    if (!invitedPromo) {
+      this.prisma.error(ResCode.NOT_FOUND, '推薦碼不可用');
+    }
+    const { parent_id, inviter_id } = invitedPromo;
 
-    // // 如果有初始化VIP, 則同時綁定
-    // const vip = await this.prisma.vip.findFirst({
-    //   where: { valid_bet: 0, deposit_min: 0 },
-    //   orderBy: { name: 'asc' },
-    // });
+    // 如果有初始化VIP, 則同時綁定
+    const vip = await this.prisma.vip.findFirst({
+      where: { valid_bet: 0, deposit_min: 0 },
+      orderBy: { name: 'asc' },
+    });
 
-    // const dupicatedPhone = await this.prisma.player.findFirst({
-    //   where: {
-    //     contact: {
-    //       phone,
-    //     },
-    //   },
-    // });
-    // if (dupicatedPhone) {
-    //   this.prisma.error(ResCode.DUPICATED_PHONE, '手機號碼重複');
-    // }
+    const dupicatedPhone = await this.prisma.player.findFirst({
+      where: {
+        contact: {
+          phone,
+        },
+      },
+    });
+    if (dupicatedPhone) {
+      this.prisma.error(ResCode.DUPICATED_PHONE, '手機號碼重複');
+    }
 
-    // try {
-    //   const player = await this.prisma.player.create({
-    //     data: {
-    //       username,
-    //       nickname,
-    //       agent_id: parent_id,
-    //       inviter_id,
-    //       password: hash,
-    //       vip_id: vip?.id,
-    //       invited_code,
-    //       contact: {
-    //         create: {
-    //           phone,
-    //           email: email || null,
-    //         },
-    //       },
-    //       tags: {
-    //         create: {
-    //           type: PlayerTagType.VERIFIED_PHONE,
-    //         },
-    //       },
-    //     },
-    //   });
-    //   this.eventEmitter.emit('register', {
-    //     username: player.username,
-    //     agent: invitedPromo.parent.username,
-    //     inviter: invitedPromo.inviter?.username || null,
-    //   } as RegisterPayload);
-    // } catch (err) {
-    //   console.log(err);
-    //   this.prisma.error(ResCode.DB_ERR, JSON.stringify(err));
-    // }
+    try {
+      const player = await this.prisma.player.create({
+        data: {
+          username,
+          nickname,
+          agent_id: parent_id,
+          inviter_id,
+          password: hash,
+          vip_id: vip?.id,
+          invited_code,
+          contact: {
+            create: {
+              phone,
+              email: email || null,
+            },
+          },
+          tags: {
+            create: {
+              type: PlayerTagType.VERIFIED_PHONE,
+            },
+          },
+        },
+      });
+      this.eventEmitter.emit('player.register', {
+        username: player.username,
+        agent: invitedPromo.parent.username,
+        inviter: invitedPromo.inviter?.username || null,
+      } as RegisterPayload);
+    } catch (err) {
+      console.log(err);
+      this.prisma.error(ResCode.DB_ERR, JSON.stringify(err));
+    }
 
     return this.prisma.success();
   }

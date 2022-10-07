@@ -10,19 +10,20 @@ import {
 import { PaymentDepositService } from './payment-deposit.service';
 import { CreatePaymentDepositDto } from './dto/create-payment-deposit.dto';
 import { UpdatePaymentDepositDto } from './dto/update-payment-deposit.dto';
+import { SearchPaymentDepositsDto } from './dto/search-payment-deposits.dto';
 
-@Controller('payment-deposits')
+@Controller('payment-deposit')
 export class PaymentDepositController {
   constructor(private readonly paymentDepositService: PaymentDepositService) {}
 
-  @Post()
+  @Post('create')
   create(@Body() createPaymentDepositDto: CreatePaymentDepositDto) {
     return this.paymentDepositService.create(createPaymentDepositDto);
   }
 
-  @Get()
-  findAll() {
-    return this.paymentDepositService.findAll();
+  @Post('list')
+  findAll(@Body() search: SearchPaymentDepositsDto) {
+    return this.paymentDepositService.findAll(search);
   }
 
   @Get(':id')

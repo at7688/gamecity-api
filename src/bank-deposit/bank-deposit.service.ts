@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
+import { ResCode } from 'src/errors/enums';
 import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { DepositPayload } from 'src/socket/types';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { SearchBankDepositsDto } from './dto/search-bank-deposits.dto';
@@ -13,6 +16,7 @@ export class BankDepositService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletRecService: WalletRecService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async findAll(search: SearchBankDepositsDto) {
@@ -96,6 +100,14 @@ export class BankDepositService {
       include: { card: true, player_card: true, player: true },
     });
 
+    if (!record) {
+      this.prisma.error(ResCode.NOT_FOUND, '查無紀錄');
+    }
+
+    if (record.status > 2) {
+      this.prisma.error(ResCode.DUPICATED_OPERATION, '不可重複審核');
+    }
+
     if (status === BankDepositStatus.FINISHED) {
       // 查看是否有儲值紀錄
       const rechargedTag = await this.prisma.playerTag.findFirst({
@@ -131,6 +143,12 @@ export class BankDepositService {
           relative_id: record.id,
         })),
       ]);
+
+      this.eventEmitter.emit('deposit.finish.bank', {
+        username: record.player.username,
+        amount: record.amount,
+        type: 'bank',
+      } as DepositPayload);
     } else {
       await this.prisma.bankDepositRec.update({
         where: { id },
