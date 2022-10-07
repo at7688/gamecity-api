@@ -158,7 +158,12 @@ export class WalletRecService {
     const player = await this.prisma.player.findUnique({
       where: { id: player_id },
     });
-    const result_balance = numeral(player.balance).add(amount).value();
+
+    const result_balance = numeral(player.balance)
+      .add(amount)
+      .subtract(fee)
+      .value();
+
     if (result_balance < 0) {
       this.prisma.error(ResCode.BALANCE_NOT_ENOUGH, '餘額不足');
     }
