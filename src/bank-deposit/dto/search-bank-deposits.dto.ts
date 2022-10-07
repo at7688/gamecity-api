@@ -14,7 +14,6 @@ import { PaginateDto } from 'src/dto/paginate.dto';
 export class SearchBankDepositsDto extends PaginateDto {
   @IsEnum(BankDepositStatus)
   @IsOptional()
-  @Transform(({ value }) => +value)
   status: BankDepositStatus;
 
   @IsString()
@@ -45,11 +44,9 @@ export class SearchBankDepositsDto extends PaginateDto {
 
   @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => +value)
   amount_from?: number;
 
   @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => +value)
   amount_to?: number;
 }

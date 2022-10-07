@@ -88,25 +88,38 @@ export class ClientPayService {
     }
 
     //  新增儲值
-    await this.prisma.bankDepositRec.create({
-      select: {
-        id: true,
-        amount: true,
-        created_at: true,
-      },
+    const record = await this.prisma.bankDepositRec.create({
       data: {
         amount,
         card_id: card.card_id,
         player_id: this.player.id,
         player_card_id,
       },
+      include: {
+        player: {
+          include: {
+            vip: true,
+            agent: true,
+          },
+        },
+      },
     });
 
-    this.eventEmitter.emit('deposit.apply.bank', {
+    const notify: DepositPayload = {
       type: 'bank',
-      username: this.player.username,
-      amount,
-    } as DepositPayload);
+      status: 'apply',
+      id: record.id,
+      username: record.player.username,
+      nickname: record.player.nickname,
+      created_at: record.created_at,
+      amount: record.amount,
+      vip_name: record.player.vip.name,
+      // count: record.times,
+      agent_nickname: record.player.agent.nickname,
+      agent_username: record.player.agent.username,
+    };
+
+    this.eventEmitter.emit('deposit.apply.bank', notify);
 
     return this.prisma.success();
   }
@@ -205,6 +218,14 @@ export class ClientPayService {
           player_fee_percent: payway.player_fee_percent,
         },
       },
+      include: {
+        player: {
+          include: {
+            vip: true,
+            agent: true,
+          },
+        },
+      },
     });
 
     // 若儲值總量已過上限則關閉此通道
@@ -223,11 +244,21 @@ export class ClientPayService {
           record.id,
         );
       }
-      this.eventEmitter.emit('deposit.apply.payment', {
+      const notify: DepositPayload = {
         type: 'payment',
-        username: this.player.username,
-        amount,
-      } as DepositPayload);
+        status: 'apply',
+        id: record.id,
+        username: record.player.username,
+        nickname: record.player.nickname,
+        created_at: record.created_at,
+        amount: record.amount,
+        vip_name: record.player.vip.name,
+        // count: record.times,
+        agent_nickname: record.player.agent.nickname,
+        agent_username: record.player.agent.username,
+      };
+
+      this.eventEmitter.emit('deposit.apply.payment', notify);
 
       return this.prisma.success();
     } catch (err) {

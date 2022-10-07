@@ -14,7 +14,6 @@ import { PaginateDto } from 'src/dto/paginate.dto';
 export class SearchWithdrawsDto extends PaginateDto {
   @IsEnum(WithdrawStatus)
   @IsOptional()
-  @Transform(({ value }) => +value)
   status: WithdrawStatus;
 
   @IsString()
@@ -45,11 +44,9 @@ export class SearchWithdrawsDto extends PaginateDto {
 
   @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => +value)
   amount_from?: number;
 
   @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => +value)
   amount_to?: number;
 }

@@ -99,12 +99,7 @@ export class WithdrawClientService {
     }
 
     //  新增提領
-    await this.prisma.withdrawRec.create({
-      select: {
-        id: true,
-        amount: true,
-        created_at: true,
-      },
+    const record = await this.prisma.withdrawRec.create({
       data: {
         amount,
         player_id: this.player.id,
@@ -112,12 +107,30 @@ export class WithdrawClientService {
         fee: (amount * fee_percent) / 100,
         times: withdrawCount,
       },
+      include: {
+        player: {
+          include: {
+            vip: true,
+            agent: true,
+          },
+        },
+      },
     });
 
-    this.eventEmitter.emit('withdraw.apply', {
-      username: this.player.username,
-      amount,
-    } as WithdrawPayload);
+    const notify: WithdrawPayload = {
+      id: record.id,
+      status: 'apply',
+      username: record.player.username,
+      nickname: record.player.nickname,
+      created_at: record.created_at,
+      amount: record.amount,
+      vip_name: record.player.vip.name,
+      count: record.times,
+      agent_nickname: record.player.agent.nickname,
+      agent_username: record.player.agent.username,
+    };
+
+    this.eventEmitter.emit('withdraw.apply', notify);
 
     return this.prisma.success();
   }

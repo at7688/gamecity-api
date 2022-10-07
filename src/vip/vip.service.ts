@@ -86,7 +86,7 @@ export class VipService {
     const depositRecords = await this.prisma.paymentDepositRec.findMany({
       select: { id: true },
       where: {
-        status: PaymentDepositStatus.PAID,
+        status: PaymentDepositStatus.FINISHED,
         created_at: {
           gte: startOfMonth(subDays(new Date(), 1)),
           lte: endOfMonth(subDays(new Date(), 1)),

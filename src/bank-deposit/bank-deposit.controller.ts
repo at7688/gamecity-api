@@ -1,15 +1,23 @@
-import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { BankDepositService } from './bank-deposit.service';
 import { SearchBankDepositsDto } from './dto/search-bank-deposits.dto';
 import { UpdateBankDepositDto } from './dto/update-bank-deposit.dto';
 
-@Controller('bank-deposits')
+@Controller('bank-deposit')
 export class BankDepositController {
   constructor(private readonly bankDepositService: BankDepositService) {}
 
-  @Get()
-  findAll(@Query() query: SearchBankDepositsDto) {
-    return this.bankDepositService.findAll(query);
+  @Post('list')
+  findAll(@Body() search: SearchBankDepositsDto) {
+    return this.bankDepositService.findAll(search);
   }
 
   @Get(':id')

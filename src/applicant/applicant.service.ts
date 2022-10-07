@@ -42,7 +42,7 @@ export class ApplicantService {
             gte: promotion.start_at ? promotion.start_at : undefined,
             lte: new Date(),
           },
-          status: PaymentDepositStatus.PAID,
+          status: PaymentDepositStatus.FINISHED,
           amount: {
             gte: recharge_amount,
           },

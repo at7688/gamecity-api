@@ -19,11 +19,20 @@ export class OrderResponseService {
   async orderSuccess(record_id: string, resData?: any) {
     const record = await this.prisma.paymentDepositRec.findUnique({
       where: { id: record_id },
-      include: { player: true, merchant: true, payway: true },
+      include: {
+        player: {
+          include: {
+            vip: true,
+            agent: true,
+          },
+        },
+        merchant: true,
+        payway: true,
+      },
     });
 
     // 查看該訂單狀態是否為未完成
-    if (record.status !== PaymentDepositStatus.CREATED) {
+    if (record.status > 2) {
       this.prisma.error(ResCode.DUPICATED_OPERATION);
     }
 
@@ -42,13 +51,15 @@ export class OrderResponseService {
       });
     }
 
+    const finished_at = new Date();
+
     await this.prisma.$transaction([
       this.prisma.paymentDepositRec.update({
         where: { id: record.id },
         data: {
-          paid_at: new Date(),
-          finished_at: new Date(),
-          status: PaymentDepositStatus.PAID,
+          paid_at: finished_at,
+          finished_at,
+          status: PaymentDepositStatus.FINISHED,
           notify_info: resData,
           is_first: !rechargedTag, // 無儲值紀錄則將此單標記為首儲
         },
@@ -63,18 +74,30 @@ export class OrderResponseService {
       })),
     ]);
 
-    this.eventEmitter.emit('deposit.finish.payment', {
-      username: record.player.username,
-      amount: record.amount,
+    const notify: DepositPayload = {
       type: 'payment',
-    } as DepositPayload);
+      status: 'finish',
+      id: record.id,
+      username: record.player.username,
+      nickname: record.player.nickname,
+      created_at: record.created_at,
+      finished_at,
+      amount: record.amount,
+      vip_name: record.player.vip.name,
+      // count: record.times,
+      agent_nickname: record.player.agent.nickname,
+      agent_username: record.player.agent.username,
+    };
+
+    this.eventEmitter.emit('deposit.finish.payment', notify);
   }
   async orderFailed(record_id: string, resData: any) {
+    const finished_at = new Date();
     await this.prisma.paymentDepositRec.update({
       where: { id: record_id },
       data: {
-        canceled_at: new Date(),
-        finished_at: new Date(),
+        canceled_at: finished_at,
+        finished_at,
         status: PaymentDepositStatus.REJECTED,
         notify_info: resData,
       },

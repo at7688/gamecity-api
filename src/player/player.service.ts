@@ -13,7 +13,7 @@ import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
 import { numToBooleanSearch } from 'src/utils';
-import { getAllParents } from './../member/raw/getAllParents';
+import { getAllParents, ParentBasic } from './../member/raw/getAllParents';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { SearchPlayersDto } from './dto/search-players.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
@@ -73,9 +73,9 @@ export class PlayerService {
 
     const code = await this.cacheManager.get<string>(phone);
 
-    if (phone_code !== code) {
-      this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
-    }
+    // if (phone_code !== code) {
+    //   this.prisma.error(ResCode.INVALID_PHONE_CODE, '手機驗證碼錯誤');
+    // }
 
     const hash = await argon2.hash(password);
 
@@ -108,15 +108,22 @@ export class PlayerService {
       orderBy: { name: 'asc' },
     });
 
-    const dupicatedPhone = await this.prisma.player.findFirst({
+    const dupicated = await this.prisma.player.findFirst({
       where: {
-        contact: {
-          phone,
-        },
+        OR: [
+          {
+            contact: {
+              phone,
+            },
+          },
+          {
+            username,
+          },
+        ],
       },
     });
-    if (dupicatedPhone) {
-      this.prisma.error(ResCode.DUPICATED_PHONE, '手機號碼重複');
+    if (dupicated) {
+      this.prisma.error(ResCode.DATA_DUPICATED, '手機或帳號重複');
     }
 
     try {
@@ -141,12 +148,31 @@ export class PlayerService {
             },
           },
         },
+        include: {
+          agent: true,
+          inviter: true,
+        },
       });
-      this.eventEmitter.emit('player.register', {
+
+      const parents = await this.prisma.$queryRaw<ParentBasic[]>(
+        getAllParents(player.agent.id),
+      );
+
+      const master_agent = parents.find((t) => t.parent_id === null);
+
+      const notify: RegisterPayload = {
         username: player.username,
-        agent: invitedPromo.parent.username,
-        inviter: invitedPromo.inviter?.username || null,
-      } as RegisterPayload);
+        nickname: player.nickname,
+        agent_username: player.agent.username,
+        agent_nickname: player.agent.nickname,
+        inviter_username: player.inviter?.username,
+        inviter_nickname: player.inviter?.nickname,
+        master_agent_nickname: master_agent.nickname,
+        master_agent_username: master_agent.username,
+        time: player.created_at,
+      };
+
+      this.eventEmitter.emit('player.register', notify);
     } catch (err) {
       console.log(err);
       this.prisma.error(ResCode.DB_ERR, JSON.stringify(err));

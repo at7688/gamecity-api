@@ -16,31 +16,8 @@ import { SearchPaymentDepositsDto } from './dto/search-payment-deposits.dto';
 export class PaymentDepositController {
   constructor(private readonly paymentDepositService: PaymentDepositService) {}
 
-  @Post('create')
-  create(@Body() createPaymentDepositDto: CreatePaymentDepositDto) {
-    return this.paymentDepositService.create(createPaymentDepositDto);
-  }
-
   @Post('list')
   findAll(@Body() search: SearchPaymentDepositsDto) {
     return this.paymentDepositService.findAll(search);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paymentDepositService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updatePaymentDepositDto: UpdatePaymentDepositDto,
-  ) {
-    return this.paymentDepositService.update(+id, updatePaymentDepositDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.paymentDepositService.remove(+id);
   }
 }

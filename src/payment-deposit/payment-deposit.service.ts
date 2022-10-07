@@ -20,21 +20,16 @@ export class PaymentDepositService {
   get player() {
     return this.request.user as Player;
   }
-  create(data: CreatePaymentDepositDto) {
-    const { amount, payway_id } = data;
-
-    // return this.prisma.paymentDepositRec.create({
-    //   data: {
-    //     amount,
-    //     player_id: this.player.id,
-    //     payway_id,
-    //   },
-    // });
-  }
 
   async findAll(search: SearchPaymentDepositsDto) {
-    const { created_start_at, created_end_at, username, page, perpage } =
-      search;
+    const {
+      created_start_at,
+      created_end_at,
+      username,
+      status,
+      page,
+      perpage,
+    } = search;
     const findManyArgs: Prisma.PaymentDepositRecFindManyArgs = {
       where: {
         player: {
@@ -44,6 +39,7 @@ export class PaymentDepositService {
           gte: created_start_at,
           lte: created_end_at,
         },
+        status,
       },
       orderBy: {
         created_at: 'desc',
@@ -57,17 +53,5 @@ export class PaymentDepositService {
         where: findManyArgs.where,
       }),
     });
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} paymentDeposit`;
-  }
-
-  update(id: number, updatePaymentDepositDto: UpdatePaymentDepositDto) {
-    return `This action updates a #${id} paymentDeposit`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} paymentDeposit`;
   }
 }

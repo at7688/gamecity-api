@@ -1,9 +1,10 @@
 export enum PaymentDepositStatus {
-  CREATED = 1,
-  PAID = 2,
-  EXPIRED = 3,
-  REJECTED = 4,
-  PENDING = 5,
+  APPLYING = 1,
+  PROCESSING = 2,
+  FINISHED = 3,
+  CANCELED = 4,
+  REJECTED = 5,
+  DEPRECATED = 6,
 }
 
-// 尚未付款 已付款 已過期 拒絕退回 等待入點
+// 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期

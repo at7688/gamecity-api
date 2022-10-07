@@ -129,7 +129,10 @@ export class WithdrawService {
 
     const record = await this.prisma.withdrawRec.findUnique({
       where: { id },
-      include: { player_card: true, player: true },
+      include: {
+        player_card: true,
+        player: { include: { vip: true, agent: true } },
+      },
     });
 
     if (!record) {
@@ -141,13 +144,14 @@ export class WithdrawService {
     }
 
     if (status === WithdrawStatus.FINISHED) {
+      const finished_at = new Date();
       this.prisma.$transaction([
         // 紀錄完成日期
         this.prisma.withdrawRec.update({
           where: { id: record.id },
           data: {
             status: WithdrawStatus.FINISHED,
-            finished_at: new Date(),
+            finished_at,
           },
           include: { player_card: true },
         }),
@@ -162,11 +166,22 @@ export class WithdrawService {
         })),
       ]);
 
-      // for TG通知
-      this.eventEmitter.emit('withdraw.finish', {
+      const notify: WithdrawPayload = {
+        id: record.id,
+        status: 'finish',
         username: record.player.username,
+        nickname: record.player.nickname,
+        created_at: record.created_at,
+        finished_at,
         amount: record.amount,
-      } as WithdrawPayload);
+        vip_name: record.player.vip.name,
+        count: record.times,
+        agent_nickname: record.player.agent.nickname,
+        agent_username: record.player.agent.username,
+      };
+
+      // for TG通知
+      this.eventEmitter.emit('withdraw.finish', notify);
 
       // 更新會員的出金次數
       await this.prisma.playerTag.upsert({

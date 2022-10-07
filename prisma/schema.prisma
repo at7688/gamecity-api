@@ -167,6 +167,7 @@ model BankDepositRec {
   amount         Float
   created_at     DateTime    @default(now()) @db.Timestamptz()
   updated_at     DateTime    @updatedAt @db.Timestamptz()
+  finished_at    DateTime?  @db.Timestamptz()
   card_id        String
   status         Int         @default(1) // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
   player_card    PlayerCard  @relation(fields: [player_card_id], references: [id])

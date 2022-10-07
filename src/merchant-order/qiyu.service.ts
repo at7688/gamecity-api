@@ -101,52 +101,53 @@ export class QiyuService {
   }
 
   async notify(data: QIYU_Notify) {
-    try {
-      await this.prisma.merchantLog.create({
-        data: {
-          merchant_code: MerchantCode.QIYU,
-          sendData: data as unknown as Prisma.InputJsonValue,
-        },
-      });
+    await this.prisma.merchantLog.create({
+      data: {
+        merchant_code: MerchantCode.QIYU,
+        sendData: data as unknown as Prisma.InputJsonValue,
+      },
+    });
 
-      const paymentTool = await this.prisma.paymentTool.findFirst({
-        where: {
-          payways: {
-            some: {
-              records: {
-                some: {
-                  id: data.order_id,
-                },
+    const paymentTool = await this.prisma.paymentTool.findFirst({
+      where: {
+        payways: {
+          some: {
+            records: {
+              some: {
+                id: data.order_id,
               },
             },
           },
         },
-      });
-      const config = paymentTool.merchant_config as any;
+      },
+    });
+    const config = paymentTool.merchant_config as any;
 
-      console.log(config);
+    console.log(config);
 
-      const valid_sign = data.sign;
-      delete data.extra;
-      delete data.sign;
-      const sign = this.getSign(data, config?.hash_key);
+    const valid_sign = data.sign;
+    delete data.extra;
+    delete data.sign;
+    const sign = this.getSign(data, config?.hash_key);
 
-      // 驗證簽名正確性
-      if (data.status !== '30000' || valid_sign !== sign) {
-        return 'ERROR';
-      }
-
-      if (data.status !== '30000') {
-        await this.orderResponseService.orderFailed(data.order_id, data);
-        return 'OK';
-      }
-
-      await this.orderResponseService.orderSuccess(data.order_id);
-
+    // 廠商回傳錯誤代碼
+    if (data.status !== '30000') {
+      await this.orderResponseService.orderFailed(data.order_id, data);
       return 'OK';
-    } catch (err) {
-      console.log(err);
-      this.prisma.error(ResCode.PAYMENT_MERCHANT_ERR);
     }
+
+    const record = await this.prisma.paymentDepositRec.findUnique({
+      where: { id: data.order_id },
+    });
+
+    // 簽名不對或金額不對則返回錯誤
+    if (valid_sign !== sign || data.real_amount !== record.amount) {
+      await this.orderResponseService.orderFailed(data.order_id, data);
+      return 'ERROR';
+    }
+
+    await this.orderResponseService.orderSuccess(data.order_id);
+
+    return 'OK';
   }
 }

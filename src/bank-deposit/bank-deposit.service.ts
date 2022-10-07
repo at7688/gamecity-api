@@ -94,10 +94,13 @@ export class BankDepositService {
 
   async update(id: string, data: UpdateBankDepositDto) {
     const { inner_note, outter_note, status } = data;
-    const record = await this.prisma.bankDepositRec.update({
+    const record = await this.prisma.bankDepositRec.findUnique({
       where: { id },
-      data: { inner_note, outter_note, status },
-      include: { card: true, player_card: true, player: true },
+      include: {
+        card: true,
+        player_card: true,
+        player: { include: { vip: true, agent: true } },
+      },
     });
 
     if (!record) {
@@ -124,6 +127,8 @@ export class BankDepositService {
         });
       }
 
+      const finished_at = new Date();
+
       await this.prisma.$transaction([
         this.prisma.bankDepositRec.update({
           where: { id },
@@ -131,6 +136,7 @@ export class BankDepositService {
             inner_note,
             outter_note,
             status,
+            finished_at,
             is_first: !rechargedTag, // 無儲值紀錄則此單為首儲
           },
         }),
@@ -144,11 +150,22 @@ export class BankDepositService {
         })),
       ]);
 
-      this.eventEmitter.emit('deposit.finish.bank', {
-        username: record.player.username,
-        amount: record.amount,
+      const notify: DepositPayload = {
         type: 'bank',
-      } as DepositPayload);
+        status: 'finish',
+        id: record.id,
+        username: record.player.username,
+        nickname: record.player.nickname,
+        created_at: record.created_at,
+        finished_at,
+        amount: record.amount,
+        vip_name: record.player.vip.name,
+        // count: record.times,
+        agent_nickname: record.player.agent.nickname,
+        agent_username: record.player.agent.username,
+      };
+
+      this.eventEmitter.emit('deposit.finish.bank', notify);
     } else {
       await this.prisma.bankDepositRec.update({
         where: { id },

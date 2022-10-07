@@ -29,7 +29,7 @@ export class FeeReportService {
     }
     const records = await this.prisma.paymentDepositRec.findMany({
       where: {
-        status: PaymentDepositStatus.PAID,
+        status: PaymentDepositStatus.FINISHED,
         created_at: {
           gte: start_at,
           lte: end_at,

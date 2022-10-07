@@ -2,8 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { TelegramBot } from '@prisma/client';
 import axios from 'axios';
+import { format } from 'date-fns';
+import * as numeral from 'numeral';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { DepositPayload, WithdrawPayload } from 'src/socket/types';
+import {
+  DepositPayload,
+  RegisterPayload,
+  WithdrawPayload,
+} from 'src/socket/types';
 import { TelegramBotType } from './enums';
 
 @Injectable()
@@ -18,14 +24,30 @@ export class TGMessageService {
       data: {
         chat_id,
         text,
-        parse_mode: 'MarkdownV2',
+        parse_mode: 'HTML',
       },
     });
   }
 
-  @OnEvent('deposit.apply.*', { async: true })
+  @OnEvent('deposit.**', { async: true })
   async sendDepositApplyMsg(payload: DepositPayload) {
-    const { type, username, amount } = payload;
+    console.log('sendDepositApplyMsg');
+    const {
+      type,
+      status,
+      username,
+      nickname,
+      vip_name,
+      created_at,
+      finished_at,
+      amount,
+      agent_username,
+      agent_nickname,
+      count,
+    } = payload;
+
+    console.log(payload);
+
     const typeMap: Record<typeof type, string> = {
       bank: '銀行卡',
       payment: '三方支付',
@@ -33,59 +55,112 @@ export class TGMessageService {
     const bots = await this.prisma.telegramBot.findMany({
       where: { type: TelegramBotType.RECHARGE, is_active: true },
     });
-    await Promise.all(
-      bots.map((bot) => {
-        return this.sendMessage(
-          bot,
-          `🛎 ${username} 申請${typeMap[type]}儲值 $*${amount}*`,
-        );
-      }),
-    );
-  }
 
-  @OnEvent('deposit.finish.*', { async: true })
-  async sendDepositFinishMsg(payload: DepositPayload) {
-    const { type, username, amount } = payload;
-    const typeMap: Record<typeof type, string> = {
-      bank: '銀行卡',
-      payment: '三方支付',
+    const msgMap: Record<typeof status, string> = {
+      apply: `
+      <b>[訂貨申請通知]🛎</b>
+      <b>申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}</b>
+      <b>訂貨方式：${typeMap[type]}</b>
+      <b>上層代理：${agent_username}(${agent_nickname})</b>
+      <b>訂貨人：${username}(${nickname})</b>
+      <b>訂貨代碼：${numeral(amount).format('0,0.00')}</b>
+      <b>訂貨級別：${vip_name}</b>
+    `,
+      finish: `
+      <b>[訂貨完成通知]🎉</b>
+      <b>申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}</b>
+      <b>完成時間：${
+        finished_at ? format(finished_at, 'yyyy-MM-dd HH:mm:ss') : '-'
+      }</b>
+      <b>訂貨方式：${typeMap[type]}</b>
+      <b>上層代理：${agent_username}(${agent_nickname})</b>
+      <b>訂貨人：${username}(${nickname})</b>
+      <b>訂貨代碼：${numeral(amount).format('0,0.00')}</b>
+      <b>訂貨級別：${vip_name}</b>
+  `,
     };
-    const bots = await this.prisma.telegramBot.findMany({
-      where: { type: TelegramBotType.RECHARGE, is_active: true },
-    });
     await Promise.all(
       bots.map((bot) => {
-        return this.sendMessage(
-          bot,
-          `🎉 ${username} ${typeMap[type]}儲值成功 $*${amount}*`,
-        );
+        return this.sendMessage(bot, msgMap[status]);
       }),
     );
   }
 
-  @OnEvent('withdraw.apply', { async: true })
+  @OnEvent('withdraw.*', { async: true })
   async sendWithdrawApplyMsg(payload: WithdrawPayload) {
-    const { username, amount } = payload;
+    const {
+      username,
+      nickname,
+      vip_name,
+      created_at,
+      finished_at,
+      status,
+      amount,
+      agent_username,
+      agent_nickname,
+      count,
+    } = payload;
     const bots = await this.prisma.telegramBot.findMany({
       where: { type: TelegramBotType.WITHDRAW, is_active: true },
     });
+    const msgMap: Record<typeof status, string> = {
+      apply: `
+      <b>[出貨申請通知]📤</b>
+      <b>申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}</b>
+      <b>上層代理：${agent_username}(${agent_nickname})</b>
+      <b>出貨人：${username}(${nickname})</b>
+      <b>出貨代碼：${numeral(amount).format('0,0.00')}</b>
+      <b>出貨級別：${vip_name}</b>
+      <b>出貨次數：${count}</b>
+    `,
+      finish: `
+    <b>[出貨完成通知]💥</b>
+    <b>申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}</b>
+    <b>完成時間：${
+      finished_at ? format(finished_at, 'yyyy-MM-dd HH:mm:ss') : '-'
+    }</b>
+    <b>上層代理：${agent_username}(${agent_nickname})</b>
+    <b>出貨人：${username}(${nickname})</b>
+    <b>出貨代碼：${numeral(amount).format('0,0.00')}</b>
+    <b>出貨級別：${vip_name}</b>
+    <b>出貨次數：${count}</b>
+  `,
+    };
     await Promise.all(
       bots.map((bot) => {
-        return this.sendMessage(bot, `📤 ${username} 申請出金 $*${amount}*`);
+        return this.sendMessage(bot, msgMap[status]);
       }),
     );
   }
 
-  @OnEvent('withdraw.finish', { async: true })
-  async sendWithdrawFinishMsg(payload: WithdrawPayload) {
-    const { username, amount } = payload;
+  @OnEvent('player.register', { async: true })
+  async sendPlayerRegisterMsg(payload: RegisterPayload) {
+    const {
+      username,
+      time,
+      master_agent_username,
+      master_agent_nickname,
+      agent_username,
+      agent_nickname,
+    } = payload;
     const bots = await this.prisma.telegramBot.findMany({
-      where: { type: TelegramBotType.WITHDRAW, is_active: true },
+      where: { type: TelegramBotType.REGISTER, is_active: true },
     });
-    await Promise.all(
-      bots.map((bot) => {
-        return this.sendMessage(bot, `💥 ${username} 出金完成 $*${amount}*`);
-      }),
-    );
+    const msg = `
+    <b>[註冊通知]🤠</b>
+    <b>註冊時間：${format(time, 'yyyy-MM-dd HH:mm:ss')}</b>
+    <b>上層總代：${master_agent_username}(${master_agent_nickname})</b>
+    <b>上層代理：${agent_username}(${agent_nickname})</b>
+    <b>客戶帳號：${username}</b>
+  `;
+    try {
+      await Promise.all(
+        bots.map((bot) => {
+          return this.sendMessage(bot, msg);
+        }),
+      );
+    } catch (err) {
+      console.log(err);
+    }
   }
 }

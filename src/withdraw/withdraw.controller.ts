@@ -1,15 +1,23 @@
-import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { WithdrawService } from './withdraw.service';
 import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
 import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
 
-@Controller('withdraw-records')
+@Controller('withdraw-record')
 export class WithdrawController {
   constructor(private readonly bankWithdrawService: WithdrawService) {}
 
-  @Get()
-  findAll(@Query() query: SearchWithdrawsDto) {
-    return this.bankWithdrawService.findAll(query);
+  @Post('list')
+  findAll(@Body() search: SearchWithdrawsDto) {
+    return this.bankWithdrawService.findAll(search);
   }
 
   @Get(':id')
