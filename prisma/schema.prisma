@@ -868,6 +868,14 @@ model SysConfig {
   value String
 }
 
+model TelegramBot {
+  id Int @id @default(autoincrement())
+  chat_id String
+  token String
+  type Int // 儲值, 出金, ..
+  note String?
+}
+
 // model AuthToken {
 //   type Int // 管端 代理端 會員
 //   relative_id String @id

@@ -17,6 +17,8 @@ import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { ResCode } from 'src/errors/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DepositPayload } from 'src/socket/types';
+import { TelegramBotType } from 'src/telegram-bot/enums';
+import axios from 'axios';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ClientPayService {
