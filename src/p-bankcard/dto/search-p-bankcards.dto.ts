@@ -6,9 +6,6 @@ import { ValidStatus } from '../enums';
 export class SearchPBankcardsDto extends PaginateDto {
   @IsEnum(ValidStatus, { each: true })
   @IsOptional()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value?.split(',').map(Number) : value,
-  )
   valid_status: ValidStatus[];
 
   @IsString()

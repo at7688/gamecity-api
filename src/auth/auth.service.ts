@@ -248,10 +248,10 @@ export class AuthService {
       });
 
       if (params.platform === 'PLAYER') {
-        return {
+        return this.prisma.success({
           user,
           access_token: token,
-        };
+        });
       }
 
       let role = 'AGENT';

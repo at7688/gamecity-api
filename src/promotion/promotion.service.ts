@@ -1,5 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { Player, Prisma } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
@@ -78,10 +77,11 @@ export class PromotionService {
     });
   }
 
-  findAll() {
-    return this.prisma.promotion.findMany({
+  async findAll() {
+    const result = await this.prisma.promotion.findMany({
       include: { recharge_reward: true },
     });
+    return this.prisma.success(result);
   }
 
   findOne(id: string) {

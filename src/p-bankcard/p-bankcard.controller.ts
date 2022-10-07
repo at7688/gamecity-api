@@ -18,7 +18,7 @@ import { SearchPBankcardsDto } from './dto/search-p-bankcards.dto';
 import { UpdatePBankcardDto } from './dto/update-p-bankcard.dto';
 import { PBankcardService } from './p-bankcard.service';
 
-@Controller('p-bankcards')
+@Controller('playerCard')
 export class PBankcardController {
   constructor(
     private readonly pBankcardService: PBankcardService,
@@ -33,9 +33,9 @@ export class PBankcardController {
     return this.uploadsService.uploadFile(file, ImageType.PLAYER_CARD);
   }
 
-  @Get()
-  findAll(@Query() query: SearchPBankcardsDto) {
-    return this.pBankcardService.findAll(query);
+  @Post('list')
+  findAll(@Body() search: SearchPBankcardsDto) {
+    return this.pBankcardService.findAll(search);
   }
 
   @Get(':id')

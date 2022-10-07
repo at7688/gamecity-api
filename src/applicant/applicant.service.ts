@@ -51,6 +51,7 @@ export class ApplicantService {
         },
       });
 
+      // TODO: 是否改為不立即審核？ 排程一定時間後再審
       if (!record) {
         await this.prisma.applicant.update({
           where: { id: applicant.id },

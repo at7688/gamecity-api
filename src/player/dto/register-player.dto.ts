@@ -19,6 +19,7 @@ export class RegisterPlayerDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(3, { message: '暱稱需為3個以上英數字' })
   nickname: string;
 
   @IsString()

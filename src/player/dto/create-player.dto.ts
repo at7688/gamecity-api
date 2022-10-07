@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
 export class CreatePlayerDto {
   @IsString()
@@ -12,6 +18,7 @@ export class CreatePlayerDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(3, { message: '暱稱需為3個以上英數字' })
   nickname: string;
 
   @IsString()

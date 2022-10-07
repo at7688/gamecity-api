@@ -7,8 +7,8 @@ import { ScheduleType } from './enums';
 export class PromotionClientService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(player: Player) {
-    return this.prisma.promotion.findMany({
+  async findAll(player: Player) {
+    const result = await this.prisma.promotion.findMany({
       where: {
         vips: {
           some: {
@@ -29,5 +29,7 @@ export class PromotionClientService {
         is_active: true,
       },
     });
+
+    return this.prisma.success(result);
   }
 }
