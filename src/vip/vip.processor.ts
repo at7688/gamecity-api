@@ -1,7 +1,7 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Queue } from 'bull';
+import { Job, Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { VipService } from './vip.service';
 
@@ -29,7 +29,7 @@ export class VipTaskService {
   }
 
   @Process('conditionCheck')
-  async conditionCheck(payload: string) {
+  async conditionCheck(payload: Job<string>) {
     await this.vipService.conditionCheck();
 
     this.Logger.debug('VIP_CONDITION_CHECK');

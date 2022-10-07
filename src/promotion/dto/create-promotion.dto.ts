@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
@@ -9,8 +8,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  Max,
-  Validate,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
@@ -88,11 +85,7 @@ export class CreatePromotionDto {
 
   @IsEnum(ApprovalType)
   @IsNotEmpty()
-  apply_approval_type: ApprovalType;
-
-  @IsEnum(ApprovalType)
-  @IsNotEmpty()
-  pay_approval_type: ApprovalType;
+  approval_type: ApprovalType;
 
   @IsEnum(ScheduleType)
   @IsNotEmpty()

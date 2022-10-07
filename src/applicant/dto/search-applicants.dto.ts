@@ -35,7 +35,7 @@ export class SearchApplicantsDto {
 
   @IsEnum(ApprovalType)
   @IsOptional()
-  apply_approval_type?: ApprovalType;
+  approval_type?: ApprovalType;
 
   @IsEnum(SettlementType)
   @IsOptional()
@@ -45,9 +45,9 @@ export class SearchApplicantsDto {
   @IsOptional()
   approval_statuses?: ApplicantStatus[];
 
-  @IsEnum(PromotionStatus, { each: true })
+  @IsEnum(PromotionStatus)
   @IsOptional()
-  promotion_statuses?: PromotionStatus[];
+  promotion_status?: PromotionStatus;
 
   @IsOptional()
   @Transform(({ value }) => new Date(value))

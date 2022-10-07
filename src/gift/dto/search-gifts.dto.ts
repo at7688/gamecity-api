@@ -31,11 +31,7 @@ export class SearchGiftsDto {
 
   @IsEnum(ApprovalType)
   @IsOptional()
-  apply_approval_type?: ApprovalType;
-
-  @IsEnum(ApprovalType)
-  @IsOptional()
-  pay_approval_type?: ApprovalType;
+  approval_type?: ApprovalType;
 
   @IsEnum(SettlementType)
   @IsOptional()

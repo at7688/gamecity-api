@@ -1,6 +1,8 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Player, Prisma } from '@prisma/client';
+import { Applicant, Player, Prisma } from '@prisma/client';
+import { Queue } from 'bull';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
@@ -18,6 +20,8 @@ export class ApplicantClientService {
     private readonly prisma: PrismaService,
     private readonly applicantService: ApplicantService,
     private readonly eventEmitter: EventEmitter2,
+    @InjectQueue('applicant')
+    private readonly applicantQueue: Queue<Applicant>,
   ) {}
 
   async create(promotion_id: string, player: Player) {
@@ -116,10 +120,15 @@ export class ApplicantClientService {
 
     // 判斷是否為立即結算且自動審核, 審核通過則直接生成待發禮包
     if (
-      promotion.apply_approval_type === ApprovalType.AUTO &&
+      promotion.approval_type !== ApprovalType.MANUAL &&
       promotion.settlement_type === SettlementType.IMMEDIATELY
     ) {
-      await this.applicantService.autoVerify(promotion_id, applicant.id);
+      console.log('there');
+      // await this.applicantService.autoVerify(
+      //   applicant.promotion_id,
+      //   applicant.id,
+      // );
+      await this.applicantQueue.add('verify', applicant);
     }
     this.eventEmitter.emit('promotion.apply', {
       promotion: promotion.title,
@@ -138,7 +147,6 @@ export class ApplicantClientService {
           select: {
             id: true,
             title: true,
-            status: true,
           },
         },
         gift: {

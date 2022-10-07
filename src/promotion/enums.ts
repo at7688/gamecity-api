@@ -5,8 +5,9 @@ export enum PromotionType {
 }
 
 export enum ApprovalType {
-  MANUAL = 1,
-  AUTO = 2,
+  MANUAL = 1, // 人工審核+派發
+  HALF_AUTO = 2, // 自動審+人工派發
+  AUTO = 3, // 自動審核+派發
 }
 
 // 活動期間

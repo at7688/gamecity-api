@@ -1,10 +1,19 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
+import { Applicant } from '@prisma/client';
+import { Queue } from 'bull';
 import { sumBy } from 'lodash';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { ResCode } from 'src/errors/enums';
 import { GiftService } from 'src/gift/gift.service';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ApprovalType, PromotionType, RollingType } from 'src/promotion/enums';
+import {
+  ApprovalType,
+  PromotionStatus,
+  PromotionType,
+  RollingType,
+} from 'src/promotion/enums';
 import { GiftStatus } from './../gift/enums';
 import { SearchApplicantsDto } from './dto/search-applicants.dto';
 import { ApplicantStatus } from './enums';
@@ -14,6 +23,8 @@ export class ApplicantService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly giftService: GiftService,
+    @InjectQueue('applicant')
+    private readonly applicantQueue: Queue<Applicant>,
   ) {}
 
   async autoVerify(promotion_id: string, applicant_id: string) {
@@ -109,13 +120,11 @@ export class ApplicantService {
             amount: rewardAmount,
             rolling_amount: rollingAmount,
             status:
-              promotion.pay_approval_type === ApprovalType.AUTO
+              promotion.approval_type === ApprovalType.AUTO
                 ? GiftStatus.SENT
                 : GiftStatus.UNPROCESSED,
             send_at:
-              promotion.pay_approval_type === ApprovalType.AUTO
-                ? new Date()
-                : null,
+              promotion.approval_type === ApprovalType.AUTO ? new Date() : null,
           },
         }),
       ]);
@@ -196,13 +205,11 @@ export class ApplicantService {
             amount: rewardAmount,
             rolling_amount: rollingAmount,
             status:
-              promotion.pay_approval_type === ApprovalType.AUTO
+              promotion.approval_type === ApprovalType.AUTO
                 ? GiftStatus.SENT
                 : GiftStatus.UNPROCESSED,
             send_at:
-              promotion.pay_approval_type === ApprovalType.AUTO
-                ? new Date()
-                : null,
+              promotion.approval_type === ApprovalType.AUTO ? new Date() : null,
           },
         }),
       ]);
@@ -216,11 +223,11 @@ export class ApplicantService {
       username,
       nickname,
       vip_ids,
-      apply_approval_type,
+      approval_type,
       settlement_type,
       types,
       approval_statuses,
-      promotion_statuses,
+      promotion_status,
       apply_start_at,
       apply_end_at,
     } = search;
@@ -233,10 +240,35 @@ export class ApplicantService {
         promotion: {
           id: promotion_id,
           title: { contains: promotion_name },
-          apply_approval_type,
+          approval_type,
           settlement_type,
           type: { in: types },
-          status: { in: promotion_statuses },
+          AND: {
+            [PromotionStatus.COMMING]: [
+              {
+                start_at: {
+                  gt: new Date(),
+                },
+              },
+            ],
+            [PromotionStatus.RUNING]: [
+              {
+                start_at: {
+                  lte: new Date(),
+                },
+                end_at: {
+                  gte: new Date(),
+                },
+              },
+            ],
+            [PromotionStatus.END]: [
+              {
+                end_at: {
+                  lt: new Date(),
+                },
+              },
+            ],
+          }[promotion_status],
         },
         player: {
           username: { contains: username },
@@ -249,5 +281,14 @@ export class ApplicantService {
         },
       },
     });
+  }
+  async getQueue() {
+    const counts = await this.applicantQueue.getJobCounts();
+    const jobs = await this.applicantQueue.getJobs([
+      'delayed',
+      'completed',
+      'failed',
+    ]);
+    return this.prisma.success(jobs);
   }
 }

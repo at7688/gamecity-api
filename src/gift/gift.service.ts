@@ -26,8 +26,7 @@ export class GiftService {
       username,
       nickname,
       vip_ids,
-      apply_approval_type,
-      pay_approval_type,
+      approval_type,
       settlement_type,
     } = search;
 
@@ -35,8 +34,7 @@ export class GiftService {
       promotions: await this.prisma.promotion.findMany({
         where: {
           id: promotion_id,
-          apply_approval_type,
-          pay_approval_type,
+          approval_type,
           settlement_type,
           gifts: {
             some: {
@@ -64,8 +62,7 @@ export class GiftService {
         where: {
           promotion: {
             id: promotion_id,
-            apply_approval_type,
-            pay_approval_type,
+            approval_type,
             settlement_type,
           },
           player: {
