@@ -30,7 +30,7 @@ export class TGMessageService {
   async sendRechargeMsg(payload: DepositPayload) {
     const { username, amount } = payload;
     const bots = await this.prisma.telegramBot.findMany({
-      where: { type: TelegramBotType.RECHARGE },
+      where: { type: TelegramBotType.RECHARGE, is_active: true },
     });
     await Promise.all(
       bots.map((bot) => {

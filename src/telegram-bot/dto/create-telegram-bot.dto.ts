@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { TelegramBotType } from '../enums';
 
 export class CreateTelegramBotDto {
@@ -13,4 +19,8 @@ export class CreateTelegramBotDto {
   @IsEnum(TelegramBotType)
   @IsNotEmpty()
   type: TelegramBotType;
+
+  @IsBoolean()
+  @IsOptional()
+  is_active: boolean;
 }

@@ -13,13 +13,14 @@ import { TelegramBotType } from './enums';
 export class TelegramBotService {
   constructor(private readonly prisma: PrismaService) {}
   async create(data: CreateTelegramBotDto) {
-    const { type, chat_id, token } = data;
+    const { type, chat_id, token, is_active } = data;
 
     const result = await this.prisma.telegramBot.create({
       data: {
         type,
         chat_id,
         token,
+        is_active,
       },
     });
     return this.prisma.success();
@@ -31,7 +32,7 @@ export class TelegramBotService {
   }
 
   async update(id: number, data: UpdateTelegramBotDto) {
-    const { type, chat_id, token } = data;
+    const { type, chat_id, token, is_active } = data;
     const result = await this.prisma.telegramBot.update({
       where: {
         id,
@@ -40,6 +41,7 @@ export class TelegramBotService {
         type,
         chat_id,
         token,
+        is_active,
       },
     });
     return this.prisma.success();

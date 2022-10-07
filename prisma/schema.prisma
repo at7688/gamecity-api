@@ -873,6 +873,7 @@ model TelegramBot {
   chat_id String
   token String
   type Int // 儲值, 出金, ..
+  is_active Boolean @default(true)
   note String?
 }
 
