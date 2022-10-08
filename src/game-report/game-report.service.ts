@@ -178,7 +178,6 @@ export class GameReportService {
   }
 
   async playerReport(search: SearchPlayerReportDto) {
-    const { start_at, end_at, username } = search;
     const result = await this.prisma.$queryRaw(playerReport(search));
     return this.prisma.success(result);
   }

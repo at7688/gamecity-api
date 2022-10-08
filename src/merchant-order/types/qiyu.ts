@@ -1,5 +1,3 @@
-import { PaymentDepositRec, Player } from '@prisma/client';
-
 export interface QIYU_Notify {
   customer_id: number;
   order_id: string;

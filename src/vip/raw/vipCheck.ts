@@ -1,54 +1,73 @@
 import { Prisma } from '@prisma/client';
 
-export interface VipCheckItem {
-  player_id: string;
-  current_deposit: number;
-  current_valid: number;
-  vip_id: string;
+export interface NextVip {
+  id: string;
+  name: string;
+  valid_bet: number;
+  deposit_min: number;
 }
 
-export const vipCheck = (
-  deposit_ids: string[],
-  bet_ids: string[],
-) => Prisma.sql`
-SELECT
-	*,
-	(
-		SELECT id FROM "Vip"
-	 	WHERE current_deposit > deposit_min AND current_valid > valid_bet
-		ORDER BY sort DESC
-		LIMIT 1
-	) vip_id
-FROM (
+export interface VipCheckItem {
+  player_id: string;
+  username: string;
+  nickname: string;
+  vip_name: string;
+  vip_id: string;
+  current_deposit: number;
+  current_valid: number;
+  next_vip: NextVip;
+}
+
+export const vipCheck = (start: Date, end: Date) => {
+  return Prisma.sql`
 	SELECT
-		d.player_id,
-		COALESCE(d.current_deposit, 0) current_deposit,
-		b.current_valid
+		*,
+		(
+			SELECT
+				json_build_object(
+					'id', id,
+					'name', name,
+					'valid_bet', valid_bet,
+					'deposit_min', deposit_min
+				)
+			FROM "Vip"
+			 WHERE current_deposit >= deposit_min AND current_valid >= valid_bet
+			ORDER BY sort DESC
+			LIMIT 1
+		) next_vip
 	FROM (
 		SELECT
-			player_id,
-			SUM(amount) current_deposit
-		FROM "PaymentDepositRec"
-    ${
-      deposit_ids.length
-        ? Prisma.sql`WHERE id IN (${Prisma.join(deposit_ids)})`
-        : Prisma.empty
-    }
+			d.player_id,
+			p.username,
+			p.nickname,
+			v.name vip_name,
+			v.id vip_id,
+			COALESCE(d.amount, 0) current_deposit,
+			COALESCE(b.current_valid, 0) current_valid
+		FROM (
+			SELECT
+				r.player_id,
+				SUM(r.amount) amount
+			FROM (
+				SELECT player_id, amount FROM "PaymentDepositRec"
+				WHERE status = 3 AND created_at BETWEEN ${start} AND ${end}
+				UNION
+				SELECT player_id, amount FROM "BankDepositRec"
+				WHERE status = 3 AND created_at BETWEEN ${start} AND ${end}
+			) r
+			GROUP BY player_id
+		) d
+		FULL JOIN (
+			SELECT
+				player_id,
+				SUM(valid_amount) current_valid
+			FROM "BetRecord"
+			WHERE status = 2 AND bet_at BETWEEN ${start} AND ${end}
+			GROUP BY player_id
+		) b ON b.player_id = d.player_id
+		JOIN "Player" p ON p.id = d.player_id
+		JOIN "Vip" v ON v.id = p.vip_id
+	) m
 
-		GROUP BY player_id
-	) d
-	FULL JOIN (
-		SELECT
-			player_id,
-			SUM(valid_amount) current_valid
-		FROM "BetRecord"
-    ${
-      bet_ids.length
-        ? Prisma.sql`WHERE id IN (${Prisma.join(bet_ids)})`
-        : Prisma.empty
-    }
-		GROUP BY player_id
-	) b ON b.player_id = d.player_id
-) m
-
-`;
+	`;
+};

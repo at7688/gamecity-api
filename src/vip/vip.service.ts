@@ -82,34 +82,15 @@ export class VipService {
     return this.prisma.vip.delete({ where: { id } });
   }
 
-  async conditionCheck() {
-    const depositRecords = await this.prisma.paymentDepositRec.findMany({
-      select: { id: true },
-      where: {
-        status: PaymentDepositStatus.FINISHED,
-        created_at: {
-          gte: startOfMonth(subDays(new Date(), 1)),
-          lte: endOfMonth(subDays(new Date(), 1)),
-        },
-      },
-    });
+  async conditionCheck(start: Date, end: Date) {
+    const result = await this.prisma.$queryRaw(vipCheck(start, end));
 
-    const betRecords = await this.prisma.betRecord.findMany({
-      select: { id: true },
-      where: {
-        status: BetRecordStatus.DONE,
-        bet_at: {
-          gte: startOfMonth(subDays(new Date(), 1)),
-          lte: endOfMonth(subDays(new Date(), 1)),
-        },
-      },
-    });
+    return this.prisma.success(result);
+  }
 
+  async checkAndApply(start: Date, end: Date) {
     const result = await this.prisma.$queryRaw<VipCheckItem[]>(
-      vipCheck(
-        depositRecords.map((t) => t.id),
-        betRecords.map((t) => t.id),
-      ),
+      vipCheck(start, end),
     );
 
     try {
@@ -120,7 +101,7 @@ export class VipService {
               id: t.player_id,
             },
             data: {
-              vip_id: t.vip_id,
+              vip_id: t.next_vip?.id,
             },
           });
         }),
