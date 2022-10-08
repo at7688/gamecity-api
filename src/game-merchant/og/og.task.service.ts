@@ -30,7 +30,11 @@ export class OgTaskService {
   @Cron(CronExpression.EVERY_MINUTE)
   async fetchGameList() {
     this.Logger.debug('OG_FETCH_BET_RECORDS');
-    await this.ogService.fetchBetRecords(subMinutes(new Date(), 2), new Date());
+    await this.ogService.fetchBetRecords(
+      subMinutes(new Date(), 2),
+      new Date(),
+      true,
+    );
   }
 
   @Cron(CronExpression.EVERY_10_MINUTES)

@@ -33,6 +33,7 @@ export class BwinTaskService {
     await this.bwinService.fetchBetRecords(
       subMinutes(new Date(), 2),
       new Date(),
+      true,
     );
   }
 }

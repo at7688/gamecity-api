@@ -324,7 +324,16 @@ export class BwinService {
     return numeral(res.data[0].balance).divide(this.creditMultiple).value();
   }
 
-  async fetchBetRecords(start: Date, end: Date) {
+  async fetchBetRecords(start: Date, end: Date, is_record?: boolean) {
+    if (is_record) {
+      const d = await this.ticketService.getOverflowRrange(
+        this.platformCode,
+        start,
+        end,
+      );
+      start = d.start;
+      end = d.end;
+    }
     await this.ticketService.useTicket(this.platformCode, start, end);
     const query = qs.stringify({
       start: getUnixTime(start) * 1000,
@@ -420,6 +429,10 @@ export class BwinService {
           }
         }),
       );
+    }
+
+    if (is_record) {
+      await this.ticketService.recordDate(this.platformCode, start, end);
     }
 
     return res;

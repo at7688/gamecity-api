@@ -1,13 +1,8 @@
-import {
-  BadGatewayException,
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as CryptoJS from 'crypto-js';
-import { formatRFC3339 } from 'date-fns';
-import * as numeral from 'numeral';
+import { format, formatRFC3339 } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { ResCode } from 'src/errors/enums';
 import { GameCategory } from 'src/game/enums';
@@ -344,8 +339,20 @@ export class BngService {
     }[res.data.status];
   }
 
-  async fetchBetRecords(start: Date, end: Date) {
+  async fetchBetRecords(start: Date, end: Date, is_record?: boolean) {
+    if (is_record) {
+      const d = await this.ticketService.getOverflowRrange(
+        this.platformCode,
+        start,
+        end,
+      );
+      start = d.start;
+      end = d.end;
+    }
+
+    // 驗證是否當前可搜尋及搜尋區間是否符合規則
     await this.ticketService.useTicket(this.platformCode, start, end);
+
     const reqConfig: BngReqBase<BngBetRecordsReq> = {
       method: 'POST',
       path: '/record/get_game_histories',
@@ -425,6 +432,10 @@ export class BngService {
           }
         }),
       );
+    }
+
+    if (is_record) {
+      await this.ticketService.recordDate(this.platformCode, start, end);
     }
 
     return res;

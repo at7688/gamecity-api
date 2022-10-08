@@ -364,7 +364,17 @@ export class AbService {
     return res.data.list[0].amount;
   }
 
-  async fetchBetRecords(start: Date, end: Date, isTask?: boolean) {
+  async fetchBetRecords(start: Date, end: Date, is_record?: boolean) {
+    if (is_record) {
+      const d = await this.ticketService.getOverflowRrange(
+        this.platformCode,
+        start,
+        end,
+      );
+      start = d.start;
+      end = d.end;
+    }
+
     await this.ticketService.useTicket(this.platformCode, start, end);
 
     const reqConfig: AbReqBase<AbBetRecordsReq> = {
@@ -456,13 +466,8 @@ export class AbService {
       }),
     );
 
-    if (isTask) {
-      await this.prisma.gamePlatform.update({
-        where: { code: this.platformCode },
-        data: {
-          record_check_at: end,
-        },
-      });
+    if (is_record) {
+      await this.ticketService.recordDate(this.platformCode, start, end);
     }
 
     return res;

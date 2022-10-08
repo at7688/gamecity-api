@@ -358,7 +358,16 @@ export class ZgService {
     return +res.balance;
   }
 
-  async fetchBetRecords(start: Date, end: Date) {
+  async fetchBetRecords(start: Date, end: Date, is_record?: boolean) {
+    if (is_record) {
+      const d = await this.ticketService.getOverflowRrange(
+        this.platformCode,
+        start,
+        end,
+      );
+      start = d.start;
+      end = d.end;
+    }
     await this.ticketService.useTicket(this.platformCode, start, end);
 
     const reqConfig: ZgReqBase<ZgBetRecordsReq> = {
@@ -448,6 +457,10 @@ export class ZgService {
           }
         }),
       );
+    }
+
+    if (is_record) {
+      await this.ticketService.recordDate(this.platformCode, start, end);
     }
 
     return res;

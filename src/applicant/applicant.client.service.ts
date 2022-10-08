@@ -156,6 +156,9 @@ export class ApplicantClientService {
           },
         },
       },
+      orderBy: {
+        created_at: 'desc',
+      },
     };
     return this.prisma.listFormat({
       items: await this.prisma.applicant.findMany(findManyArg),

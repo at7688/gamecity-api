@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cache } from 'cache-manager';
 import { subHours, subMinutes, addMinutes } from 'date-fns';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BngService } from './bng.service';
@@ -9,6 +10,7 @@ export class BngTaskService {
   constructor(
     private readonly bngService: BngService,
     private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   private readonly Logger = new Logger(BngTaskService.name);
 
@@ -32,6 +34,7 @@ export class BngTaskService {
     await this.bngService.fetchBetRecords(
       subMinutes(new Date(), 1),
       new Date(),
+      true,
     );
   }
 }

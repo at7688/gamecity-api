@@ -353,7 +353,16 @@ export class GrService {
     return res.data.balance;
   }
 
-  async fetchBetRecords(start: Date, end: Date) {
+  async fetchBetRecords(start: Date, end: Date, is_record?: boolean) {
+    if (is_record) {
+      const d = await this.ticketService.getOverflowRrange(
+        this.platformCode,
+        start,
+        end,
+      );
+      start = d.start;
+      end = d.end;
+    }
     await this.ticketService.useTicket(this.platformCode, start, end);
     const reqConfig: GrReqBase<GrBetRecordsReq> = {
       method: 'POST',
@@ -430,6 +439,10 @@ export class GrService {
           }
         }),
       );
+    }
+
+    if (is_record) {
+      await this.ticketService.recordDate(this.platformCode, start, end);
     }
 
     return res;
