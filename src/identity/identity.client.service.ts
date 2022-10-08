@@ -6,7 +6,6 @@ import { ResCode } from 'src/errors/enums';
 import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateIdentityDto } from './dto/create-identity.dto';
-import { IdentityVarifyStatus } from './enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class IdentityClientService {

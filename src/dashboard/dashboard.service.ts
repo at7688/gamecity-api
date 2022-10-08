@@ -8,7 +8,10 @@ import {
   startOfWeek,
   subWeeks,
 } from 'date-fns';
+import { BankDepositStatus } from 'src/bank-deposit/enums';
+import { ValidateStatus } from 'src/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WithdrawStatus } from 'src/withdraw/enums';
 import { getRangeCounts, RangeCountsInfo } from './raw/getRangeCounts';
 
 @Injectable()
@@ -94,6 +97,21 @@ export class DashboardService {
       thisWeek: thisWeekResult._sum,
       lastWeek: lastWeekResult._sum,
       thisMonth: thisMonthResult._sum,
+    });
+  }
+
+  async getBallCounts() {
+    const bankDeposits = await this.prisma.bankDepositRec.count({
+      where: { status: BankDepositStatus.APPLYING },
+    });
+    const playerCard = await this.prisma.playerCard.count({
+      where: { valid_status: ValidateStatus.UNPROCESSED },
+    });
+    const withdraw = await this.prisma.withdrawRec.count({
+      where: { status: WithdrawStatus.APPLYING },
+    });
+    const applicant = await this.prisma.applicant.count({
+      where: { status: ValidateStatus.UNPROCESSED },
     });
   }
 }

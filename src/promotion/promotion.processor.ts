@@ -2,8 +2,8 @@ import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Applicant, Promotion } from '@prisma/client';
 import { Job, Queue } from 'bull';
+import { ValidateStatus } from 'src/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ApplicantStatus } from '../applicant/enums';
 
 // TODO:處理活動狀態更新(未開始,進行中,已結束)
 @Processor('promotion')
@@ -22,7 +22,7 @@ export class PromotionProcessor {
     const applicants = await this.prisma.applicant.findMany({
       where: {
         promotion_id: id,
-        status: ApplicantStatus.APPLIED,
+        status: ValidateStatus.UNPROCESSED,
       },
     });
     await Promise.all(

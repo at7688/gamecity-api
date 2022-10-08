@@ -1,11 +1,10 @@
-import { Transform } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { IdentityVarifyStatus } from '../enums';
+import { ValidateStatus } from 'src/enums';
 
 export class UpdateIdentityDto {
-  @IsEnum(IdentityVarifyStatus)
+  @IsEnum(ValidateStatus)
   @IsNotEmpty()
-  status: IdentityVarifyStatus;
+  status: ValidateStatus;
 
   @IsString()
   @IsOptional()

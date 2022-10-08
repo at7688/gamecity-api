@@ -56,7 +56,7 @@ export class SocketGateway {
     this.server.emit('withdraw', payload);
   }
 
-  @OnEvent('playercard.apply')
+  @OnEvent('playerCard.apply')
   playerCard(payload: PlayerCardPayload) {
     this.server.emit('bankcard', payload);
   }
@@ -66,7 +66,7 @@ export class SocketGateway {
     this.server.emit('applyPromo', payload);
   }
 
-  // @Cron(CronExpression.EVERY_5_SECONDS)
+  // @Cron(CronExpression.EVERY_30_SECONDS)
   // async pushDashboard(socket) {
   //   const result = await this.dashboardService.getRangeCounts();
   //   this.server.emit('dashboard', result);

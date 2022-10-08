@@ -1,18 +1,16 @@
-import { ValidStatus } from './../p-bankcard/enums';
-import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
-import { Inject, Injectable, Scope, BadRequestException } from '@nestjs/common';
-import { CreateWithdrawDto } from './dto/create-withdraw.dto';
-import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
-import { LoginUser } from 'src/types';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Player } from '@prisma/client';
+import { Inject, Injectable, Scope } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
-import { WithdrawStatus } from './enums';
-import { ResCode } from 'src/errors/enums';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { WithdrawPayload } from 'src/socket/types';
+import { Player } from '@prisma/client';
+import { Request } from 'express';
+import { ValidateStatus } from 'src/enums';
+import { ResCode } from 'src/errors/enums';
 import { PlayerTagType } from 'src/player/enums';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { WithdrawPayload } from 'src/socket/types';
+import { CreateWithdrawDto } from './dto/create-withdraw.dto';
+import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
+import { WithdrawStatus } from './enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class WithdrawClientService {
@@ -41,7 +39,7 @@ export class WithdrawClientService {
       where: {
         id: player_card_id,
         player_id: this.player.id,
-        valid_status: ValidStatus.VALID,
+        valid_status: ValidateStatus.APPROVED,
       },
     });
     if (!playerCard) {

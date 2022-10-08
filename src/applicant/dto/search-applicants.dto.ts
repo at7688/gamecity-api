@@ -1,12 +1,12 @@
 import { Transform } from 'class-transformer';
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import { ValidateStatus } from 'src/enums';
 import {
   ApprovalType,
   PromotionStatus,
   PromotionType,
   SettlementType,
 } from 'src/promotion/enums';
-import { ApplicantStatus } from '../enums';
 
 export class SearchApplicantsDto {
   @IsString()
@@ -41,9 +41,9 @@ export class SearchApplicantsDto {
   @IsOptional()
   settlement_type?: SettlementType;
 
-  @IsEnum(ApplicantStatus, { each: true })
+  @IsEnum(ValidateStatus, { each: true })
   @IsOptional()
-  approval_statuses?: ApplicantStatus[];
+  approval_statuses?: ValidateStatus[];
 
   @IsEnum(PromotionStatus)
   @IsOptional()

@@ -1,13 +1,13 @@
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
-import { IdentityVarifyStatus } from '../enums';
+import { ValidateStatus } from 'src/enums';
 
 export class SearchIdentitiesDto extends PaginateDto {
-  @IsEnum(IdentityVarifyStatus)
+  @IsEnum(ValidateStatus)
   @IsOptional()
   @Transform(({ value }) => +value)
-  status?: IdentityVarifyStatus;
+  status?: ValidateStatus;
 
   @IsString()
   @IsOptional()

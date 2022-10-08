@@ -13,3 +13,10 @@ export enum TargetType {
   PLAYER = 1,
   AGENT = 2,
 }
+
+export enum ValidateStatus {
+  UNPROCESSED = 1,
+  PROCESSING = 2,
+  APPROVED = 3,
+  REJECTED = 4,
+}

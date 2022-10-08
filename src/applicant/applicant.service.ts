@@ -4,6 +4,7 @@ import { Applicant } from '@prisma/client';
 import { Queue } from 'bull';
 import { sumBy } from 'lodash';
 import { BetRecordStatus } from 'src/bet-record/enums';
+import { ValidateStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { GiftService } from 'src/gift/gift.service';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
@@ -16,7 +17,6 @@ import {
 } from 'src/promotion/enums';
 import { GiftStatus } from './../gift/enums';
 import { SearchApplicantsDto } from './dto/search-applicants.dto';
-import { ApplicantStatus } from './enums';
 
 @Injectable()
 export class ApplicantService {
@@ -67,7 +67,7 @@ export class ApplicantService {
         await this.prisma.applicant.update({
           where: { id: applicant.id },
           data: {
-            status: ApplicantStatus.REJECTED,
+            status: ValidateStatus.REJECTED,
             note: '未有符合條件的儲值單',
           },
         });
@@ -108,7 +108,7 @@ export class ApplicantService {
         this.prisma.applicant.update({
           where: { id: applicant.id },
           data: {
-            status: ApplicantStatus.APPROVED,
+            status: ValidateStatus.APPROVED,
           },
         }),
         // 生成禮包(手動/自動派發)
@@ -152,7 +152,7 @@ export class ApplicantService {
         await this.prisma.applicant.update({
           where: { id: applicant.id },
           data: {
-            status: ApplicantStatus.REJECTED,
+            status: ValidateStatus.REJECTED,
             note: '有效投注未達標準',
           },
         });
@@ -194,7 +194,7 @@ export class ApplicantService {
             id: applicant_id,
           },
           data: {
-            status: ApplicantStatus.APPROVED,
+            status: ValidateStatus.APPROVED,
           },
         }),
         this.prisma.gift.create({

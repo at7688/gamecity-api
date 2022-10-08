@@ -1,14 +1,14 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { ValidStatus } from '../enums';
+import { ValidateStatus } from 'src/enums';
 
 export class ValidatePBankcardDto {
   @IsString()
   @IsNotEmpty()
   id: string;
 
-  @IsEnum(ValidStatus)
+  @IsEnum(ValidateStatus)
   @IsNotEmpty()
-  valid_status: ValidStatus;
+  valid_status: ValidateStatus;
 
   @IsOptional()
   @IsString()

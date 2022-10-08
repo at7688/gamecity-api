@@ -1,12 +1,12 @@
 import { Transform } from 'class-transformer';
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
-import { ValidStatus } from '../enums';
+import { ValidateStatus } from 'src/enums';
 
 export class SearchPBankcardsDto extends PaginateDto {
-  @IsEnum(ValidStatus, { each: true })
+  @IsEnum(ValidateStatus, { each: true })
   @IsOptional()
-  valid_status: ValidStatus[];
+  valid_status: ValidateStatus[];
 
   @IsString()
   @IsOptional()

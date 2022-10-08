@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Applicant, Player, Prisma } from '@prisma/client';
 import { Queue } from 'bull';
+import { ValidateStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
@@ -12,7 +13,6 @@ import {
 } from 'src/promotion/enums';
 import { PromotionApplyPayload } from 'src/socket/types';
 import { ApplicantService } from './applicant.service';
-import { ApplicantStatus } from './enums';
 
 @Injectable()
 export class ApplicantClientService {
@@ -56,7 +56,7 @@ export class ApplicantClientService {
         where: {
           promotion_id,
           status: {
-            not: ApplicantStatus.REJECTED,
+            not: ValidateStatus.REJECTED,
           },
         },
       });
@@ -77,7 +77,7 @@ export class ApplicantClientService {
           promotion_id,
           player_id: player.id,
           status: {
-            not: ApplicantStatus.REJECTED,
+            not: ValidateStatus.REJECTED,
           },
         },
       });
@@ -91,7 +91,7 @@ export class ApplicantClientService {
       where: {
         promotion_id,
         player_id: player.id,
-        status: ApplicantStatus.APPLIED,
+        status: ValidateStatus.UNPROCESSED,
       },
     });
     if (applyingCount) {
@@ -103,7 +103,7 @@ export class ApplicantClientService {
       where: {
         promotion_id,
         player_id: player.id,
-        status: ApplicantStatus.REJECTED,
+        status: ValidateStatus.REJECTED,
       },
     });
     if (rejectedCount) {

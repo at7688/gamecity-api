@@ -1,4 +1,3 @@
-import { IdentityVarifyStatus } from './enums';
 import { Injectable } from '@nestjs/common';
 import { AdminUser, Player, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -7,6 +6,7 @@ import { SearchIdentitiesDto } from './dto/search-identities.dto';
 import { UpdateIdentityDto } from './dto/update-identity.dto';
 import { PlayerTagType } from 'src/player/enums';
 import { ResCode } from 'src/errors/enums';
+import { ValidateStatus } from 'src/enums';
 
 @Injectable()
 export class IdentityService {
@@ -89,7 +89,7 @@ export class IdentityService {
         operator_id: user.id,
       },
     });
-    if (status === IdentityVarifyStatus.APPROVED) {
+    if (status === ValidateStatus.APPROVED) {
       // 若為通過，則添加會員實名標籤
       await this.prisma.playerTag.create({
         data: {

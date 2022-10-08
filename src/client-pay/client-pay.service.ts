@@ -5,8 +5,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Player } from '@prisma/client';
 import { add } from 'date-fns';
 import { Request } from 'express';
+import { ValidateStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
-import { ValidStatus } from 'src/p-bankcard/enums';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { ValidTool, validTools } from 'src/payment-tool/raw/validTools';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -49,7 +49,7 @@ export class ClientPayService {
       where: {
         id: player_card_id,
         player_id: this.player.id,
-        valid_status: ValidStatus.VALID,
+        valid_status: ValidateStatus.APPROVED,
       },
     });
     if (!playerCard) {
