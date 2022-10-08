@@ -354,6 +354,7 @@ model Vip {
   sort  Int @default(autoincrement())
   name              String
   icon              String?
+  card_count Int @default(1) // 可申請的會員銀行卡數
   valid_bet         Int           @default(0) // 有效投注量
   deposit_min      Int  @default(0)   // 最低儲值量
   withdraw_min      Int

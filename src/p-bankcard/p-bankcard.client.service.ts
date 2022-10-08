@@ -10,6 +10,7 @@ import { Request } from 'express';
 import { User } from 'src/decorators/user.decorator';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PlayerCardPayload } from 'src/socket/types';
+import { ResCode } from 'src/errors/enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PBankcardClientService {
@@ -26,10 +27,21 @@ export class PBankcardClientService {
   }
   async create(data: CreatePBankcardDto) {
     const { bank_code, branch, name, account, img_ids } = data;
-    // 查詢是否該玩家有預設卡片
-    const defaultCards = await this.prisma.playerCard.findMany({
-      where: { player_id: this.player.id, is_default: true },
+
+    const cards = await this.prisma.playerCard.findMany({
+      where: { player_id: this.player.id },
     });
+
+    // 查看該會員的VIP等級可綁定卡片是否超過
+    const vip = await this.prisma.vip.findUnique({
+      where: { id: this.player.vip_id },
+    });
+    if (cards.length >= vip.card_count) {
+      this.prisma.error(ResCode.OVER_PLAYER_CARD_LIMIT, '超過可申請的卡片上限');
+    }
+    // 查詢是否該玩家有預設卡片, 無則設定該張卡為預設卡
+    const defaultCards = cards.filter((t) => !!t.is_default);
+
     await this.prisma.playerCard.create({
       data: {
         bank_code,
@@ -37,7 +49,7 @@ export class PBankcardClientService {
         name,
         account,
         imgs: { connect: img_ids.map((id) => ({ id })) },
-        is_default: !defaultCards.length, // 有預設卡片則新卡片不為預設
+        is_default: !defaultCards.length,
         player_id: this.player.id,
       },
     });

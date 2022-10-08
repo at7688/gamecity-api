@@ -66,4 +66,5 @@ ${
     ? Prisma.sql`AND r.updated_at < ${withdraw_start_at}`
     : Prisma.empty
 }
+ORDER BY created_at DESC
 `;

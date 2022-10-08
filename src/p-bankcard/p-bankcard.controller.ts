@@ -50,12 +50,9 @@ export class PBankcardController {
   ) {
     return this.pBankcardService.update(id, updatePBankcardDto);
   }
-  @Patch(':id/validate')
-  validate(
-    @Param('id') id: string,
-    @Body() validatePBankcardDto: ValidatePBankcardDto,
-  ) {
-    return this.pBankcardService.validate(id, validatePBankcardDto);
+  @Post('validate')
+  validate(@Body() validatePBankcardDto: ValidatePBankcardDto) {
+    return this.pBankcardService.validate(validatePBankcardDto);
   }
 
   @Delete(':id')

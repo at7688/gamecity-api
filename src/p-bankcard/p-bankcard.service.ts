@@ -69,9 +69,9 @@ export class PBankcardService {
   update(id: string, data: UpdatePBankcardDto) {
     return this.prisma.playerCard.update({ where: { id }, data: { ...data } });
   }
-  validate(id: string, data: ValidatePBankcardDto) {
-    const { valid_status, inner_note, outter_note } = data;
-    return this.prisma.playerCard.update({
+  async validate(data: ValidatePBankcardDto) {
+    const { id, valid_status, inner_note, outter_note } = data;
+    await this.prisma.playerCard.update({
       where: { id },
       data: {
         valid_status,
@@ -79,6 +79,7 @@ export class PBankcardService {
         outter_note,
       },
     });
+    return this.prisma.success();
   }
 
   remove(id: string) {
