@@ -156,11 +156,6 @@ export class PlatformsBridgeService {
       platforms.map((t) => this.gameHub[t.platform_code].transferBack(player)),
     );
 
-    return this.prisma.success(
-      platforms.map((t, i) => ({
-        code: t.platform_code,
-        credit: result[i].credit,
-      })),
-    );
+    return this.prisma.success(platforms.map((t, i) => t.platform_code));
   }
 }

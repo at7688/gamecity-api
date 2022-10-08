@@ -9,6 +9,7 @@ import { getAllParents, ParentBasic } from 'src/member/raw/getAllParents';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType, WalletStatus } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
+import { PlatformsBridgeService } from './platforms-bridge/platforms-bridge.service';
 import { TransferQueue } from './types';
 
 @Injectable()
@@ -182,9 +183,7 @@ export class GameMerchantService {
         },
       },
       data: {
-        credit: {
-          increment: Math.abs(record.amount),
-        },
+        credit: record.amount,
       },
     });
 
@@ -216,9 +215,7 @@ export class GameMerchantService {
         },
       },
       data: {
-        credit: {
-          decrement: Math.abs(record.amount),
-        },
+        credit: 0,
       },
     });
 
