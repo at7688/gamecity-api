@@ -76,12 +76,18 @@ export class RecordTicketService {
     });
 
     if (!ticket) {
+      // 若無紀錄，則撈60秒
       return addSeconds(start, 60);
     }
 
     const distenceToNow = differenceInSeconds(new Date(), start);
 
-    return addSeconds(start, Math.min(distenceToNow, ticket?.max_seconds));
+    // TODO: 若有產生分頁，需記錄到資料庫
+    const limitSeconds = 60 * 5; // 最大不要撈超過5分鐘，以免產生分頁
+
+    const seconds = Math.min(distenceToNow, ticket?.max_seconds, limitSeconds);
+
+    return addSeconds(start, seconds);
   }
 
   async useTicket(
