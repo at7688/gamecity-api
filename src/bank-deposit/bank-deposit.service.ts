@@ -92,8 +92,8 @@ export class BankDepositService {
     return `This action returns a #${id} bankDeposit`;
   }
 
-  async update(id: string, data: UpdateBankDepositDto) {
-    const { inner_note, outter_note, status } = data;
+  async validate(data: UpdateBankDepositDto) {
+    const { id, inner_note, outter_note, status } = data;
     const record = await this.prisma.bankDepositRec.findUnique({
       where: { id },
       include: {

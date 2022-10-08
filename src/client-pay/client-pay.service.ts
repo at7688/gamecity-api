@@ -58,7 +58,7 @@ export class ClientPayService {
 
     // 取得當前輪替的卡片們
     const cards = await this.prisma.$queryRaw<CardInfo[]>(
-      getCurrentCard(this.player.id),
+      getCurrentCard(this.player.vip_id),
     );
 
     // 若無限額內可用卡片則提示錯誤
@@ -78,13 +78,12 @@ export class ClientPayService {
       });
     }
 
-    // 若儲值後超出限額，則關閉當前卡片
-    if (amount + card.current_sum > card.deposit_max) {
-      console.log(`超出限額，關閉當前銀行卡`);
-      await this.prisma.companyCard.update({
-        where: { id: card.card_id },
-        data: { is_current: false },
-      });
+    // 查看當前申請金額是否符合卡片要求範圍
+    if (amount > card.deposit_max || amount < card.deposit_min) {
+      this.prisma.error(
+        ResCode.FIELD_NOT_VALID,
+        `儲值限額為：${card.deposit_min}～${card.deposit_max}`,
+      );
     }
 
     //  新增儲值
@@ -104,6 +103,15 @@ export class ClientPayService {
         },
       },
     });
+
+    // 儲值後超出限額，則關閉當前卡片
+    if (amount + card.current_sum >= card.recharge_max) {
+      console.log(`儲值總量已過上限，關閉銀行卡`);
+      await this.prisma.companyCard.update({
+        where: { id: card.card_id },
+        data: { is_current: false },
+      });
+    }
 
     const notify: DepositPayload = {
       type: 'bank',
@@ -168,18 +176,13 @@ export class ClientPayService {
     }
 
     // 確認儲值金額是否符合支付方式的單筆儲值條件
-    if (amount > payway.deposit_max) {
+    if (amount > payway.deposit_max || amount < payway.deposit_min) {
       this.prisma.error(
         ResCode.FIELD_NOT_VALID,
-        `超過單筆儲值上限${payway.deposit_max}`,
+        `儲值限額為：${payway.deposit_min}～${payway.deposit_max}`,
       );
     }
-    if (amount < payway.deposit_min) {
-      this.prisma.error(
-        ResCode.FIELD_NOT_VALID,
-        `最低儲值金額為${payway.deposit_min}`,
-      );
-    }
+
     // 計算手續費負擔
     let fee = 0;
     let fee_on_player = 0;
@@ -229,7 +232,7 @@ export class ClientPayService {
     });
 
     // 若儲值總量已過上限則關閉此通道
-    if (currentTool.recharge_max <= currentTool.current_amount + amount) {
+    if (currentTool.current_amount + amount >= currentTool.recharge_max) {
       console.log(`儲值總量已過上限，關閉通道`);
       this.prisma.paymentTool.update({
         where: { id: currentTool.id },

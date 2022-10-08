@@ -25,11 +25,8 @@ export class BankDepositController {
     return this.bankDepositService.findOne(id);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateBankDepositDto: UpdateBankDepositDto,
-  ) {
-    return this.bankDepositService.update(id, updateBankDepositDto);
+  @Post('validate')
+  validate(@Body() updateBankDepositDto: UpdateBankDepositDto) {
+    return this.bankDepositService.validate(updateBankDepositDto);
   }
 }

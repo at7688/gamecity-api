@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCBankcardDto } from './dto/create-c-bankcard.dto';
+import { SearchCBankcardDto } from './dto/search-c-bankcard.dto';
 import { UpdateCBankcardDto } from './dto/update-c-bankcard.dto';
 import { companyCardList } from './raw/companyCardList';
 
@@ -14,7 +15,8 @@ export class CBankcardService {
     });
   }
 
-  async findAll(rotation_id: number) {
+  async findAll(search: SearchCBankcardDto) {
+    const { rotation_id } = search;
     const records = await this.prisma.$queryRaw(companyCardList(rotation_id));
     return this.prisma.listFormat(records[0]);
   }

@@ -11,20 +11,21 @@ import {
 } from '@nestjs/common';
 import { CBankcardService } from './c-bankcard.service';
 import { CreateCBankcardDto } from './dto/create-c-bankcard.dto';
+import { SearchCBankcardDto } from './dto/search-c-bankcard.dto';
 import { UpdateCBankcardDto } from './dto/update-c-bankcard.dto';
 
-@Controller('c-bankcards')
+@Controller('bankcard')
 export class CBankcardController {
   constructor(private readonly cBankcardService: CBankcardService) {}
 
-  @Post()
+  @Post('create')
   create(@Body() createCBankcardDto: CreateCBankcardDto) {
     return this.cBankcardService.create(createCBankcardDto);
   }
 
-  @Get()
-  findAll(@Query('rotation_id', ParseIntPipe) rotation_id: number) {
-    return this.cBankcardService.findAll(rotation_id);
+  @Post('list')
+  findAll(@Body() search: SearchCBankcardDto) {
+    return this.cBankcardService.findAll(search);
   }
 
   @Get(':id')

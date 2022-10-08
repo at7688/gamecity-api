@@ -1,7 +1,11 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { BankDepositStatus } from 'src/bank-deposit/enums';
 
 export class UpdateBankDepositDto {
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+
   @IsEnum(BankDepositStatus)
   @IsOptional()
   status?: BankDepositStatus;
