@@ -36,9 +36,15 @@ export class RecordTicketService {
 
   async getOverflowRrange(platform_code: string, start: Date, end: Date) {
     // 取得最後搜尋日期
-    const lastEnd = await this.cacheManager.get<Date>(
+    let lastEnd = await this.cacheManager.get<Date>(
       `RecordEnd_${platform_code}`,
     );
+    if (!lastEnd) {
+      const record = await this.prisma.gamePlatform.findUnique({
+        where: { code: platform_code },
+      });
+      lastEnd = record.record_check_at;
+    }
     if (lastEnd) {
       const diffSecond = differenceInSeconds(
         new Date(start),
