@@ -15,6 +15,7 @@ import {
   VIP_CHECK_SCHEDULE,
 } from './consts';
 import { SetSysConfigDto } from './dto/set-sys-config.dto';
+import { SetVipScheduleDto } from './dto/set-vip-schedule.dto';
 
 @Injectable()
 export class SysConfigService {
@@ -113,16 +114,18 @@ export class SysConfigService {
     return this.prisma.success();
   }
 
-  async setVipSchedule(cron: string) {
+  async setVipSchedule(data: SetVipScheduleDto) {
+    const { type, day, date, hour, minute } = data;
+
     await this.prisma.sysConfig.update({
       where: {
         code: VIP_CHECK_SCHEDULE,
       },
       data: {
-        value: cron,
+        value: `${type}.${type === 'month' ? date : day}.${hour}.${minute}`,
       },
     });
-    this.eventEmitter.emit('vip.scheduleUpdate', cron);
+    this.eventEmitter.emit('vip.scheduleUpdate', data);
     return this.prisma.success();
   }
 }

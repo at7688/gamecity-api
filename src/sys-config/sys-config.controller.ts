@@ -15,6 +15,6 @@ export class SysConfigController {
 
   @Post('vipSchedule')
   setVipSchedule(@Body() data: SetVipScheduleDto) {
-    return this.sysConfigService.setVipSchedule(data.cron);
+    return this.sysConfigService.setVipSchedule(data);
   }
 }

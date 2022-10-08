@@ -11,8 +11,16 @@ import { VipService } from './vip.service';
 import { CreateVipDto } from './dto/create-vip.dto';
 import { UpdateVipDto } from './dto/update-vip.dto';
 import { SetGameWaterDto } from './dto/set-game-water.dto';
-import { endOfMonth, startOfMonth, subDays } from 'date-fns';
+import {
+  endOfMonth,
+  endOfWeek,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+  subWeeks,
+} from 'date-fns';
 import { CheckVipDto } from './dto/check-vip.dto';
+import { SearchVipQueueDto } from './dto/search-vip-queue.dto';
 
 @Controller('vip')
 export class VipController {
@@ -32,6 +40,12 @@ export class VipController {
   conditionCheck(@Body() data: CheckVipDto) {
     const { start_at, end_at } = data;
     return this.vipService.conditionCheck(start_at, end_at);
+  }
+
+  @Post('apply')
+  checkAndApply(@Body() data: CheckVipDto) {
+    const { start_at, end_at } = data;
+    return this.vipService.checkAndApply(start_at, end_at);
   }
 
   @Get('options')
@@ -59,8 +73,8 @@ export class VipController {
     return this.vipService.remove(id);
   }
 
-  @Get('queue')
-  getVipQueue() {
-    return this.vipService.getVipQueue();
+  @Post('queue')
+  getVipQueue(@Body() data: SearchVipQueueDto) {
+    return this.vipService.getVipQueue(data);
   }
 }

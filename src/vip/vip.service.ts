@@ -1,12 +1,13 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
-import { Queue } from 'bull';
+import { JobStatus, Queue } from 'bull';
 import { endOfMonth, startOfMonth, subDays } from 'date-fns';
 import { BetRecordStatus } from 'src/bet-record/enums';
 import { ResCode } from 'src/errors/enums';
 import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateVipDto } from './dto/create-vip.dto';
+import { SearchVipQueueDto } from './dto/search-vip-queue.dto';
 import { SetGameWaterDto } from './dto/set-game-water.dto';
 import { UpdateVipDto } from './dto/update-vip.dto';
 import { vipCheck, VipCheckItem } from './raw/vipCheck';
@@ -96,9 +97,9 @@ export class VipService {
     try {
       await Promise.all(
         result.map(async (t) => {
-          await this.prisma.player.update({
+          return await this.prisma.player.update({
             where: {
-              id: t.player_id,
+              id: t.id,
             },
             data: {
               vip_id: t.next_vip?.id,
@@ -107,12 +108,15 @@ export class VipService {
         }),
       );
     } catch (err) {
-      this.prisma.error(ResCode.EXCEPTION_ERR);
+      this.prisma.error(ResCode.EXCEPTION_ERR, JSON.stringify(err));
     }
 
     return this.prisma.success(result);
   }
-  getVipQueue() {
-    return this.vipQueue.getJobs(['delayed']);
+  async getVipQueue(data: SearchVipQueueDto) {
+    const { statuses } = data;
+    const jobs = await this.vipQueue.getJobs(statuses);
+
+    return this.prisma.success(jobs);
   }
 }

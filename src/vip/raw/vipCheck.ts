@@ -8,7 +8,7 @@ export interface NextVip {
 }
 
 export interface VipCheckItem {
-  player_id: string;
+  id: string;
   username: string;
   nickname: string;
   vip_name: string;
@@ -37,7 +37,7 @@ export const vipCheck = (start: Date, end: Date) => {
 		) next_vip
 	FROM (
 		SELECT
-			d.player_id,
+			p.id,
 			p.username,
 			p.nickname,
 			v.name vip_name,
@@ -65,7 +65,7 @@ export const vipCheck = (start: Date, end: Date) => {
 			WHERE status = 2 AND bet_at BETWEEN ${start} AND ${end}
 			GROUP BY player_id
 		) b ON b.player_id = d.player_id
-		JOIN "Player" p ON p.id = d.player_id
+		RIGHT JOIN "Player" p ON p.id = d.player_id
 		JOIN "Vip" v ON v.id = p.vip_id
 	) m
 
