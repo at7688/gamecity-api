@@ -59,24 +59,24 @@ export class TGMessageService {
     const msgMap: Record<typeof status, string> = {
       apply: `
       <b>[訂貨申請通知]🛎</b>
-      <b>申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}</b>
-      <b>訂貨方式：${typeMap[type]}</b>
-      <b>上層代理：${agent_username}(${agent_nickname})</b>
-      <b>訂貨人：${username}(${nickname})</b>
-      <b>訂貨代碼：${numeral(amount).format('0,0.00')}</b>
-      <b>訂貨級別：${vip_name}</b>
+      申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}
+      訂貨方式：${typeMap[type]}
+      上層代理：${agent_username}(${agent_nickname})
+      訂貨人：${username}(${nickname})
+      訂貨代碼：${numeral(amount).format('0,0.00')}
+      訂貨級別：${vip_name}
     `,
       finish: `
       <b>[訂貨完成通知]🎉</b>
-      <b>申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}</b>
-      <b>完成時間：${
+      申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}
+      完成時間：${
         finished_at ? format(finished_at, 'yyyy-MM-dd HH:mm:ss') : '-'
-      }</b>
-      <b>訂貨方式：${typeMap[type]}</b>
-      <b>上層代理：${agent_username}(${agent_nickname})</b>
-      <b>訂貨人：${username}(${nickname})</b>
-      <b>訂貨代碼：${numeral(amount).format('0,0.00')}</b>
-      <b>訂貨級別：${vip_name}</b>
+      }
+      訂貨方式：${typeMap[type]}
+      上層代理：${agent_username}(${agent_nickname})
+      訂貨人：${username}(${nickname})
+      訂貨代碼：${numeral(amount).format('0,0.00')}
+      訂貨級別：${vip_name}
   `,
     };
     await Promise.all(
@@ -106,24 +106,22 @@ export class TGMessageService {
     const msgMap: Record<typeof status, string> = {
       apply: `
       <b>[出貨申請通知]📤</b>
-      <b>申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}</b>
-      <b>上層代理：${agent_username}(${agent_nickname})</b>
-      <b>出貨人：${username}(${nickname})</b>
-      <b>出貨代碼：${numeral(amount).format('0,0.00')}</b>
-      <b>出貨級別：${vip_name}</b>
-      <b>出貨次數：${count}</b>
+      申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}
+      上層代理：${agent_username}(${agent_nickname})
+      出貨人：${username}(${nickname})
+      出貨代碼：${numeral(amount).format('0,0.00')}
+      出貨級別：${vip_name}
+      出貨次數：${count}
     `,
       finish: `
     <b>[出貨完成通知]💥</b>
-    <b>申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}</b>
-    <b>完成時間：${
-      finished_at ? format(finished_at, 'yyyy-MM-dd HH:mm:ss') : '-'
-    }</b>
-    <b>上層代理：${agent_username}(${agent_nickname})</b>
-    <b>出貨人：${username}(${nickname})</b>
-    <b>出貨代碼：${numeral(amount).format('0,0.00')}</b>
-    <b>出貨級別：${vip_name}</b>
-    <b>出貨次數：${count}</b>
+    申請時間：${format(created_at, 'yyyy-MM-dd HH:mm:ss')}
+    完成時間：${finished_at ? format(finished_at, 'yyyy-MM-dd HH:mm:ss') : '-'}
+    上層代理：${agent_username}(${agent_nickname})
+    出貨人：${username}(${nickname})
+    出貨代碼：${numeral(amount).format('0,0.00')}
+    出貨級別：${vip_name}
+    出貨次數：${count}
   `,
     };
     await Promise.all(
@@ -148,10 +146,10 @@ export class TGMessageService {
     });
     const msg = `
     <b>[註冊通知]🤠</b>
-    <b>註冊時間：${format(time, 'yyyy-MM-dd HH:mm:ss')}</b>
-    <b>上層總代：${master_agent_username}(${master_agent_nickname})</b>
-    <b>上層代理：${agent_username}(${agent_nickname})</b>
-    <b>客戶帳號：${username}</b>
+    註冊時間：${format(time, 'yyyy-MM-dd HH:mm:ss')}
+    上層總代：${master_agent_username}(${master_agent_nickname})
+    上層代理：${agent_username}(${agent_nickname})
+    客戶帳號：${username}
   `;
     try {
       await Promise.all(
