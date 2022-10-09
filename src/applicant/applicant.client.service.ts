@@ -143,7 +143,6 @@ export class ApplicantClientService {
       promotion.approval_type !== ApprovalType.MANUAL &&
       promotion.settlement_type === SettlementType.IMMEDIATELY
     ) {
-      console.log('there');
       // await this.applicantService.autoVerify(
       //   applicant.promotion_id,
       //   applicant.id,

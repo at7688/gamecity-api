@@ -1,11 +1,11 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Player, Prisma } from '@prisma/client';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { ClientSearchGiftsDto } from './dto/client-search-gifts.dto';
-import { GiftType, GiftStatus } from './enums';
+import { GiftStatus, GiftType } from './enums';
 import { GiftService } from './gift.service';
 
 @Injectable()

@@ -12,6 +12,7 @@ import { GiftStatus, GiftType } from './enums';
 import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { WalletRecType } from 'src/wallet-rec/enums';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
+import { ValidateGiftDto } from './dto/validate-gift.dto';
 
 @Injectable()
 export class GiftService {
@@ -126,6 +127,7 @@ export class GiftService {
 
     const players = await this.prisma.player.findMany(findManyArg);
     const count = await this.prisma.player.count({ where: findManyArg.where });
+
     if (!players.length) {
       this.prisma.error(ResCode.NOT_FOUND, '查無資料');
     }
@@ -179,6 +181,29 @@ export class GiftService {
       items: await this.prisma.gift.findMany(findManyArg),
       count: await this.prisma.gift.count({ where: findManyArg.where }),
     });
+  }
+
+  async validate(data: ValidateGiftDto) {
+    const { id, status } = data;
+    const gift = await this.prisma.gift.findFirst({
+      where: {
+        id,
+      },
+    });
+    if (!gift) {
+      this.prisma.error(ResCode.NOT_FOUND);
+    }
+
+    await this.prisma.gift.update({
+      where: {
+        id,
+      },
+      data: {
+        status,
+      },
+    });
+
+    return this.prisma.success();
   }
 
   async abandon(gift_id: string) {

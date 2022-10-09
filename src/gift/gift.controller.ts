@@ -6,6 +6,7 @@ import { Platforms } from 'src/metas/platforms.meta';
 import { PlatformType } from '@prisma/client';
 import { User } from 'src/decorators/user.decorator';
 import { LoginUser } from 'src/types';
+import { ValidateGiftDto } from './dto/validate-gift.dto';
 
 @Controller('gift')
 export class GiftController {
@@ -14,6 +15,16 @@ export class GiftController {
   @Post('list')
   @Platforms([PlatformType.AGENT])
   findAll(@Body() search: SearchGiftsDto, @User() user: LoginUser) {
+    if ('admin_role_id' in user) {
+      return this.giftService.findAll(search);
+    } else {
+      return this.giftService.findAll(search, user);
+    }
+  }
+
+  @Post('update')
+  @Platforms([PlatformType.AGENT])
+  update(@Body() search: SearchGiftsDto, @User() user: LoginUser) {
     if ('admin_role_id' in user) {
       return this.giftService.findAll(search);
     } else {
@@ -34,5 +45,10 @@ export class GiftController {
   @Post('abandon/:id')
   abandon(@Param('id') gift_id: string) {
     return this.giftService.abandon(gift_id);
+  }
+
+  @Post('validate')
+  validate(@Body() data: ValidateGiftDto) {
+    return this.giftService.validate(data);
   }
 }

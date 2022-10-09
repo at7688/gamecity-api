@@ -26,7 +26,11 @@ WITH filterGifts AS (
   WHERE player_id IN (${Prisma.join(player_ids)})
 )
 
-SELECT gg.*, b.current_rolling, p.username, p.nickname
+SELECT
+	gg.*,
+	COALESCE(b.current_rolling, 0) current_rolling,
+	p.username,
+	p.nickname
 FROM (
 	SELECT
 		g.player_id,
@@ -56,7 +60,7 @@ FROM (
 	) g
 	GROUP BY g.player_id
 ) gg
-JOIN (
+LEFT JOIN (
 	SELECT
 		player_id,
 		SUM(rolling_amount) current_rolling
