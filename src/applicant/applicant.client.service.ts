@@ -3,10 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Applicant, Player, Prisma } from '@prisma/client';
 import { Queue } from 'bull';
+import { addDays, addHours, addWeeks, startOfDay } from 'date-fns';
 import { ValidateStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  ApplyGap,
   ApprovalType,
   ScheduleType,
   SettlementType,
@@ -41,13 +43,11 @@ export class ApplicantClientService {
     }
 
     // 驗證是否於活動時間內申請
-    if (promotion.schedule_type !== ScheduleType.FOREVER) {
-      if (promotion.start_at > new Date()) {
-        this.prisma.error(ResCode.PROMOTION_NOT_RUNNING, '活動尚未開始');
-      }
-      if (promotion.end_at < new Date()) {
-        this.prisma.error(ResCode.PROMOTION_NOT_RUNNING, '活動已結束');
-      }
+    if (promotion.start_at > new Date()) {
+      this.prisma.error(ResCode.PROMOTION_NOT_RUNNING, '活動尚未開始');
+    }
+    if (promotion.end_at < new Date()) {
+      this.prisma.error(ResCode.PROMOTION_NOT_RUNNING, '活動已結束');
     }
 
     // 驗證申請人數是否已達上限
@@ -70,19 +70,39 @@ export class ApplicantClientService {
       this.prisma.error(ResCode.VIP_LEVEL_NOT_ALLOW, '玩家等級資格不符');
     }
 
+    const prevApplicants = await this.prisma.applicant.findMany({
+      where: {
+        promotion_id,
+        player_id: player.id,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
     // 驗證是否達到個人申請上限
     if (promotion.apply_times !== 0) {
-      const applicantCount = await this.prisma.applicant.count({
-        where: {
-          promotion_id,
-          player_id: player.id,
-          status: {
-            not: ValidateStatus.REJECTED,
-          },
-        },
-      });
-      if (applicantCount >= promotion.apply_times) {
+      const count = prevApplicants.length;
+      if (count >= promotion.apply_times) {
         this.prisma.error(ResCode.OVER_APPLY_TIMES, '已達個人申請次數上限');
+      }
+    }
+
+    // 驗證是否符合申請的時間間隔
+    if (promotion.apply_gap > 0 && prevApplicants.length) {
+      const prev = prevApplicants[0];
+      let validDate = promotion.start_at;
+      if (promotion.apply_gap === ApplyGap.A_HOUR) {
+        validDate = addHours(prev.created_at, 1);
+      }
+      if (promotion.apply_gap === ApplyGap.A_DAY) {
+        validDate = addDays(prev.created_at, 1);
+      }
+      if (promotion.apply_gap === ApplyGap.A_WEEK) {
+        validDate = addWeeks(prev.created_at, 1);
+      }
+      if (validDate > new Date()) {
+        this.prisma.error(ResCode.APPLY_GAP_ERR, '不符活動申請間隔');
       }
     }
 
@@ -99,16 +119,16 @@ export class ApplicantClientService {
     }
 
     // 確認是否此活動已有該玩家已拒絕的申請單
-    const rejectedCount = await this.prisma.applicant.count({
-      where: {
-        promotion_id,
-        player_id: player.id,
-        status: ValidateStatus.REJECTED,
-      },
-    });
-    if (rejectedCount) {
-      this.prisma.error(ResCode.APPLICANT_REJECTED, '申請未通過');
-    }
+    // const rejectedCount = await this.prisma.applicant.count({
+    //   where: {
+    //     promotion_id,
+    //     player_id: player.id,
+    //     status: ValidateStatus.REJECTED,
+    //   },
+    // });
+    // if (rejectedCount) {
+    //   this.prisma.error(ResCode.APPLICANT_REJECTED, '申請未通過');
+    // }
 
     // 生成申請單(未審核)
     const applicant = await this.prisma.applicant.create({

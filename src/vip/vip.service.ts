@@ -1,10 +1,7 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
-import { JobStatus, Queue } from 'bull';
-import { endOfMonth, startOfMonth, subDays } from 'date-fns';
-import { BetRecordStatus } from 'src/bet-record/enums';
+import { Queue } from 'bull';
 import { ResCode } from 'src/errors/enums';
-import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateVipDto } from './dto/create-vip.dto';
 import { SearchVipQueueDto } from './dto/search-vip-queue.dto';

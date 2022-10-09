@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DepositStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
-import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DepositPayload } from 'src/socket/types';
@@ -59,7 +59,7 @@ export class OrderResponseService {
         data: {
           paid_at: finished_at,
           finished_at,
-          status: PaymentDepositStatus.FINISHED,
+          status: DepositStatus.FINISHED,
           notify_info: resData,
           is_first: !rechargedTag, // 無儲值紀錄則將此單標記為首儲
         },
@@ -98,7 +98,7 @@ export class OrderResponseService {
       data: {
         canceled_at: finished_at,
         finished_at,
-        status: PaymentDepositStatus.REJECTED,
+        status: DepositStatus.REJECTED,
         notify_info: resData,
       },
     });

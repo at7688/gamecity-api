@@ -1,26 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { VipService } from './vip.service';
-import { CreateVipDto } from './dto/create-vip.dto';
-import { UpdateVipDto } from './dto/update-vip.dto';
-import { SetGameWaterDto } from './dto/set-game-water.dto';
-import {
-  endOfMonth,
-  endOfWeek,
-  startOfMonth,
-  startOfWeek,
-  subDays,
-  subWeeks,
-} from 'date-fns';
 import { CheckVipDto } from './dto/check-vip.dto';
+import { CreateVipDto } from './dto/create-vip.dto';
 import { SearchVipQueueDto } from './dto/search-vip-queue.dto';
+import { SetGameWaterDto } from './dto/set-game-water.dto';
+import { UpdateVipDto } from './dto/update-vip.dto';
+import { VipService } from './vip.service';
 
 @Controller('vip')
 export class VipController {

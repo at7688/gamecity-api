@@ -12,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
+  ApplyGap,
   ApprovalType,
   PromotionType,
   RechargeRewardType,
@@ -39,19 +40,13 @@ export class RechargeReward {
   @IsNotEmpty()
   recharge_amount: number;
 
-  @IsEnum(RechargeRewardType)
-  @IsNotEmpty()
-  reward_type: RechargeRewardType;
-
-  @ValidateIf((t) => t.type === RechargeRewardType.AMOUNT)
   @IsInt()
   @IsNotEmpty()
-  reward_amount?: number;
+  reward_amount: number;
 
-  @ValidateIf((t) => t.type === RechargeRewardType.PERCENTAGE)
   @IsNumber()
   @IsNotEmpty()
-  reward_percent?: number;
+  reward_percent: number;
 
   @IsEnum(RollingType)
   @IsOptional()
@@ -67,17 +62,15 @@ export class CreatePromotionDto {
   @IsNotEmpty()
   title: string;
 
-  @ValidateIf((t) => t.schedule_type !== ScheduleType.FOREVER)
   @IsNotEmpty()
   @Transform(({ value }) => new Date(value))
   @IsDate()
-  start_at?: string | Date;
+  start_at: string | Date;
 
-  @ValidateIf((t) => t.schedule_type !== ScheduleType.FOREVER)
   @IsNotEmpty()
   @Transform(({ value }) => new Date(value))
   @IsDate()
-  end_at?: string | Date;
+  end_at: string | Date;
 
   @IsBoolean()
   @IsOptional()
@@ -86,6 +79,10 @@ export class CreatePromotionDto {
   @IsEnum(ApprovalType)
   @IsNotEmpty()
   approval_type: ApprovalType;
+
+  @IsEnum(ApplyGap)
+  @IsNotEmpty()
+  apply_gap: ApplyGap;
 
   @IsEnum(ScheduleType)
   @IsNotEmpty()

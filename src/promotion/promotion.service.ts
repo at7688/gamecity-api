@@ -38,8 +38,9 @@ export class PromotionService {
       apply_times,
       recharge_reward,
       valid_bet,
+      apply_gap,
     } = data;
-    if (schedule_type !== ScheduleType.FOREVER && end_at < new Date()) {
+    if (end_at < new Date()) {
       this.prisma.error(ResCode.FIELD_NOT_VALID, '結束時間不可小於當前時間');
     }
     const record = await this.prisma.promotion.create({
@@ -52,6 +53,7 @@ export class PromotionService {
         approval_type,
         schedule_type,
         valid_bet,
+        apply_gap,
         vips: {
           connect: vip_ids.map((id) => ({ id })),
         },
@@ -82,36 +84,18 @@ export class PromotionService {
       },
     });
 
-    if (record.approval_type !== ApprovalType.MANUAL) {
+    if (
+      record.approval_type !== ApprovalType.MANUAL &&
+      record.settlement_type === SettlementType.ENDING
+    ) {
       // 推到自動審核排程
-      if (record.settlement_type === SettlementType.ENDING) {
-        await this.promotionQueue.add('settlement', record, {
-          repeat: {
-            cron: '* * * * * *',
-            startDate: record.end_at,
-            limit: 1,
-          },
-        });
-      }
-      if (
-        [SettlementType.DAILY, SettlementType.WEEKLY].includes(
-          record.settlement_type,
-        )
-      ) {
-        await this.promotionQueue.add('settlement', record, {
-          repeat: {
-            cron: {
-              [SettlementType.DAILY]: '0 0 0 * * *', // 每日結算(午夜整點)
-              [SettlementType.WEEKLY]: '0 0 0 * * 0', // 每週結算(週日午夜整點)
-            }[record.settlement_type],
-            startDate: record.start_at,
-            endDate: record.end_at,
-          },
-        });
-      }
-      // if (record.settlement_type === SettlementType.IMMEDIATELY) {
-      //   await this.promotionQueue.add('settlement', record);
-      // }
+      await this.promotionQueue.add('settlement', record, {
+        repeat: {
+          cron: '* * * * * *',
+          startDate: record.end_at,
+          limit: 1,
+        },
+      });
     }
     return this.prisma.success();
   }
@@ -185,6 +169,12 @@ export class PromotionService {
   }
 
   async remove(id: string) {
+    const jobs = await this.promotionQueue.getJobs(['delayed']);
+    jobs.forEach((t) => {
+      if (t.data.id === id) {
+        t.remove();
+      }
+    });
     await this.prisma.promotion.delete({ where: { id } });
     return this.prisma.success();
   }

@@ -15,17 +15,14 @@ export class PromotionClientService {
             id: player.vip_id,
           },
         },
-        OR: [
-          {
-            start_at: {
-              lte: new Date(),
-            },
-            end_at: {
-              gte: new Date(),
-            },
+        OR: {
+          start_at: {
+            lte: new Date(),
           },
-          { schedule_type: ScheduleType.FOREVER },
-        ],
+          end_at: {
+            gte: new Date(),
+          },
+        },
         is_active: true,
       },
     });

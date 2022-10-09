@@ -676,9 +676,9 @@ model RechargeReward {
 
   recharge_amount Int
 
-  reward_type    Int // 比例, 固定
-  reward_amount  Int?
-  reward_percent Float?
+  reward_amount  Int
+
+  reward_percent Float
 
   rolling_type Int @default(1) // 洗碼倍數是否含儲值金計算(不含/含)
 
@@ -690,9 +690,9 @@ model Promotion {
   type  Int // 首儲獎勵 續儲獎勵 遊戲返水
   title String
 
-  schedule_type Int       @default(1) // (活動期間) 無限期 僅一次 月延續 周延續 日延續
-  start_at      DateTime? @db.Timestamptz() // 無限期則留空
-  end_at        DateTime? @db.Timestamptz() // 無限期則留空
+  schedule_type Int       @default(1) // 僅一次 月延續 周延續 日延續
+  start_at      DateTime @db.Timestamptz()
+  end_at        DateTime @db.Timestamptz()
 
   is_active           Boolean @default(false) // 關閉則佔不開放申請
   approval_type Int @default(1) // 人工審核派發, 半自動(產生未派發禮包), 全自動(自動派發禮包)
@@ -706,6 +706,8 @@ model Promotion {
 
   apply_times Int @default(0) // 可申請次數 (0為無限制)
 
+  apply_gap Int @default(0) // 申請間隔： 無限制, 1次/時, 1次/日, 1次/週
+
   nums_rolling Float @default(1) // 洗碼倍數
 
   game_water GameWater[] // 返水活動(遊戲退水%)
@@ -715,6 +717,7 @@ model Promotion {
 
   applicants Applicant[] // 活動報名單
   gifts      Gift[] // 活動禮包
+
 
   bank_deposits    BankDepositRec[] // 綁定活動的銀行卡儲值紀錄
   payment_deposits PaymentDepositRec[] // 綁定活動的支付工具儲值紀錄

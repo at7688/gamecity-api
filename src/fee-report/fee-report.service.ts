@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { DepositStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
-import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchFeeReportDto } from './dto/search-fee-report.dto';
@@ -29,7 +29,7 @@ export class FeeReportService {
     }
     const records = await this.prisma.paymentDepositRec.findMany({
       where: {
-        status: PaymentDepositStatus.FINISHED,
+        status: DepositStatus.FINISHED,
         created_at: {
           gte: start_at,
           lte: end_at,

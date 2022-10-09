@@ -5,9 +5,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Player } from '@prisma/client';
 import { add } from 'date-fns';
 import { Request } from 'express';
-import { ValidateStatus } from 'src/enums';
+import { DepositStatus, ValidateStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
-import { PaymentDepositStatus } from 'src/payment-deposit/enums';
 import { ValidTool, validTools } from 'src/payment-tool/raw/validTools';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DepositPayload } from 'src/socket/types';
@@ -269,7 +268,7 @@ export class ClientPayService {
         where: { id: record.id },
         data: {
           canceled_at: new Date(),
-          status: PaymentDepositStatus.REJECTED,
+          status: DepositStatus.REJECTED,
         },
       });
       this.prisma.error(ResCode.EXCEPTION_ERR, '金流建單失敗');

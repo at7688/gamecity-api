@@ -89,7 +89,7 @@ export class RecordTicketService {
     const distenceToNow = differenceInSeconds(new Date(), start);
 
     // TODO: 若有產生分頁，需記錄到資料庫
-    const limitSeconds = 60 * 5; // 最大不要撈超過5分鐘，以免產生分頁
+    const limitSeconds = 60 * 10; // 最大不要撈超過10分鐘，以免產生分頁
 
     const seconds = Math.min(distenceToNow, ticket?.max_seconds, limitSeconds);
 

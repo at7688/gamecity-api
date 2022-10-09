@@ -35,6 +35,8 @@ export enum ResCode {
   DATE_ERR = 'DATE_ERR', // 日期設定錯誤
   LAYER_ERR = 'LAYER_ERR', // 代理階層數錯誤
 
+  APPLY_GAP_ERR = 'APPLY_GAP_ERR', // 不符合申請間隔
+
   EMPTY_VAL = 'EMPTY_VAL', // 不可為空
   DB_ERR = 'DB_ERR', // DB錯誤
   FORMAT_ERR = 'FORMAT_ERR', // 格式驗證錯誤
