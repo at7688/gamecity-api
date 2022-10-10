@@ -166,6 +166,15 @@ export class GameMerchantService {
     return player.balance;
   }
 
+  async getRate(platform_code: string) {
+    const result = await this.prisma.gamePlatform.findUnique({
+      where: {
+        code: platform_code,
+      },
+    });
+    return result.exchange_rate;
+  }
+
   async transToSuccess(trans_id: string) {
     const record = await this.prisma.walletRec.findFirst({
       where: {
@@ -174,16 +183,20 @@ export class GameMerchantService {
       },
     });
 
+    const platform_code = record.source;
+
+    const gameCredit = -record.amount;
+
     // 紀錄遊戲端帳號餘額
     await this.prisma.gameAccount.update({
       where: {
         platform_code_player_id: {
           player_id: record.player_id,
-          platform_code: record.source,
+          platform_code,
         },
       },
       data: {
-        credit: record.amount,
+        credit: gameCredit,
       },
     });
 

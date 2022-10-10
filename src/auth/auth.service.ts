@@ -377,12 +377,6 @@ export class AuthService {
             name: true,
           },
         },
-        game_accounts: {
-          select: {
-            platform_code: true,
-            credit: true,
-          },
-        },
       },
     });
     const rollingInfo =

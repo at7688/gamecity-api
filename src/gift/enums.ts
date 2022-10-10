@@ -1,8 +1,8 @@
 export enum GiftStatus {
   UNPROCESSED = 1,
   SENT = 2,
-  RECIEVED = 3,
-  ABANDONED = 4,
+  RECIEVED = 10,
+  ABANDONED = 20,
 }
 
 export enum GiftType {

@@ -37,7 +37,6 @@ export class BwinService {
   apiKey = '0f12914a-4714-4ed8-8248-2b2cfb473578';
   apiToken =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTU2NywidXNlcklkIjoxNDk5LCJwYXNzd29yZCI6IiQyYiQwNSRtTUNlWEdRWi5US1R6UVFLcEFLY0ouVHNleVhYc2ltN05qdkFYNnVLc3hJT3ZmVlIzZUtFbSIsInVzZXJuYW1lIjoia2lkdWx0Iiwic3ViIjowLCJjdXJyZW5jeSI6IlRXRCIsInBhcmVudElkIjoxLCJpYXQiOjE2NjI5ODU1MzksImV4cCI6OTAwNzIwMDkxNzcyNjUzMH0.ky-Eh9E7giLMFGArXFK11Yis2-qqa8Y0rOMvIoBXelg';
-  creditMultiple = 100;
 
   async request<T extends BwinResBase>(reqConfig: BwinReqBase) {
     const { method, path, data } = reqConfig;
@@ -209,6 +208,8 @@ export class BwinService {
 
   async transferTo(player: Player) {
     const trans_id = uuidv4();
+    const rate = await this.gameMerchantService.getRate(this.platformCode);
+
     const amount = await this.gameMerchantService.beforeTransTo(
       player,
       this.platformCode,
@@ -221,7 +222,7 @@ export class BwinService {
       path: '/api/v1/players/deposit',
       data: {
         transactionId: trans_id,
-        amount: numeral(amount).multiply(this.creditMultiple).value(),
+        amount: numeral(amount).multiply(rate).value(),
         player: player.username,
       },
     };
@@ -248,6 +249,7 @@ export class BwinService {
 
   async transferBack(player: Player) {
     const balance = await this.getBalance(player);
+    const rate = await this.gameMerchantService.getRate(this.platformCode);
 
     if (balance <= 0) {
       return this.prisma.success(0);
@@ -260,7 +262,7 @@ export class BwinService {
       path: '/api/v1/players/withdraw',
       data: {
         transactionId: trans_id,
-        amount: numeral(balance).multiply(this.creditMultiple).value(),
+        amount: numeral(balance).multiply(rate).value(),
         player: player.username,
       },
     };
@@ -320,11 +322,13 @@ export class BwinService {
       method: 'GET',
       path: `/api/v1/players?player=${player.username}`,
     };
+    const rate = await this.gameMerchantService.getRate(this.platformCode);
     const res = await this.request<BwinGetBalanceRes>(reqConfig);
-    return numeral(res.data[0].balance).divide(this.creditMultiple).value();
+    return numeral(res.data[0].balance).divide(rate).value();
   }
 
   async fetchBetRecords(start: Date, end: Date, is_record?: boolean) {
+    const rate = await this.gameMerchantService.getRate(this.platformCode);
     if (is_record) {
       const d = await this.ticketService.getOverflowRrange(
         this.platformCode,
@@ -364,15 +368,9 @@ export class BwinService {
               this.platformCode,
               t.productId.toString(),
             );
-            const betAmount = numeral(t.bet)
-              .divide(this.creditMultiple)
-              .value();
-            const validAmount = numeral(t.validBet)
-              .divide(this.creditMultiple)
-              .value();
-            const winLoseAmount = numeral(t.result)
-              .divide(this.creditMultiple)
-              .value();
+            const betAmount = numeral(t.bet).divide(rate).value();
+            const validAmount = numeral(t.validBet).divide(rate).value();
+            const winLoseAmount = numeral(t.result).divide(rate).value();
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
