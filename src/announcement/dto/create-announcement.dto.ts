@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AnnouncementType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import {
   IsBoolean,
   IsEnum,
@@ -10,21 +10,19 @@ import {
   IsString,
   IsUrl,
 } from 'class-validator';
+import { AnnouncementType } from '../enums';
 
-export class CreateAnnouncementDto implements Prisma.AnnouncementCreateInput {
+export class CreateAnnouncementDto {
   @IsNotEmpty()
   @IsEnum(AnnouncementType)
-  @ApiProperty({ enum: AnnouncementType })
   type: AnnouncementType;
 
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({ default: '測試標題' })
   title: string;
 
   @IsOptional()
   @IsString()
-  @ApiProperty({ default: '測試內容' })
   content: string;
 
   @ApiProperty()

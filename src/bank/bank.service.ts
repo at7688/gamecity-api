@@ -5,7 +5,10 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class BankService {
   constructor(private readonly prisma: PrismaService) {}
 
-  options() {
-    return this.prisma.bank.findMany({ where: { is_active: true } });
+  async options() {
+    const result = await this.prisma.bank.findMany({
+      where: { is_active: true },
+    });
+    return this.prisma.success(result);
   }
 }

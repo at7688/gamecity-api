@@ -64,7 +64,7 @@ model Announcement {
   end_at     DateTime?        @db.Timestamptz(6)
   created_at DateTime         @default(now()) @db.Timestamptz()
   updated_at DateTime         @updatedAt @db.Timestamptz()
-  type       AnnouncementType
+  type       Int @default(1) // 系統 遊戲 活動
   is_active  Boolean          @default(true)
   link       String?
   is_new_win Boolean          @default(false)
@@ -396,7 +396,7 @@ model LoginRec {
   agent         Member?      @relation(fields: [agent_id], references: [id])
   player        Player?      @relation(fields: [player_id], references: [id])
 
-  token String?
+  token String? //TODO: 是要拿掉？
 }
 
 model Banner {
@@ -898,11 +898,4 @@ enum PayType {
   BARCODE
   CREDIT
   ATM
-}
-
-enum AnnouncementType {
-  GAME
-  OPERATION
-  EVENT
-  SERVICE
 }

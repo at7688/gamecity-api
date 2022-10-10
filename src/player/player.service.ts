@@ -17,7 +17,7 @@ import { getAllParents, ParentBasic } from './../member/raw/getAllParents';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { SearchPlayersDto } from './dto/search-players.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
-import { playerList } from './raw/playerList';
+import { PlayerItem, playerList } from './raw/playerList';
 import { SubAgent, subAgents } from './raw/subAgents';
 import { TargetType } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
@@ -26,6 +26,7 @@ import { Cache } from 'cache-manager';
 import { REGISTER_REQUIRED } from 'src/sys-config/consts';
 import { RegisterPayload } from 'src/socket/types';
 import { PlayerTagType } from './enums';
+import { ChangePwDto } from './dto/change-pw.dto';
 
 @Injectable()
 export class PlayerService {
@@ -277,7 +278,7 @@ export class PlayerService {
     const _items = await this.prisma.player.findMany(findManyArgs);
 
     return this.prisma.listFormat({
-      items: await this.prisma.$queryRaw<unknown[]>(
+      items: await this.prisma.$queryRaw<PlayerItem[]>(
         playerList(_items.map((t) => t.id)),
       ),
       count: await this.prisma.player.count({
@@ -288,44 +289,126 @@ export class PlayerService {
   }
 
   async findOne(id: string) {
-    const player = await this.prisma.player.findUnique({
-      where: { id },
+    const result = await this.prisma.$queryRaw(playerList([id]));
+    const player = result[0];
+    const playerCards = await this.prisma.playerCard.findMany({
+      where: { player_id: id },
+    });
+    const lastWithdraws = await this.prisma.withdrawRec.findMany({
+      where: { player_id: id },
+      orderBy: {
+        created_at: 'desc',
+      },
       include: {
-        contact: {
+        player_card: {
           select: {
-            email: true,
-            phone: true,
-            line_id: true,
-            telegram: true,
+            id: true,
+            bank_code: true,
+            branch: true,
+            name: true,
+            account: true,
           },
         },
       },
+      take: 5,
+    });
+    const lastPaymentDeposits = await this.prisma.paymentDepositRec.findMany({
+      where: { player_id: id },
+      orderBy: {
+        created_at: 'desc',
+      },
+      include: {
+        payway: {
+          select: {
+            id: true,
+            name: true,
+            tool: {
+              select: {
+                id: true,
+                tool_name: true,
+                merchant: {
+                  select: {
+                    name: true,
+                    code: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      take: 5,
+    });
+    const lastBankDeposits = await this.prisma.bankDepositRec.findMany({
+      where: { player_id: id },
+      orderBy: {
+        created_at: 'desc',
+      },
+      include: {
+        player_card: {
+          select: {
+            id: true,
+            bank_code: true,
+            branch: true,
+            name: true,
+            account: true,
+          },
+        },
+        card: {
+          select: {
+            id: true,
+            bank_code: true,
+            branch: true,
+            name: true,
+            account: true,
+          },
+        },
+      },
+      take: 5,
+    });
+
+    const gameAccs = await this.prisma.gameAccount.findMany({
+      where: { player_id: id },
+    });
+
+    const gifts = await this.prisma.gift.groupBy({
+      by: ['status', 'type'],
+      where: { player_id: id },
     });
 
     return this.prisma.success({
       parents: await this.prisma.$queryRaw(getAllParents(player.agent_id)),
       player,
+      playerCards,
+      lastWithdraws,
+      lastPaymentDeposits,
+      lastBankDeposits,
+      gameAccs,
+      gifts,
     });
   }
 
-  async updatePw(id: string, password: string) {
+  async updatePw(data: ChangePwDto) {
+    const { id, password } = data;
     const hash = await argon2.hash(password);
-    return this.prisma.player.update({
+    await this.prisma.player.update({
       where: { id },
       data: { password: hash },
     });
+    return this.prisma.success();
   }
   async updateBlocked(id: string, is_blocked: boolean) {
-    return this.prisma.player.update({
+    await this.prisma.player.update({
       where: { id },
       data: { is_blocked },
     });
+    return this.prisma.success();
   }
 
   async update(id: string, data: UpdatePlayerDto) {
     const { nickname, phone, email, line_id, telegram } = data;
 
-    return this.prisma.player.update({
+    await this.prisma.player.update({
       where: { id },
       data: {
         nickname,
@@ -349,9 +432,6 @@ export class PlayerService {
         },
       },
     });
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} player`;
+    return this.prisma.success();
   }
 }

@@ -15,7 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async findOne(id: string): Promise<AdminUser | null> {
+  async findOne(id: string) {
     const user = await this.prisma.adminUser.findUnique({
       where: { id },
       include: {
@@ -31,7 +31,7 @@ export class UserService {
     if (!user) {
       this.prisma.error(ResCode.NOT_FOUND);
     }
-    return user;
+    return this.prisma.success(user);
   }
 
   async findAll(search: SearchUserDto) {
@@ -62,10 +62,10 @@ export class UserService {
     });
   }
 
-  async create({ password, ...data }: CreateUserDto): Promise<AdminUser> {
+  async create({ password, ...data }: CreateUserDto) {
     const hash = await argon2.hash(password);
 
-    return await this.prisma.adminUser.create({
+    await this.prisma.adminUser.create({
       data: {
         username: data.username,
         nickname: data.nickname,
@@ -75,26 +75,26 @@ export class UserService {
         password: hash,
       },
     });
+    return this.prisma.success();
   }
 
-  async update(
-    id: string,
-    { password, ...data }: UpdateUserDto,
-  ): Promise<AdminUser> {
+  async update(id: string, { password, ...data }: UpdateUserDto) {
     if (password) {
       const hash = await argon2.hash(password);
-      return this.prisma.adminUser.update({
+      await this.prisma.adminUser.update({
         where: { id },
         data: { ...data, password: hash },
       });
     }
-    return this.prisma.adminUser.update({
+    await this.prisma.adminUser.update({
       where: { id },
       data,
     });
+    return this.prisma.success();
   }
 
-  remove(id: string) {
-    return this.prisma.adminUser.delete({ where: { id } });
+  async remove(id: string) {
+    await this.prisma.adminUser.delete({ where: { id } });
+    return this.prisma.success();
   }
 }

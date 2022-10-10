@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AnnouncementType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { numToBooleanSearch } from 'src/utils';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
@@ -10,60 +10,9 @@ import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 export class AnnouncementService {
   constructor(private readonly prisma: PrismaService) {}
 
-  cleanBeforeDay(day: Date | string) {
-    // const targetTimeStamp = new Date().setDate(new Date().getDate() + diffDays);
-    return this.prisma.announcement.deleteMany({
-      where: {
-        end_at: {
-          lt: new Date(day),
-        },
-      },
-    });
-  }
-
-  batchCreate(list: CreateAnnouncementDto[]) {
-    return this.prisma.announcement.createMany({
-      data: list,
-      skipDuplicates: true,
-    });
-  }
-  injectOldList(
-    oldData: {
-      title: string;
-      content: string;
-      category: number;
-      createdAt: string;
-      startAt: string;
-      endAt: string;
-      isRedirect: boolean;
-      sort: number;
-      platform: number;
-    }[],
-  ) {
-    return this.prisma.announcement.createMany({
-      data: oldData.map<Prisma.AnnouncementCreateInput>((t) => ({
-        title: t.title,
-        content: t.content,
-        type: {
-          1: AnnouncementType.OPERATION,
-          2: AnnouncementType.EVENT,
-          3: AnnouncementType.SERVICE,
-          4: AnnouncementType.GAME,
-        }[t.category],
-        created_at: new Date(t.createdAt),
-        start_at: new Date(t.startAt),
-        end_at: new Date(t.endAt),
-        link: t.isRedirect ? t.content : '',
-        is_new_win: t.isRedirect,
-        is_top: t.sort === 0,
-        sort: t.sort,
-        is_active: true,
-      })),
-      skipDuplicates: true,
-    });
-  }
-  create(data: CreateAnnouncementDto) {
-    return this.prisma.announcement.create({ data });
+  async create(data: CreateAnnouncementDto) {
+    await this.prisma.announcement.create({ data });
+    return this.prisma.success();
   }
 
   async findAll(search: SearchAnnouncementsDto) {
@@ -97,15 +46,18 @@ export class AnnouncementService {
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.announcement.findUnique({ where: { id } });
+  async findOne(id: string) {
+    const result = await this.prisma.announcement.findUnique({ where: { id } });
+    return this.prisma.success(result);
   }
 
-  update(id: string, data: UpdateAnnouncementDto) {
-    return this.prisma.announcement.update({ where: { id }, data });
+  async update(id: string, data: UpdateAnnouncementDto) {
+    await this.prisma.announcement.update({ where: { id }, data });
+    return this.prisma.success();
   }
 
-  remove(id: string) {
-    return this.prisma.announcement.delete({ where: { id } });
+  async remove(id: string) {
+    await this.prisma.announcement.delete({ where: { id } });
+    return this.prisma.success();
   }
 }

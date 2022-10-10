@@ -1,7 +1,7 @@
-import { AnnouncementType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
+import { AnnouncementType } from '../enums';
 
 export class SearchAnnouncementsDto extends PaginateDto {
   @IsString()
@@ -10,7 +10,7 @@ export class SearchAnnouncementsDto extends PaginateDto {
 
   @IsEnum(AnnouncementType)
   @IsOptional()
-  type = null;
+  type?: AnnouncementType;
 
   @IsInt()
   @IsOptional()

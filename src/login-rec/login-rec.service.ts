@@ -12,6 +12,7 @@ export class LoginRecService {
     const {
       page,
       perpage,
+      platform,
       ip,
       username,
       nickname,
@@ -25,6 +26,7 @@ export class LoginRecService {
     const findManyArgs: Prisma.LoginRecFindManyArgs = {
       where: {
         ip,
+        platform,
         admin_user_id: null,
         nums_failed: status
           ? status.includes(1) && status.includes(2)
@@ -69,19 +71,26 @@ export class LoginRecService {
       take: perpage,
       skip: (page - 1) * perpage,
       include: {
+        admin_user: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+        },
+        player: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+          },
+        },
         agent: {
           select: {
+            id: true,
             username: true,
             nickname: true,
             layer: true,
-            is_blocked: true,
-            parent: {
-              select: {
-                username: true,
-                nickname: true,
-                layer: true,
-              },
-            },
           },
         },
       },

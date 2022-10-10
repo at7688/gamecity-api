@@ -2,11 +2,11 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { SearchLoginRecsDto } from './dto/search-login-rec.dto';
 import { LoginRecService } from './login-rec.service';
 
-@Controller('login-recs')
+@Controller('loginRec')
 export class LoginRecController {
   constructor(private readonly loginRecService: LoginRecService) {}
 
-  @Get()
+  @Get('list')
   findAll(@Query() query: SearchLoginRecsDto) {
     return this.loginRecService.findAll(query);
   }

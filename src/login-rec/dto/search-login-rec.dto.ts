@@ -1,6 +1,8 @@
+import { PlatformType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsDateString,
+  IsEnum,
   IsIn,
   IsInt,
   IsOptional,
@@ -9,6 +11,10 @@ import {
 import { PaginateDto } from 'src/dto/paginate.dto';
 
 export class SearchLoginRecsDto extends PaginateDto {
+  @IsEnum(PlatformType)
+  @IsOptional()
+  platform?: PlatformType;
+
   @IsString()
   @IsOptional()
   ip?: string;
@@ -23,23 +29,14 @@ export class SearchLoginRecsDto extends PaginateDto {
 
   @IsIn([1, 2], { each: true })
   @IsOptional()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value?.split(',').map(Number) : value,
-  )
   status?: number[];
 
   @IsIn([1, 2, 3], { each: true })
   @IsOptional()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value?.split(',').map(Number) : value,
-  )
   block?: number[];
 
   @IsInt({ each: true })
   @IsOptional()
-  @Transform(({ value }) =>
-    typeof value === 'string' ? value?.split(',').map(Number) : value,
-  )
   layer?: number[];
 
   @IsDateString()

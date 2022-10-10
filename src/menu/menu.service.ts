@@ -7,8 +7,8 @@ import { UpdateMenuDto } from './dto/update-menu.dto';
 @Injectable()
 export class MenuService {
   constructor(private readonly prisma: PrismaService) {}
-  create({ permission_ids, ...data }: CreateMenuDto) {
-    return this.prisma.menu.create({
+  async create({ permission_ids, ...data }: CreateMenuDto) {
+    await this.prisma.menu.create({
       data: {
         ...data,
         permissions: {
@@ -19,11 +19,12 @@ export class MenuService {
         permissions: true,
       },
     });
+    return this.prisma.success();
   }
 
-  pathGetSubMenus(path: string, user: LoginUser) {
+  async pathGetSubMenus(path: string, user: LoginUser) {
     const roleCode = 'admin_role_id' in user ? user.admin_role.code : 'AGENT';
-    return this.prisma.menu.findUnique({
+    const result = await this.prisma.menu.findUnique({
       where: {
         path,
       },
@@ -40,10 +41,11 @@ export class MenuService {
         root_menu: true,
       },
     });
+    return this.prisma.success(result);
   }
 
-  findAll() {
-    return this.prisma.menu.findMany({
+  async findAll() {
+    const result = await this.prisma.menu.findMany({
       where: {
         root_menu: null,
       },
@@ -65,14 +67,17 @@ export class MenuService {
         sort: 'asc',
       },
     });
+
+    return this.prisma.success(result);
   }
 
-  findOne(id: string) {
-    return this.prisma.menu.findUnique({ where: { id } });
+  async findOne(id: string) {
+    const result = await this.prisma.menu.findUnique({ where: { id } });
+    return this.prisma.success(result);
   }
 
-  update(id: string, { permission_ids, ...data }: UpdateMenuDto) {
-    return this.prisma.menu.update({
+  async update(id: string, { permission_ids, ...data }: UpdateMenuDto) {
+    await this.prisma.menu.update({
       where: { id },
       data: {
         ...data,
@@ -84,9 +89,11 @@ export class MenuService {
         permissions: true,
       },
     });
+    return this.prisma.success();
   }
 
-  remove(id: string) {
-    return this.prisma.menu.delete({ where: { id } });
+  async remove(id: string) {
+    await this.prisma.menu.delete({ where: { id } });
+    return this.prisma.success();
   }
 }

@@ -29,25 +29,28 @@ export class VipService {
   }
 
   async options() {
-    return this.prisma.vip.findMany({
+    const result = await this.prisma.vip.findMany({
       select: { id: true, name: true },
     });
+    return this.prisma.success(result);
   }
 
-  findOne(id: string) {
-    return this.prisma.vip.findUnique({ where: { id } });
+  async findOne(id: string) {
+    const result = await this.prisma.vip.findUnique({ where: { id } });
+    return this.prisma.success(result);
   }
 
-  update(id: string, data: UpdateVipDto) {
-    return this.prisma.vip.update({
+  async update(id: string, data: UpdateVipDto) {
+    await this.prisma.vip.update({
       where: { id },
       data,
     });
+    return this.prisma.success();
   }
 
-  gameWater(data: SetGameWaterDto) {
+  async gameWater(data: SetGameWaterDto) {
     const { setting, vip_id } = data;
-    return Promise.all(
+    await Promise.all(
       setting.map((t) => {
         return this.prisma.gameWater.upsert({
           select: {
@@ -74,10 +77,12 @@ export class VipService {
         });
       }),
     );
+    return this.prisma.success();
   }
 
-  remove(id: string) {
-    return this.prisma.vip.delete({ where: { id } });
+  async remove(id: string) {
+    await this.prisma.vip.delete({ where: { id } });
+    return this.prisma.success();
   }
 
   async conditionCheck(start: Date, end: Date) {

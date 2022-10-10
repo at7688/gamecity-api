@@ -1,18 +1,10 @@
-import { RegisterPlayerDto } from './dto/register-player.dto';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { User } from 'src/decorators/user.decorator';
 import { Public } from 'src/metas/public.meta';
 import { LoginUser } from 'src/types';
+import { ChangePwDto } from './dto/change-pw.dto';
 import { CreatePlayerDto } from './dto/create-player.dto';
+import { RegisterPlayerDto } from './dto/register-player.dto';
 import { SearchPlayersDto } from './dto/search-players.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { PlayerService } from './player.service';
@@ -48,9 +40,9 @@ export class PlayerController {
     return this.playerService.findOne(id);
   }
 
-  @Patch(':id/password')
-  updatePw(@Param('id') id: string, @Body('password') password: string) {
-    return this.playerService.updatePw(id, password);
+  @Patch('password')
+  updatePw(@Body() data: ChangePwDto) {
+    return this.playerService.updatePw(data);
   }
   @Patch(':id/blocked')
   updateBlocked(
@@ -63,10 +55,5 @@ export class PlayerController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePlayerDto: UpdatePlayerDto) {
     return this.playerService.update(id, updatePlayerDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.playerService.remove(id);
   }
 }

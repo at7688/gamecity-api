@@ -151,7 +151,6 @@ export class PlatformsBridgeService {
         },
       },
     });
-    console.log(platforms);
     const result = await Promise.all(
       platforms.map((t) => this.gameHub[t.platform_code].transferBack(player)),
     );

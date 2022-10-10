@@ -15,6 +15,7 @@ export class RegisterPlayerDto {
 
   @IsString()
   @IsNotEmpty()
+  @Matches(/^\w{5,}$/, { message: '密碼需為5個以上英數字' })
   password: string;
 
   @IsString()
