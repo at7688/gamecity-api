@@ -50,10 +50,10 @@ export const vipCheck = (start: Date, end: Date) => {
 				SUM(r.amount) amount
 			FROM (
 				SELECT player_id, amount FROM "PaymentDepositRec"
-				WHERE status = 3 AND created_at BETWEEN ${start} AND ${end}
+				WHERE status = 10 AND created_at BETWEEN ${start} AND ${end}
 				UNION
 				SELECT player_id, amount FROM "BankDepositRec"
-				WHERE status = 3 AND created_at BETWEEN ${start} AND ${end}
+				WHERE status = 10 AND created_at BETWEEN ${start} AND ${end}
 			) r
 			GROUP BY player_id
 		) d
@@ -62,7 +62,7 @@ export const vipCheck = (start: Date, end: Date) => {
 				player_id,
 				SUM(valid_amount) current_valid
 			FROM "BetRecord"
-			WHERE status = 2 AND bet_at BETWEEN ${start} AND ${end}
+			WHERE status = 10 AND bet_at BETWEEN ${start} AND ${end}
 			GROUP BY player_id
 		) b ON b.player_id = d.player_id
 		RIGHT JOIN "Player" p ON p.id = d.player_id

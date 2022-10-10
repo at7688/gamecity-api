@@ -12,14 +12,14 @@ WITH
 			COUNT(*),
 			SUM(amount)
 	FROM "WithdrawRec" r
-	WHERE r.status = 3
+	WHERE r.status = 10
 	GROUP BY player_card_id
 	),
 
 	latestRecords AS (
 		SELECT r.* FROM "WithdrawRec" r
 		JOIN (
-			SELECT MAX(updated_at), player_card_id FROM "WithdrawRec" WHERE status = 3 GROUP BY "player_card_id"
+			SELECT MAX(updated_at), player_card_id FROM "WithdrawRec" WHERE status = 10 GROUP BY "player_card_id"
 		) c ON r.player_card_id = r.player_card_id AND c.max = r.updated_at
 	)
 

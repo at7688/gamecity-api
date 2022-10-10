@@ -17,7 +17,7 @@ export const getRangeCounts = () => Prisma.sql`
 
 SELECT
 	(SELECT COUNT(*) FROM "Gift" WHERE status > 1) delivered_gift_count,
-	(SELECT SUM(amount) FROM "Gift" WHERE status = 3) recieved_gift_amount,
+	(SELECT SUM(amount) FROM "Gift" WHERE status = 10) recieved_gift_amount,
 	(SELECT SUM(amount) FROM "WithdrawRec") withdraw_amount,
 	(SELECT COUNT(*) FROM (SELECT DISTINCT player_id FROM "BetRecord") list) active_player_count,
 	(SELECT SUM(amount) FROM "PaymentDepositRec") payment_deposit_amount,

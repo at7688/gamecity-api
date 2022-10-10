@@ -139,7 +139,7 @@ export class WithdrawService {
       this.prisma.error(ResCode.NOT_FOUND, '查無紀錄');
     }
 
-    if (record.status > 2) {
+    if (record.status >= 10) {
       this.prisma.error(ResCode.DUPICATED_OPERATION, '不可重複審核');
     }
 

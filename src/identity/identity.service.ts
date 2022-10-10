@@ -76,7 +76,7 @@ export class IdentityService {
     });
 
     // 若申請單已通過或駁回，則不可再次審核
-    if (record.status > 2) {
+    if (record.status >= 10) {
       this.prisma.error(ResCode.ALREADY_VARIFIED, '不可重複審核');
     }
 

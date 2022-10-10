@@ -77,9 +77,9 @@ export const playerList = (ids: string[]) => {
       player_id,
       SUM(amount) total_deposit_amount
     FROM (
-      SELECT player_id, amount, created_at FROM "PaymentDepositRec" WHERE status = 3
+      SELECT player_id, amount, created_at FROM "PaymentDepositRec" WHERE status = 10
       UNION
-      SELECT player_id, amount, created_at FROM "BankDepositRec" WHERE status = 3
+      SELECT player_id, amount, created_at FROM "BankDepositRec" WHERE status = 10
     ) r
     GROUP BY player_id
   ) t ON t.player_id = p.id
@@ -93,9 +93,9 @@ export const playerList = (ids: string[]) => {
       *,
       ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY created_at DESC) row_num
     FROM (
-        SELECT player_id, amount, created_at FROM "PaymentDepositRec" WHERE status = 3
+        SELECT player_id, amount, created_at FROM "PaymentDepositRec" WHERE status = 10
         UNION
-        SELECT player_id, amount, created_at FROM "BankDepositRec" WHERE status = 3
+        SELECT player_id, amount, created_at FROM "BankDepositRec" WHERE status = 10
       ) r
     ) rr
     WHERE row_num = 1
@@ -112,7 +112,7 @@ export const playerList = (ids: string[]) => {
       SELECT
         *,
         ROW_NUMBER() OVER(PARTITION BY player_id ORDER BY created_at DESC)
-      FROM "WithdrawRec" WHERE status = 3
+      FROM "WithdrawRec" WHERE status = 10
     ) r
     WHERE row_number = 1
   ) wl ON wl.player_id = p.id
@@ -121,7 +121,7 @@ export const playerList = (ids: string[]) => {
       player_id,
       SUM(amount) total_withdraw_amount
     FROM (
-      SELECT * FROM "WithdrawRec" WHERE status = 3
+      SELECT * FROM "WithdrawRec" WHERE status = 10
     ) r
     GROUP BY player_id
   ) w ON w.player_id = p.id

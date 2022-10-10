@@ -32,7 +32,7 @@ export class OrderResponseService {
     });
 
     // 查看該訂單狀態是否為未完成
-    if (record.status > 2) {
+    if (record.status >= 10) {
       this.prisma.error(ResCode.DUPICATED_OPERATION);
     }
 

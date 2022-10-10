@@ -176,30 +176,6 @@ export class GameMerchantService {
   }
 
   async transToSuccess(trans_id: string) {
-    const record = await this.prisma.walletRec.findFirst({
-      where: {
-        relative_id: trans_id,
-        type: WalletRecType.TRANS_TO_GAME,
-      },
-    });
-
-    const platform_code = record.source;
-
-    const gameCredit = -record.amount;
-
-    // 紀錄遊戲端帳號餘額
-    await this.prisma.gameAccount.update({
-      where: {
-        platform_code_player_id: {
-          player_id: record.player_id,
-          platform_code,
-        },
-      },
-      data: {
-        credit: gameCredit,
-      },
-    });
-
     // 更新錢包狀態為「完成」
     await this.prisma.walletRec.updateMany({
       where: {
@@ -212,26 +188,6 @@ export class GameMerchantService {
     });
   }
   async transBackSuccess(trans_id: string) {
-    const record = await this.prisma.walletRec.findFirst({
-      where: {
-        relative_id: trans_id,
-        type: WalletRecType.TRANS_FROM_GAME,
-      },
-    });
-
-    // 紀錄遊戲端帳號餘額
-    await this.prisma.gameAccount.update({
-      where: {
-        platform_code_player_id: {
-          player_id: record.player_id,
-          platform_code: record.source,
-        },
-      },
-      data: {
-        credit: 0,
-      },
-    });
-
     // 更新錢包狀態為「完成」
     await this.prisma.walletRec.updateMany({
       where: {

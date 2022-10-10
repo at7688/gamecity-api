@@ -31,7 +31,7 @@ SELECT
 		JOIN "Player" p ON p.agent_id = a.id
 		JOIN "PaymentDepositRec" r  ON r.player_id = p.id
 		JOIN "Payway" w ON r.payway_id = w.id
-		WHERE status = 2
+		WHERE status = 10
 		GROUP BY type
 	) rr) cvs_result
 FROM "Member" m

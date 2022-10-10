@@ -14,7 +14,7 @@ FROM "Player" p
 LEFT JOIN (
 	SELECT player_id, SUM(rolling_amount) current_rolling
 	FROM "BetRecord"
-	WHERE status = 2
+	WHERE status = 10
 	GROUP BY player_id
 ) r ON r.player_id = p.id
 LEFT JOIN (
@@ -22,7 +22,7 @@ LEFT JOIN (
 		player_id,
 		SUM(rolling_amount) required_rolling
 	FROM "Gift"
-	WHERE status = 3
+	WHERE status = 10
 	GROUP BY player_id
 ) g ON g.player_id = r.player_id
 

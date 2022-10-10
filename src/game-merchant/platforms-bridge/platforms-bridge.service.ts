@@ -146,9 +146,6 @@ export class PlatformsBridgeService {
     const platforms = await this.prisma.gameAccount.findMany({
       where: {
         player_id: player.id,
-        credit: {
-          gt: 0,
-        },
       },
     });
     const result = await Promise.all(
