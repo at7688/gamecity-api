@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
-import { DepositStatus } from 'src/enums';
+import { ProcessStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -111,7 +111,7 @@ export class BankDepositService {
       this.prisma.error(ResCode.DUPICATED_OPERATION, '不可重複審核');
     }
 
-    if (status === DepositStatus.FINISHED) {
+    if (status === ProcessStatus.FINISHED) {
       // 查看是否有儲值紀錄
       const rechargedTag = await this.prisma.playerTag.findFirst({
         where: { player_id: record.player.id, type: PlayerTagType.RECHARGED },

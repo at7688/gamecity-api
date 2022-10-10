@@ -1,8 +1,7 @@
-import { pagerList } from './../sql/pagerList';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { WithdrawStatus } from 'src/withdraw/enums';
+import { pagerList } from './../sql/pagerList';
 import { SearchPBankcardsDto } from './dto/search-p-bankcards.dto';
 import { UpdatePBankcardDto } from './dto/update-p-bankcard.dto';
 import { ValidatePBankcardDto } from './dto/validate-p-bankcard.dto';

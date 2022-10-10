@@ -1,10 +1,10 @@
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
-import { WithdrawStatus } from 'src/withdraw/enums';
+import { ProcessStatus } from 'src/enums';
 
 export class UpdateWithdrawDto {
-  @IsEnum(WithdrawStatus)
+  @IsEnum(ProcessStatus)
   @IsOptional()
-  status?: WithdrawStatus;
+  status?: ProcessStatus;
 
   @IsString()
   @IsOptional()

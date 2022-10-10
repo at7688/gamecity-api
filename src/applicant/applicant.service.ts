@@ -4,7 +4,7 @@ import { Applicant } from '@prisma/client';
 import { Queue } from 'bull';
 import { sumBy } from 'lodash';
 import { BetRecordStatus } from 'src/bet-record/enums';
-import { DepositStatus, ValidateStatus } from 'src/enums';
+import { ProcessStatus, ValidateStatus } from 'src/enums';
 import { GiftService } from 'src/gift/gift.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
@@ -157,7 +157,7 @@ export class ApplicantService {
           gte: promotion.start_at ? promotion.start_at : undefined,
           lte: new Date(),
         },
-        status: DepositStatus.FINISHED,
+        status: ProcessStatus.FINISHED,
         amount: {
           gte: recharge_amount,
         },
@@ -173,7 +173,7 @@ export class ApplicantService {
           gte: promotion.start_at ? promotion.start_at : undefined,
           lte: new Date(),
         },
-        status: DepositStatus.FINISHED,
+        status: ProcessStatus.FINISHED,
         amount: {
           gte: recharge_amount,
         },

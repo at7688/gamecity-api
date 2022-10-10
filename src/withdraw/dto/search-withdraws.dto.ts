@@ -1,20 +1,18 @@
-import { WithdrawStatus } from 'src/withdraw/enums';
 import { Transform } from 'class-transformer';
 import {
   IsDate,
   IsEnum,
-  IsInt,
-  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
+import { ProcessStatus } from 'src/enums';
 
 export class SearchWithdrawsDto extends PaginateDto {
-  @IsEnum(WithdrawStatus)
+  @IsEnum(ProcessStatus)
   @IsOptional()
-  status: WithdrawStatus;
+  status: ProcessStatus;
 
   @IsString()
   @IsOptional()

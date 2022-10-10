@@ -28,7 +28,7 @@ export enum WalletRecType {
 }
 
 export enum WalletStatus {
-  DONE = 1,
-  PROCESSING = 2,
-  FAILED = 3,
+  PROCESSING = 1,
+  DONE = 10,
+  FAILED = 20,
 }

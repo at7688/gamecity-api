@@ -7,12 +7,12 @@ import {
   IsString,
 } from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
-import { DepositStatus } from 'src/enums';
+import { ProcessStatus } from 'src/enums';
 
 export class SearchPaymentDepositsDto extends PaginateDto {
-  @IsEnum(DepositStatus)
+  @IsEnum(ProcessStatus)
   @IsOptional()
-  status: DepositStatus;
+  status: ProcessStatus;
 
   @IsString()
   @IsOptional()

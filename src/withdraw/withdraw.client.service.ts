@@ -3,14 +3,13 @@ import { REQUEST } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Player } from '@prisma/client';
 import { Request } from 'express';
-import { ValidateStatus } from 'src/enums';
+import { ProcessStatus, ValidateStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WithdrawPayload } from 'src/socket/types';
 import { CreateWithdrawDto } from './dto/create-withdraw.dto';
 import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
-import { WithdrawStatus } from './enums';
 
 @Injectable({ scope: Scope.REQUEST })
 export class WithdrawClientService {
@@ -51,7 +50,7 @@ export class WithdrawClientService {
       where: {
         player: { id: this.player.id },
         status: {
-          in: [WithdrawStatus.APPLYING, WithdrawStatus.PROCESSING],
+          in: [ProcessStatus.UNPROCESSED, ProcessStatus.PROCESSING],
         },
       },
     });

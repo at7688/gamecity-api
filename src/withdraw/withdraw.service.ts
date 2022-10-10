@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
+import { ProcessStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { PlayerTagType } from 'src/player/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -10,7 +11,6 @@ import { WalletRecService } from 'src/wallet-rec/wallet-rec.service';
 import { CreateWithdrawDto } from './dto/create-withdraw.dto';
 import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
 import { UpdateWithdrawDto } from './dto/update-withdraw.dto';
-import { WithdrawStatus } from './enums';
 
 @Injectable()
 export class WithdrawService {
@@ -143,14 +143,14 @@ export class WithdrawService {
       this.prisma.error(ResCode.DUPICATED_OPERATION, '不可重複審核');
     }
 
-    if (status === WithdrawStatus.FINISHED) {
+    if (status === ProcessStatus.FINISHED) {
       const finished_at = new Date();
       this.prisma.$transaction([
         // 紀錄完成日期
         this.prisma.withdrawRec.update({
           where: { id: record.id },
           data: {
-            status: WithdrawStatus.FINISHED,
+            status: ProcessStatus.FINISHED,
             finished_at,
           },
           include: { player_card: true },

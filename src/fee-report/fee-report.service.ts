@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DepositStatus } from 'src/enums';
+import { ProcessStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { SubPlayer, subPlayers } from 'src/player/raw/subPlayers';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -29,7 +29,7 @@ export class FeeReportService {
     }
     const records = await this.prisma.paymentDepositRec.findMany({
       where: {
-        status: DepositStatus.FINISHED,
+        status: ProcessStatus.FINISHED,
         created_at: {
           gte: start_at,
           lte: end_at,
