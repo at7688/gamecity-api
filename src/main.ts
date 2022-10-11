@@ -26,10 +26,12 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       exceptionFactory(errors) {
-        const msgs = errors.map((t) => Object.values(t.constraints)).flat();
+        console.log(errors);
+        // const msgs = errors.map((t) => Object.values(t.constraints)).flat();
         throw new BadRequestException({
           code: ResCode.FORMAT_ERR,
-          msg: msgs?.[0] || '',
+          msg: '格式錯誤',
+          // msg: JSON.stringify(errors),
         });
       },
     }),

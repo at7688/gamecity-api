@@ -17,7 +17,7 @@ import { BatchSetGameRatioDtos } from './dto/batch-set-game-ratios.dto';
 import { Platforms } from 'src/metas/platforms.meta';
 import { PlatformType } from '@prisma/client';
 
-@Controller('game-ratio')
+@Controller('gameRatio')
 @Platforms([PlatformType.PLAYER])
 export class GameRatioController {
   constructor(private readonly gameRatioService: GameRatioService) {}
@@ -26,9 +26,10 @@ export class GameRatioController {
   batchSet(@Body() batchSetGameRatiosDto: BatchSetGameRatioDtos) {
     return this.gameRatioService.batchSet(batchSetGameRatiosDto);
   }
+
   @Post('set')
   set(@Body() createGameRatioDto: CreateGameRatioDto) {
-    return this.gameRatioService.set(createGameRatioDto);
+    return this.gameRatioService.set(createGameRatioDto, false);
   }
 
   @Get('list/:agent_id')

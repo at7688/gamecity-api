@@ -11,23 +11,55 @@ export class GameRatioService {
   constructor(private readonly prisma: PrismaService) {}
   async batchSet(data: BatchSetGameRatioDtos) {
     const { agent_id, setting } = data;
+
     await Promise.all(
       setting.map(({ platform_code, game_code, ratio, water, water_duty }) =>
-        this.set({
-          platform_code,
-          game_code,
-          agent_id,
-          ratio,
-          water,
-          water_duty,
-        }),
+        this.set(
+          {
+            platform_code,
+            game_code,
+            agent_id,
+            ratio,
+            water,
+            water_duty,
+          },
+          true,
+        ),
       ),
     );
+    await Promise.all(
+      setting.map(({ platform_code, game_code, ratio, water, water_duty }) =>
+        this.set(
+          {
+            platform_code,
+            game_code,
+            agent_id,
+            ratio,
+            water,
+            water_duty,
+          },
+          false,
+        ),
+      ),
+    );
+
     return this.prisma.success();
   }
-  async set(data: CreateGameRatioDto) {
+  async set(data: CreateGameRatioDto, is_check: boolean) {
     const { game_code, platform_code, agent_id, ratio, water, water_duty } =
       data;
+    const game = await this.prisma.game.findFirst({
+      where: {
+        platform_code,
+        code: game_code,
+      },
+    });
+    if (!game) {
+      this.prisma.error(
+        ResCode.NOT_FOUND,
+        `無此遊戲(${platform_code}/${game_code})`,
+      );
+    }
     // 查看上層agent的ratio
     const parent = await this.prisma.member.findFirst({
       where: {
@@ -55,7 +87,7 @@ export class GameRatioService {
     if (parent && !parent.game_ratios[0]) {
       this.prisma.error(
         ResCode.FIELD_NOT_VALID,
-        `請先設定上層代理佔成 (${game_code})`,
+        `請先設定上層代理佔成 (${game.name})`,
       );
     }
     // 有上層代理，最高不能超過該代理佔成
@@ -65,50 +97,50 @@ export class GameRatioService {
       max.water_duty = setting.water_duty;
       max.water = setting.water;
     }
-    console.log(data);
-    console.log(max);
+
     if (ratio > max.ratio) {
       this.prisma.error(
         ResCode.FIELD_NOT_VALID,
-        `(${game_code})輸贏佔成不可超過${max.ratio}`,
+        `(${game.name})輸贏佔成不可超過${max.ratio}`,
       );
     }
     if (water_duty > max.water_duty) {
       this.prisma.error(
         ResCode.FIELD_NOT_VALID,
-        `(${game_code})退水負擔不可超過${max.water_duty}`,
+        `(${game.name})退水負擔不可超過${max.water_duty}`,
       );
     }
     if (water > max.water) {
       this.prisma.error(
         ResCode.FIELD_NOT_VALID,
-        `(${game_code})退水紅利不可超過${max.water}`,
+        `(${game.name})退水紅利不可超過${max.water}`,
       );
     }
 
-    // 設置的ratio不能高於上層agent
-    return this.prisma.gameRatio.upsert({
-      where: {
-        platform_code_game_code_agent_id: {
+    if (!is_check) {
+      await this.prisma.gameRatio.upsert({
+        where: {
+          platform_code_game_code_agent_id: {
+            platform_code,
+            game_code,
+            agent_id,
+          },
+        },
+        create: {
           platform_code,
           game_code,
           agent_id,
+          ratio,
+          water,
+          water_duty,
         },
-      },
-      create: {
-        platform_code,
-        game_code,
-        agent_id,
-        ratio,
-        water,
-        water_duty,
-      },
-      update: {
-        ratio,
-        water,
-        water_duty,
-      },
-    });
+        update: {
+          ratio,
+          water,
+          water_duty,
+        },
+      });
+    }
   }
 
   findAllByPlayer(agent_id: string, search: SearchGameRatiosDto) {

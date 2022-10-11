@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
   IsNotEmpty,
   IsNumber,
   IsString,
@@ -36,5 +37,6 @@ export class BatchSetGameRatioDtos {
   @ValidateNested({ each: true })
   @Type(() => GameSetting)
   @IsNotEmpty()
+  @ArrayNotEmpty()
   setting: GameSetting[];
 }

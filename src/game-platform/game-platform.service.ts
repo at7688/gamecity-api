@@ -1,16 +1,14 @@
-import { UpdateGamePlatformDto } from './dto/update-game-platform.dto';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { SearchGamePlatformsDto } from './dto/search-game-platforms.dto';
 import { MaintenanceStatus, MaintenanceType } from 'src/maintenance/enums';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UpdateGamePlatformDto } from './dto/update-game-platform.dto';
 
 @Injectable()
 export class GamePlatformService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(search: SearchGamePlatformsDto) {
-    const {} = search;
-    return this.prisma.gamePlatform.findMany({
+  async findAll() {
+    const result = await this.prisma.gamePlatform.findMany({
       include: {
         maintenance: {
           where: {
@@ -22,6 +20,7 @@ export class GamePlatformService {
         },
       },
     });
+    return this.prisma.success(result);
   }
 
   async update(code: string, data: UpdateGamePlatformDto) {

@@ -1,4 +1,30 @@
+import { SimpleMember } from './../../types';
 import { Prisma } from '@prisma/client';
+
+export interface AgentWithSubNum {
+  id: string;
+  username: string;
+  password: string;
+  nickname: string;
+  created_at: Date;
+  updated_at: Date;
+  parent_id: string | null;
+  is_active: boolean;
+  layer: number;
+  is_blocked: boolean;
+  balance: number;
+  invited_code: string | null;
+  all_agents: number;
+  self_agents: number;
+  self_players: number;
+  all_players: number;
+  parents?: SimpleMember[];
+  login: {
+    login_at: Date;
+    ip: string;
+    nums_failed: number;
+  };
+}
 
 export const agentWithSubNums = (ids: string[]) => Prisma.sql`
   SELECT

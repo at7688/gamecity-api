@@ -1,13 +1,10 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
-import { PlatformType } from '@prisma/client';
-import { Platforms } from 'src/metas/platforms.meta';
-import { Public } from 'src/metas/public.meta';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { CreateGamesDto } from './dto/create-games.dto';
 import { SearchGameDto } from './dto/search-game.dto';
 import { GameService } from './game.service';
 
-@Controller('games')
+@Controller('game')
 export class GameController {
   constructor(private readonly gameService: GameService) {}
 
@@ -24,6 +21,11 @@ export class GameController {
 
   @Post('list')
   fetchAll(@Body() saerch: SearchGameDto) {
+    return this.gameService.fetchAll(saerch);
+  }
+
+  @Get('options')
+  options(@Query() saerch: SearchGameDto) {
     return this.gameService.fetchAll(saerch);
   }
 }

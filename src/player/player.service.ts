@@ -289,7 +289,7 @@ export class PlayerService {
   }
 
   async findOne(id: string) {
-    const result = await this.prisma.$queryRaw(playerList([id]));
+    const result = await this.prisma.$queryRaw<PlayerItem[]>(playerList([id]));
     const player = result[0];
     const playerCards = await this.prisma.playerCard.findMany({
       where: { player_id: id },
@@ -374,10 +374,10 @@ export class PlayerService {
     const gifts = await this.prisma.gift.groupBy({
       by: ['status', 'type'],
       where: { player_id: id },
+      _count: true,
     });
 
     return this.prisma.success({
-      parents: await this.prisma.$queryRaw(getAllParents(player.agent_id)),
       player,
       playerCards,
       lastWithdraws,

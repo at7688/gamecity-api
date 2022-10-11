@@ -1,3 +1,4 @@
+import { GamePlatformStatus } from 'src/game-platform/enums';
 import { RegisterAgentDto } from './dto/register-agent.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -10,13 +11,13 @@ import { CreateAgentDto } from './dto/create-agent.dto';
 import { SearchAgentsDto } from './dto/search-agents.dto';
 import { SetAgentDutyDto } from './dto/set-agent-duty.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
-import { agentWithSubNums } from './raw/agentWithSubNums';
+import { AgentWithSubNum, agentWithSubNums } from './raw/agentWithSubNums';
 import { getAllParents } from './raw/getAllParents';
 import { getAllSubs } from './raw/getAllSubs';
 import { getTreeNode, TreeNodeMember } from './raw/getTreeNode';
 import { ResCode } from 'src/errors/enums';
 import { TargetType } from 'src/enums';
-import { MAX_LAYER_DEPTH } from 'src/sys-config/consts';
+import { MAX_LAYER_DEPTH, SITE_URL } from 'src/sys-config/consts';
 @Injectable()
 export class MemberService {
   constructor(
@@ -207,12 +208,11 @@ export class MemberService {
         },
         is_blocked: numToBooleanSearch(is_blocked),
         parent_id: {
-          in:
-            all && parent_id
-              ? await this.getAllSubs(parent_id).then((arr) =>
-                  arr.map((t) => t.id).concat(parent_id),
-                )
-              : parent_id,
+          in: parent_id
+            ? await this.getAllSubs(parent_id).then((arr) =>
+                arr.map((t) => t.id).concat(parent_id),
+              )
+            : parent_id,
         },
       },
       take: perpage,
@@ -246,10 +246,91 @@ export class MemberService {
     );
   }
 
-  findOne(id: string) {
-    return this.prisma.member.findUnique({
-      where: { id },
-      include: { duty: { select: { fee_duty: true, promotion_duty: true } } },
+  async findOne(id: string) {
+    const result = await this.prisma.$queryRaw<AgentWithSubNum[]>(
+      agentWithSubNums([id]),
+    );
+
+    const agent = result[0];
+    const contact = await this.prisma.contact.findUnique({
+      where: {
+        agent_id: id,
+      },
+    });
+    const promoCodes = await this.prisma.promoCode.findMany({
+      where: {
+        parent_id: id,
+        inviter_id: null,
+        type: TargetType.PLAYER,
+      },
+    });
+    const siteUrlResult = await this.prisma.sysConfig.findUnique({
+      where: {
+        code: SITE_URL,
+      },
+    });
+    const gameRatios = await this.prisma.gameRatio.findMany({
+      where: {
+        agent_id: id,
+      },
+      include: {
+        game: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+      },
+    });
+    const parentGameRatios = await this.prisma.gameRatio.findMany({
+      where: {
+        agent_id: agent.parent_id,
+      },
+      include: {
+        game: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const platforms = await this.prisma.gamePlatform.findMany({
+      where: {
+        status: {
+          not: GamePlatformStatus.OFFLINE,
+        },
+      },
+      select: {
+        code: true,
+        name: true,
+        games: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: [{ sort: 'asc' }, { name: 'asc' }],
+    });
+
+    const duty = await this.prisma.agentDuty.findUnique({
+      where: { agent_id: id },
+    });
+
+    return this.prisma.success({
+      agent,
+      contact,
+      promoCodes,
+      siteUrl: siteUrlResult.value,
+      gameRatios,
+      parentGameRatios,
+      platforms,
+      duty,
     });
   }
 

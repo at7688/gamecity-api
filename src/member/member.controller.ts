@@ -38,8 +38,8 @@ export class MemberController {
   }
 
   @Post('list')
-  findAll(@Query() query: SearchAgentsDto, @User() user: LoginUser) {
-    return this.memberService.findAll(query, user);
+  findAll(@Body() search: SearchAgentsDto, @User() user: LoginUser) {
+    return this.memberService.findAll(search, user);
   }
 
   @Get('tree')

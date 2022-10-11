@@ -37,4 +37,14 @@ export class GameService {
       }),
     });
   }
+
+  async options(search: SearchGameDto) {
+    const { platform_code } = search;
+    const result = await this.prisma.game.findMany({
+      where: {
+        platform_code,
+      },
+    });
+    return this.prisma.success(result);
+  }
 }
