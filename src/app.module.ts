@@ -65,6 +65,7 @@ import { SysConfigModule } from './sys-config/sys-config.module';
 import { SocketModule } from './socket/socket.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -146,6 +147,7 @@ import { TelegramBotModule } from './telegram-bot/telegram-bot.module';
     SocketModule,
     DashboardModule,
     TelegramBotModule,
+    QueueModule,
   ],
   controllers: [AppController, UploadsController, BankController],
 

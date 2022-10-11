@@ -328,17 +328,41 @@ export class ApplicantService {
           lte: apply_end_at,
         },
       },
+      include: {
+        promotion: {
+          select: {
+            id: true,
+            title: true,
+            start_at: true,
+            end_at: true,
+          },
+        },
+        player: {
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+            agent: {
+              select: {
+                id: true,
+                username: true,
+                nickname: true,
+                layer: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
     });
 
     return this.prisma.success(result);
   }
   async getQueue() {
     const counts = await this.applicantQueue.getJobCounts();
-    const jobs = await this.applicantQueue.getJobs([
-      'delayed',
-      'completed',
-      'failed',
-    ]);
+    const jobs = await this.applicantQueue.getJobs(['delayed', 'completed']);
     return this.prisma.success(jobs);
   }
 }

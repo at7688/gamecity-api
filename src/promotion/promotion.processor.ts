@@ -5,6 +5,7 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
+  addSeconds,
 } from 'date-fns';
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
@@ -21,6 +22,8 @@ export class PromotionProcessor {
     private readonly prisma: PrismaService,
     @InjectQueue('applicant')
     private readonly applicantQueue: Queue<Applicant>,
+    @InjectQueue('promotion')
+    private readonly promotionQueue: Queue<Promotion>,
   ) {}
   private readonly Logger = new Logger(PromotionProcessor.name);
 
@@ -28,7 +31,7 @@ export class PromotionProcessor {
   @Process('settlement')
   async promotionSettlement(queue: Job<Promotion>) {
     this.Logger.log('RPOMOTION_SETTLEMENT_START');
-    const { id, schedule_type, ...restProps } = queue.data;
+    const { id, schedule_type } = queue.data;
     const applicants = await this.prisma.applicant.findMany({
       where: {
         promotion_id: id,
@@ -62,12 +65,19 @@ export class PromotionProcessor {
         }),
       };
       const { start_at, end_at } = dateMap[schedule_type]();
-      await this.prisma.promotion.create({
+      const record = await this.prisma.promotion.update({
+        where: { id },
         data: {
-          ...restProps,
-          schedule_type,
           start_at,
           end_at,
+        },
+      });
+      // 推到自動審核排程
+      await this.promotionQueue.add('settlement', record, {
+        repeat: {
+          cron: '* * * * * *',
+          startDate: addSeconds(record.end_at, 10),
+          limit: 1,
         },
       });
       this.Logger.log('RPOMOTION_SETTLEMENT_END');
