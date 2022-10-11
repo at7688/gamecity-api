@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { Promotion } from '@prisma/client';
 import { Queue } from 'bull';
+import { addSeconds } from 'date-fns';
 import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
@@ -92,7 +93,7 @@ export class PromotionService {
       await this.promotionQueue.add('settlement', record, {
         repeat: {
           cron: '* * * * * *',
-          startDate: record.end_at,
+          startDate: addSeconds(record.end_at, 10),
           limit: 1,
         },
       });

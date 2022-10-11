@@ -6,6 +6,7 @@ import { Request } from 'express';
 import { ProcessStatus, ValidateStatus } from 'src/enums';
 import { ResCode } from 'src/errors/enums';
 import { PlayerTagType } from 'src/player/enums';
+import { PlayerRolling, playerRolling } from 'src/player/raw/playerRolling';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WithdrawPayload } from 'src/socket/types';
 import { CreateWithdrawDto } from './dto/create-withdraw.dto';
@@ -30,8 +31,16 @@ export class WithdrawClientService {
       where: { id: this.player.id },
     });
 
+    // 驗證餘額是否足夠
     if (amount > player.balance) {
       this.prisma.error(ResCode.BALANCE_NOT_ENOUGH, '餘額不足');
+    }
+    // 驗證是否達到流水標準
+    const result = await this.prisma.$queryRaw<PlayerRolling[]>(
+      playerRolling(player.id),
+    );
+    if (result[0].current_rolling < result[0].required_rolling) {
+      this.prisma.error(ResCode.ROLLING_NO_ENOUGH, '流水未達標準');
     }
     // 驗證客戶的卡片
     const playerCard = await this.prisma.playerCard.findFirst({

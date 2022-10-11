@@ -30,6 +30,7 @@ export enum ResCode {
   DUPICATED_OPERATION = 'DUPICATED_OPERATION', // 重複操作
 
   BALANCE_NOT_ENOUGH = 'BALANCE_NOT_ENOUGH', // 餘額不足
+  ROLLING_NO_ENOUGH = 'ROLLING_NO_ENOUGH', // 流水未達標準
 
   NOT_FOUND = 'NOT_FOUND', // 查無紀錄
   DATE_ERR = 'DATE_ERR', // 日期設定錯誤

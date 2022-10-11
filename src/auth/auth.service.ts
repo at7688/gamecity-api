@@ -11,7 +11,7 @@ import { AdminUser, Member, Menu, Player, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { Cache } from 'cache-manager';
 import { ResCode } from 'src/errors/enums';
-import { playerRolling } from 'src/player/raw/playerRolling';
+import { PlayerRolling, playerRolling } from 'src/player/raw/playerRolling';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ADMIN_MULTI_LOGIN } from 'src/sys-config/consts';
 import { LoginUser } from 'src/types';
@@ -380,7 +380,9 @@ export class AuthService {
       },
     });
     const rollingInfo =
-      (await this.prisma.$queryRaw(playerRolling(user.id)))[0] || {};
+      (
+        await this.prisma.$queryRaw<PlayerRolling[]>(playerRolling(user.id))
+      )[0] || {};
     return this.prisma.success({ ...user, ...rollingInfo });
   }
 
