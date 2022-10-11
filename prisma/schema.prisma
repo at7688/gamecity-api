@@ -840,6 +840,7 @@ model GameAccount {
   @@unique([platform_code, player_id])
 }
 
+
 model GameRatio {
   game_code     String
   platform_code String

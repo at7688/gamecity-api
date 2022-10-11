@@ -143,9 +143,9 @@ export class GameRatioService {
     }
   }
 
-  findAllByPlayer(agent_id: string, search: SearchGameRatiosDto) {
-    const { platform_code, game_code } = search;
-    return this.prisma.gameRatio.findMany({
+  async findAll(search: SearchGameRatiosDto) {
+    const { agent_id, platform_code, game_code } = search;
+    const result = await this.prisma.gameRatio.findMany({
       where: {
         platform_code,
         game_code,
@@ -153,17 +153,6 @@ export class GameRatioService {
       },
       orderBy: [{ platform_code: 'asc' }, { game_code: 'asc' }],
     });
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} gameRatio`;
-  }
-
-  update(id: number, updateGameRatioDto: UpdateGameRatioDto) {
-    return `This action updates a #${id} gameRatio`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} gameRatio`;
+    return this.prisma.success(result);
   }
 }

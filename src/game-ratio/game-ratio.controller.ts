@@ -32,29 +32,8 @@ export class GameRatioController {
     return this.gameRatioService.set(createGameRatioDto, false);
   }
 
-  @Get('list/:agent_id')
-  findAllByPlayer(
-    @Param('agent_id') agent_id: string,
-    @Query() query: SearchGameRatiosDto,
-  ) {
-    return this.gameRatioService.findAllByPlayer(agent_id, query);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.gameRatioService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateGameRatioDto: UpdateGameRatioDto,
-  ) {
-    return this.gameRatioService.update(+id, updateGameRatioDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.gameRatioService.remove(+id);
+  @Post('list')
+  findAll(@Body() search: SearchGameRatiosDto) {
+    return this.gameRatioService.findAll(search);
   }
 }

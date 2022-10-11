@@ -283,20 +283,25 @@ export class MemberService {
         },
       },
     });
-    const parentGameRatios = await this.prisma.gameRatio.findMany({
-      where: {
-        agent_id: agent.parent_id,
-      },
-      include: {
-        game: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
+
+    let parentGameRatios = null;
+
+    if (agent.parent_id) {
+      parentGameRatios = await this.prisma.gameRatio.findMany({
+        where: {
+          agent_id: agent.parent_id,
+        },
+        include: {
+          game: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+            },
           },
         },
-      },
-    });
+      });
+    }
 
     const platforms = await this.prisma.gamePlatform.findMany({
       where: {
