@@ -1,12 +1,11 @@
 import { Inject, Injectable, Scope } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreatePaymentDepositDto } from './dto/create-payment-deposit.dto';
-import { UpdatePaymentDepositDto } from './dto/update-payment-deposit.dto';
-import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { REQUEST } from '@nestjs/core';
 import { Player, Prisma } from '@prisma/client';
+import { Request } from 'express';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchPaymentDepositsDto } from './dto/search-payment-deposits.dto';
+import { UpdatePaymentDepositDto } from './dto/update-payment-deposit.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PaymentDepositService {
@@ -41,6 +40,43 @@ export class PaymentDepositService {
         },
         status,
       },
+      include: {
+        player: {
+          select: {
+            id: true,
+            nickname: true,
+            username: true,
+            vip: {
+              select: {
+                id: true,
+                icon: true,
+                name: true,
+              },
+            },
+          },
+        },
+        payway: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            tool: {
+              select: {
+                id: true,
+                tool_name: true,
+                merchant_config: true,
+                merchant: {
+                  select: {
+                    id: true,
+                    name: true,
+                    code: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       orderBy: {
         created_at: 'desc',
       },
@@ -53,5 +89,19 @@ export class PaymentDepositService {
         where: findManyArgs.where,
       }),
     });
+  }
+
+  async update(data: UpdatePaymentDepositDto) {
+    const { id, inner_note, outter_note } = data;
+    await this.prisma.paymentDepositRec.update({
+      where: {
+        id,
+      },
+      data: {
+        inner_note,
+        outter_note,
+      },
+    });
+    return this.prisma.success();
   }
 }

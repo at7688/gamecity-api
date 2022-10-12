@@ -1,4 +1,15 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreatePaymentDepositDto } from './create-payment-deposit.dto';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class UpdatePaymentDepositDto extends PartialType(CreatePaymentDepositDto) {}
+export class UpdatePaymentDepositDto {
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+
+  @IsString()
+  @IsOptional()
+  inner_note?: string;
+
+  @IsString()
+  @IsOptional()
+  outter_note?: string;
+}

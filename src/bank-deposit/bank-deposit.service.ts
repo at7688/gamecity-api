@@ -66,9 +66,25 @@ export class BankDepositService {
             id: true,
             nickname: true,
             username: true,
+            vip: {
+              select: {
+                id: true,
+                icon: true,
+                name: true,
+              },
+            },
           },
         },
         player_card: {
+          select: {
+            id: true,
+            bank_code: true,
+            branch: true,
+            name: true,
+            account: true,
+          },
+        },
+        card: {
           select: {
             id: true,
             bank_code: true,

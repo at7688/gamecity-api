@@ -618,6 +618,9 @@ model PaymentDepositRec {
   bank_account String? // ATM付款帳號
   order_info   Json?
   notify_info  Json?
+
+  inner_note  String?
+  outter_note String?
 }
 
 model MerchantLog {

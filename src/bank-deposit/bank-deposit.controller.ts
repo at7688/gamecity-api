@@ -1,17 +1,9 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { BankDepositService } from './bank-deposit.service';
 import { SearchBankDepositsDto } from './dto/search-bank-deposits.dto';
 import { UpdateBankDepositDto } from './dto/update-bank-deposit.dto';
 
-@Controller('bank-deposit')
+@Controller('bankDeposit')
 export class BankDepositController {
   constructor(private readonly bankDepositService: BankDepositService) {}
 
