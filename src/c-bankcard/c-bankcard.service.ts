@@ -9,27 +9,31 @@ import { companyCardList } from './raw/companyCardList';
 @Injectable()
 export class CBankcardService {
   constructor(private readonly prisma: PrismaService) {}
-  create(data: CreateCBankcardDto) {
-    return this.prisma.companyCard.create({
+  async create(data: CreateCBankcardDto) {
+    await this.prisma.companyCard.create({
       data,
     });
+    return this.prisma.success();
   }
 
   async findAll(search: SearchCBankcardDto) {
     const { rotation_id } = search;
-    const records = await this.prisma.$queryRaw(companyCardList(rotation_id));
-    return this.prisma.listFormat(records[0]);
+    const result = await this.prisma.$queryRaw(companyCardList(rotation_id));
+    return this.prisma.success(result);
   }
 
-  findOne(id: string) {
-    return this.prisma.companyCard.findUnique({ where: { id } });
+  async findOne(id: string) {
+    const result = await this.prisma.companyCard.findUnique({ where: { id } });
+    return this.prisma.success(result);
   }
 
-  update(id: string, data: UpdateCBankcardDto) {
-    return this.prisma.companyCard.update({ where: { id }, data });
+  async update(id: string, data: UpdateCBankcardDto) {
+    await this.prisma.companyCard.update({ where: { id }, data });
+    return this.prisma.success();
   }
 
-  remove(id: string) {
-    return this.prisma.companyCard.delete({ where: { id } });
+  async remove(id: string) {
+    await this.prisma.companyCard.delete({ where: { id } });
+    return this.prisma.success();
   }
 }

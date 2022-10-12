@@ -25,7 +25,7 @@ export class VipService {
 
   async findAll() {
     const records = await this.prisma.$queryRaw(vipList());
-    return this.prisma.listFormat(records[0]);
+    return this.prisma.success(records);
   }
 
   async options() {

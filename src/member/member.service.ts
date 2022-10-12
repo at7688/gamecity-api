@@ -269,59 +269,6 @@ export class MemberService {
         code: SITE_URL,
       },
     });
-    const gameRatios = await this.prisma.gameRatio.findMany({
-      where: {
-        agent_id: id,
-      },
-      include: {
-        game: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    let parentGameRatios = null;
-
-    if (agent.parent_id) {
-      parentGameRatios = await this.prisma.gameRatio.findMany({
-        where: {
-          agent_id: agent.parent_id,
-        },
-        include: {
-          game: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-            },
-          },
-        },
-      });
-    }
-
-    const platforms = await this.prisma.gamePlatform.findMany({
-      where: {
-        status: {
-          not: GamePlatformStatus.OFFLINE,
-        },
-      },
-      select: {
-        code: true,
-        name: true,
-        games: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: [{ sort: 'asc' }, { name: 'asc' }],
-    });
 
     const duty = await this.prisma.agentDuty.findUnique({
       where: { agent_id: id },
@@ -332,9 +279,6 @@ export class MemberService {
       contact,
       promoCodes,
       siteUrl: siteUrlResult.value,
-      gameRatios,
-      parentGameRatios,
-      platforms,
       duty,
     });
   }

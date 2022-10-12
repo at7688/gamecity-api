@@ -46,8 +46,4 @@ export class CreateCBankcardDto {
   @IsInt()
   @IsOptional()
   sort?: number;
-
-  @IsBoolean()
-  @IsNotEmpty()
-  is_rotate?: boolean;
 }

@@ -1,7 +1,6 @@
 import { Prisma } from '@prisma/client';
 
 export const companyCardList = (rotation_id: number) => Prisma.sql`
-WITH list AS (
 SELECT
 	c.*,
 	(SELECT COALESCE(sum(amount), 0) FROM "BankDepositRec" r
@@ -25,10 +24,5 @@ SELECT
 	FROM "CompanyCard" c
   WHERE rotation_id = ${rotation_id}
 	ORDER BY sort
-)
-
-SELECT
-    (SELECT json_agg(list) FROM list) items,
-    (SELECT COUNT(*) FROM list) count
 
 `;

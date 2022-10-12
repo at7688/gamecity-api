@@ -4,6 +4,8 @@ import {
   IsNotEmpty,
   IsNumber,
   IsString,
+  Max,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -18,14 +20,20 @@ class GameSetting {
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(0)
+  @Max(100)
   ratio: number;
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(0)
+  @Max(1)
   water: number;
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(0)
+  @Max(100)
   water_duty: number;
 }
 

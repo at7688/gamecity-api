@@ -27,11 +27,15 @@ async function bootstrap() {
       whitelist: true,
       exceptionFactory(errors) {
         console.log(errors);
-        // const msgs = errors.map((t) => Object.values(t.constraints)).flat();
+        let msg = '格式錯誤';
+        try {
+          msg = errors.map((t) => Object.values(t.constraints)).flat()[0];
+        } catch (err) {
+          //
+        }
         throw new BadRequestException({
           code: ResCode.FORMAT_ERR,
-          msg: '格式錯誤',
-          // msg: JSON.stringify(errors),
+          msg,
         });
       },
     }),

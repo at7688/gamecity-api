@@ -5,6 +5,7 @@ import { CreateGameRatioDto } from './dto/create-game-ratio.dto';
 import { SearchGameRatiosDto } from './dto/search-game-ratios.dto';
 import { UpdateGameRatioDto } from './dto/update-game-ratio.dto';
 import { ResCode } from 'src/errors/enums';
+import { getAllSubs } from 'src/member/raw/getAllSubs';
 
 @Injectable()
 export class GameRatioService {
@@ -45,6 +46,7 @@ export class GameRatioService {
 
     return this.prisma.success();
   }
+
   async set(data: CreateGameRatioDto, is_check: boolean) {
     const { game_code, platform_code, agent_id, ratio, water, water_duty } =
       data;
@@ -117,6 +119,36 @@ export class GameRatioService {
       );
     }
 
+    const subs = await this.prisma.member.findMany({
+      where: { parent_id: agent_id },
+      include: {
+        game_ratios: {
+          where: {
+            platform_code,
+            game_code,
+          },
+        },
+      },
+    });
+
+    const subsSetting = subs.map(async (t) => {
+      const _setting = t.game_ratios[0];
+      if (!_setting) return;
+      await this.set(
+        {
+          agent_id: t.id,
+          platform_code,
+          game_code,
+          ratio: Math.min(_setting.ratio || 0, ratio),
+          water: Math.min(_setting.water || 0, water),
+          water_duty: Math.min(_setting.water_duty || 0, water_duty),
+        },
+        false,
+      );
+    });
+    await Promise.all(subsSetting);
+
+    // 若不為驗證模式，則送出更新
     if (!is_check) {
       await this.prisma.gameRatio.upsert({
         where: {

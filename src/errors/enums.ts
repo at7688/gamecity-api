@@ -46,6 +46,8 @@ export enum ResCode {
   OVER_AGENT_LIMIT = 'OVER_AGENT_LIMIT', // 超過代理洗碼設定限制
   BLOCKED_ACCOUNT = 'BLOCKED_ACCOUNT', // 帳號已被封鎖
 
+  RELATION_DATA_ERR = 'RELATION_DATA_ERR', // 關聯資料錯誤
+
   NO_AUTH = 'NO_AUTH', // TOKEN錯誤
   EXCEPTION_ERR = 'EXCEPTION_ERR', // 未知例外錯誤
 }

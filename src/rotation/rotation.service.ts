@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
@@ -7,19 +6,22 @@ import { UpdateRotationDto } from './dto/update-rotation.dto';
 @Injectable()
 export class RotationService {
   constructor(private readonly prisma: PrismaService) {}
-  create(data: CreateRotationDto) {
-    return this.prisma.rotationGroup.create({ data });
+
+  async create(data: CreateRotationDto) {
+    await this.prisma.rotationGroup.create({ data });
+    return this.prisma.success();
   }
 
   async options(type: number) {
-    return this.prisma.rotationGroup.findMany({
+    const result = await this.prisma.rotationGroup.findMany({
       where: { type },
       select: { id: true, name: true, sort: true },
       orderBy: [{ sort: 'asc' }, { id: 'asc' }],
     });
+    return this.prisma.success(result);
   }
   async findAll(type: number) {
-    const findManyArg: Prisma.RotationGroupFindManyArgs = {
+    const result = await this.prisma.rotationGroup.findMany({
       where: {
         type,
       },
@@ -40,28 +42,22 @@ export class RotationService {
         },
       },
       orderBy: [{ sort: 'asc' }, { id: 'asc' }],
-    };
-    return this.prisma.listFormat({
-      items: await this.prisma.rotationGroup.findMany(findManyArg),
-      count: await this.prisma.rotationGroup.count({
-        where: findManyArg.where,
-      }),
     });
-  }
-  findOne(id: number) {
-    return `This action returns a #${id} rotation`;
+    return this.prisma.success(result);
   }
 
-  update(id: number, data: UpdateRotationDto) {
-    return this.prisma.rotationGroup.update({
+  async update(id: number, data: UpdateRotationDto) {
+    await this.prisma.rotationGroup.update({
       where: { id },
       data,
     });
+    return this.prisma.success();
   }
 
-  remove(id: number) {
-    return this.prisma.rotationGroup.delete({
+  async remove(id: number) {
+    await this.prisma.rotationGroup.delete({
       where: { id },
     });
+    return this.prisma.success();
   }
 }
