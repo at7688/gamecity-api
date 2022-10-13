@@ -14,11 +14,7 @@ import {
 } from 'class-validator';
 import { PaymentFeeType } from '../enums';
 
-export class Payment {
-  @IsString()
-  @IsOptional()
-  id?: string;
-
+export class Payway {
   @IsEnum(PayType)
   @IsNotEmpty()
   type: PayType;
@@ -102,8 +98,8 @@ export class CreatePaymentToolDto {
   merchant_id: string;
 
   @ValidateNested({ each: true })
-  @Type(() => Payment)
-  payways?: Payment[];
+  @Type(() => Payway)
+  payways?: Payway[];
 
   @IsInt()
   @IsOptional()

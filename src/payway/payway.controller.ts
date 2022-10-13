@@ -11,11 +11,11 @@ import { PaywayService } from './payway.service';
 import { CreatePaywayDto } from './dto/create-payway.dto';
 import { UpdatePaywayDto } from './dto/update-payway.dto';
 
-@Controller('payways')
+@Controller('payway')
 export class PaywayController {
   constructor(private readonly paywayService: PaywayService) {}
 
-  @Post()
+  @Post('create')
   create(@Body() createPaywayDto: CreatePaywayDto) {
     return this.paywayService.create(createPaywayDto);
   }

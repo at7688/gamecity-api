@@ -23,15 +23,20 @@ export class PaymentMerchantService {
     return this.prisma.success();
   }
 
-  findAll() {
-    return this.prisma.paymentMerchant.findMany({
-      select: {
-        id: true,
-        name: true,
-        code: true,
-        config: true,
+  async findAll() {
+    const result = await this.prisma.paymentMerchant.findMany({
+      where: {
+        is_active: true,
+      },
+      include: {
+        payways: {
+          where: {
+            tool_id: null,
+          },
+        },
       },
     });
+    return this.prisma.success(result);
   }
 
   findOne(id: string) {

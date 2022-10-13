@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ActivePaymentToolDto } from './dto/active-payment-tool.dto';
 import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
+import { CurrentPaymentToolDto } from './dto/current-payment-tool.dto';
 import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
 import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
 import { PaymentToolService } from './payment-tool.service';
@@ -45,14 +46,14 @@ export class PaymentToolController {
     return this.paymentToolService.update(id, updatePaymentToolDto);
   }
 
-  @Patch(':id/current')
-  current(@Param('id') id: string) {
-    return this.paymentToolService.current(id);
+  @Post('current')
+  current(@Body() data: CurrentPaymentToolDto) {
+    return this.paymentToolService.current(data);
   }
 
-  @Patch(':id/active')
-  active(@Param('id') id: string, @Body() data: ActivePaymentToolDto) {
-    return this.paymentToolService.active(id, data);
+  @Post('active')
+  active(@Body() data: ActivePaymentToolDto) {
+    return this.paymentToolService.active(data);
   }
 
   @Delete(':id')

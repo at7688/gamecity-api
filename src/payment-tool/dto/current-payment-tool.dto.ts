@@ -1,11 +1,11 @@
 import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
-export class ActivePaymentToolDto {
+export class CurrentPaymentToolDto {
   @IsString()
   @IsNotEmpty()
   id: string;
 
   @IsBoolean()
   @IsNotEmpty()
-  is_active: boolean;
+  is_current: boolean;
 }

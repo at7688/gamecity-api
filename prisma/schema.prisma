@@ -519,7 +519,8 @@ model Payway {
   id                 String      @id @default(cuid())
   type               PayType
   code               String // 金流廠商渠道代號
-  name               String?
+  name               String // 支付方式名稱
+
   player_fee_amount  Float       @default(0)
   player_fee_percent Float       @default(0)
   player_fee_min     Float       @default(10)
@@ -528,14 +529,16 @@ model Payway {
   fee_percent        Float       @default(0)
   fee_min            Float       @default(10)
   fee_max            Float       @default(200)
-  tool_id            String
+  tool_id            String?
   deposit_max        Int
   deposit_min        Int
-  tool               PaymentTool @relation(fields: [tool_id], references: [id])
+  tool               PaymentTool? @relation(fields: [tool_id], references: [id])
   is_active          Boolean     @default(false)
 
   records PaymentDepositRec[]
 
+  merchant PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant_id String
 
   @@unique([tool_id, code])
 }
@@ -553,6 +556,8 @@ model PaymentMerchant {
   is_active Boolean      @default(true)
 
   config Json?
+
+  payways Payway[]
 
   paymentTools PaymentTool[]
 

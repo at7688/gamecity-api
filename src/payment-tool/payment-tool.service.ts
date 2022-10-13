@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { pagerList } from 'src/sql/pagerList';
 import { ActivePaymentToolDto } from './dto/active-payment-tool.dto';
 import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
+import { CurrentPaymentToolDto } from './dto/current-payment-tool.dto';
 import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
 import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
 import { getToolList } from './raw/getToolList';
@@ -10,7 +11,7 @@ import { getToolList } from './raw/getToolList';
 @Injectable()
 export class PaymentToolService {
   constructor(private readonly prisma: PrismaService) {}
-  create(data: CreatePaymentToolDto) {
+  async create(data: CreatePaymentToolDto) {
     const {
       tool_name,
       is_active,
@@ -22,7 +23,7 @@ export class PaymentToolService {
       payways,
       merchant_config,
     } = data;
-    return this.prisma.paymentTool.create({
+    await this.prisma.paymentTool.create({
       data: {
         tool_name,
         is_active,
@@ -30,10 +31,10 @@ export class PaymentToolService {
         note,
         rotation_id,
         merchant_id,
-        sort,
+        sort: sort || undefined,
         payways: {
           createMany: {
-            data: payways,
+            data: payways.map((t) => ({ ...t, merchant_id })),
           },
         },
         merchant_config,
@@ -43,6 +44,7 @@ export class PaymentToolService {
         payways: true,
       },
     });
+    return this.prisma.success();
   }
 
   async findAll(search: SearchPaymentToolsDto) {
@@ -63,20 +65,22 @@ export class PaymentToolService {
     return this.prisma.listFormat({ ...records[0], search });
   }
 
-  findOne(id: string) {
-    return this.prisma.paymentTool.findUnique({
+  async findOne(id: string) {
+    const result = await this.prisma.paymentTool.findUnique({
       where: { id },
       include: { payways: true },
     });
+    return this.prisma.success(result);
   }
 
-  active(id: string, { is_active }: ActivePaymentToolDto) {
-    return this.prisma.paymentTool.update({
+  async active({ id, is_active }: ActivePaymentToolDto) {
+    await this.prisma.paymentTool.update({
       where: { id },
       data: {
         is_active,
       },
     });
+    return this.prisma.success();
   }
 
   async clean(id: string) {
@@ -89,7 +93,7 @@ export class PaymentToolService {
     return this.prisma.success();
   }
 
-  update(id: string, data: UpdatePaymentToolDto) {
+  async update(id: string, data: UpdatePaymentToolDto) {
     const {
       tool_name,
       is_active,
@@ -101,7 +105,7 @@ export class PaymentToolService {
       payways,
       merchant_config,
     } = data;
-    return this.prisma.paymentTool.update({
+    await this.prisma.paymentTool.update({
       where: { id },
       data: {
         tool_name,
@@ -118,25 +122,20 @@ export class PaymentToolService {
           })),
         },
         merchant_config,
-        is_current: false,
       },
       include: {
         payways: true,
       },
     });
+    return this.prisma.success();
   }
 
-  async current(id: string) {
-    await this.prisma.$transaction([
-      this.prisma.paymentTool.updateMany({
-        where: { id: { not: id } },
-        data: { is_current: false },
-      }),
-      this.prisma.paymentTool.update({
-        where: { id },
-        data: { is_current: true },
-      }),
-    ]);
+  async current({ id, is_current }: CurrentPaymentToolDto) {
+    await this.prisma.paymentTool.update({
+      where: { id },
+      data: { is_current },
+    });
+
     return this.prisma.success();
   }
 

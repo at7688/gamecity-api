@@ -6,12 +6,47 @@ import { UpdatePaywayDto } from './dto/update-payway.dto';
 @Injectable()
 export class PaywayService {
   constructor(private readonly prisma: PrismaService) {}
-  create(createPaywayDto: CreatePaywayDto) {
-    return 'This action adds a new payway';
+  async create(data: CreatePaywayDto) {
+    const {
+      type,
+      merchant_id,
+      code,
+      name,
+      player_fee_amount,
+      player_fee_max,
+      player_fee_min,
+      player_fee_percent,
+      fee_amount,
+      fee_max,
+      fee_min,
+      fee_percent,
+      deposit_max,
+      deposit_min,
+    } = data;
+    await this.prisma.payway.create({
+      data: {
+        type,
+        merchant_id,
+        code,
+        name,
+        player_fee_amount,
+        player_fee_max,
+        player_fee_min,
+        player_fee_percent,
+        fee_amount,
+        fee_max,
+        fee_min,
+        fee_percent,
+        deposit_max,
+        deposit_min,
+      },
+    });
+    return this.prisma.success();
   }
 
-  findAll() {
-    return this.prisma.payway.findMany();
+  async findAll() {
+    const result = await this.prisma.payway.findMany();
+    return this.prisma.success(result);
   }
 
   findOne(id: number) {
