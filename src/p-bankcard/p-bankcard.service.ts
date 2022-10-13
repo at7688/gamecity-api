@@ -15,7 +15,6 @@ export class PBankcardService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {}
-  platform = this.configService.get('PLATFORM');
 
   async findAll(search: SearchPBankcardsDto) {
     const {

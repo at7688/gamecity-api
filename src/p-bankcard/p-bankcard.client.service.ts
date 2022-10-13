@@ -20,7 +20,6 @@ export class PBankcardClientService {
     private readonly eventEmitter: EventEmitter2,
     @Inject(REQUEST) private request: Request,
   ) {}
-  platform = this.configService.get('PLATFORM');
 
   get player() {
     return this.request.user as Player;
