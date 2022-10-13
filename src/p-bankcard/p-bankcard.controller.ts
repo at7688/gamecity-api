@@ -50,6 +50,7 @@ export class PBankcardController {
   ) {
     return this.pBankcardService.update(id, updatePBankcardDto);
   }
+
   @Post('validate')
   validate(@Body() validatePBankcardDto: ValidatePBankcardDto) {
     return this.pBankcardService.validate(validatePBankcardDto);
