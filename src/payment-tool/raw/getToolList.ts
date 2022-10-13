@@ -25,7 +25,7 @@ SELECT * FROM (
 		COALESCE(current_amount, 0) current_amount,
 		COALESCE(total_fee, 0) total_fee,
 		COALESCE(total_player_fee, 0) total_player_fee,
-		lastest_record
+		last_record
 	FROM "PaymentTool" t
 	JOIN "PaymentMerchant" m ON m.id = t.merchant_id
 	JOIN (
@@ -55,11 +55,15 @@ SELECT * FROM (
 		SELECT DISTINCT ON (tool_id)
 		tool_id, json_build_object(
 			'created_at', created_at,
-			'amount', amount
-		) lastest_record FROM (
-			SELECT *
+			'amount', amount,
+			'id', id,
+			'username', username,
+			'nickname', nickname
+		) last_record FROM (
+			SELECT toolRecord.*, p.username, p.nickname
 			FROM toolRecord
-			ORDER BY created_at DESC
+			LEFT JOIN "Player" p ON p.id = toolRecord.player_id
+			ORDER BY toolRecord.created_at DESC
 		) k
 	) r ON r.tool_id = t.id
 ) m

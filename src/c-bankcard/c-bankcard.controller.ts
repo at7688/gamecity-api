@@ -41,6 +41,11 @@ export class CBankcardController {
     return this.cBankcardService.update(id, updateCBankcardDto);
   }
 
+  @Post('clean/:id')
+  clean(@Param('id') id: string) {
+    return this.cBankcardService.clean(id);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.cBankcardService.remove(id);

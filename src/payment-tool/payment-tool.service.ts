@@ -79,7 +79,7 @@ export class PaymentToolService {
     });
   }
 
-  async clearCurrentAmount(id: string) {
+  async clean(id: string) {
     await this.prisma.paymentTool.update({
       where: { id },
       data: {

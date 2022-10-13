@@ -32,6 +32,14 @@ export class CBankcardService {
     return this.prisma.success();
   }
 
+  async clean(id: string) {
+    await this.prisma.companyCard.update({
+      where: { id },
+      data: { accumulate_from: new Date() },
+    });
+    return this.prisma.success();
+  }
+
   async remove(id: string) {
     await this.prisma.companyCard.delete({ where: { id } });
     return this.prisma.success();

@@ -5,10 +5,10 @@ SELECT
 	c.*,
 	(SELECT COALESCE(sum(amount), 0) FROM "BankDepositRec" r
 	 WHERE r.card_id = c.id AND r.created_at > c.accumulate_from
-	) current_sum,
+	) current_amount,
 	(SELECT COALESCE(sum(amount), 0) FROM "BankDepositRec" r
 	 WHERE r.card_id = c.id
-	) total_sum,
+	) total_amount,
 	(SELECT json_build_object(
 		'id', p.id,
 		'nickname', p.nickname,

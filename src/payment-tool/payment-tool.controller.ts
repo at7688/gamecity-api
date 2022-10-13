@@ -1,21 +1,19 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query,
-  ParseIntPipe,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { PaymentToolService } from './payment-tool.service';
-import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
-import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
-import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
 import { ActivePaymentToolDto } from './dto/active-payment-tool.dto';
+import { CreatePaymentToolDto } from './dto/create-payment-tool.dto';
+import { SearchPaymentToolsDto } from './dto/search-payment-tools.dto';
+import { UpdatePaymentToolDto } from './dto/update-payment-tool.dto';
+import { PaymentToolService } from './payment-tool.service';
 
-@Controller('payment-tool')
+@Controller('payment')
 export class PaymentToolController {
   constructor(private readonly paymentToolService: PaymentToolService) {}
 
@@ -29,9 +27,9 @@ export class PaymentToolController {
     return this.paymentToolService.findAll(search);
   }
 
-  @Patch(':id/clear')
-  clearCurrentAmount(@Param('id') id: string) {
-    return this.paymentToolService.clearCurrentAmount(id);
+  @Post('clean/:id')
+  clean(@Param('id') id: string) {
+    return this.paymentToolService.clean(id);
   }
 
   @Get(':id')

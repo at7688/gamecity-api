@@ -104,7 +104,7 @@ export class ClientPayService {
     });
 
     // 儲值後超出限額，則關閉當前卡片
-    if (amount + card.current_sum >= card.recharge_max) {
+    if (amount + card.current_amount >= card.recharge_max) {
       console.log(`儲值總量已過上限，關閉銀行卡`);
       await this.prisma.companyCard.update({
         where: { id: card.card_id },
