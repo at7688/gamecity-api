@@ -36,4 +36,8 @@ export class CreateAgentDto {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @IsString()
+  @IsOptional()
+  invited_code?: string;
 }

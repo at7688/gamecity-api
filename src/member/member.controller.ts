@@ -1,25 +1,25 @@
-import { RegisterAgentDto } from './dto/register-agent.dto';
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
 } from '@nestjs/common';
+import { RegisterAgentDto } from './dto/register-agent.dto';
 
-import { MemberService } from './member.service';
-import { CreateAgentDto } from './dto/create-agent.dto';
-import { UpdateMemberDto } from './dto/update-member.dto';
+import { User } from 'src/decorators/user.decorator';
 import { Serilizer } from 'src/interceptors/serializer.interceptor';
+import { Public } from 'src/metas/public.meta';
+import { LoginUser } from 'src/types';
+import { CreateAgentDto } from './dto/create-agent.dto';
 import { MemberDto } from './dto/member.dto';
 import { SearchAgentsDto } from './dto/search-agents.dto';
-import { User } from 'src/decorators/user.decorator';
-import { LoginUser } from 'src/types';
 import { SetAgentDutyDto } from './dto/set-agent-duty.dto';
-import { Public } from 'src/metas/public.meta';
+import { UpdateMemberDto } from './dto/update-member.dto';
+import { MemberService } from './member.service';
 
 @Controller('agent')
 @Serilizer(MemberDto)
@@ -33,8 +33,8 @@ export class MemberController {
   }
 
   @Post('create')
-  create(@Body() body: CreateAgentDto, @User() user: LoginUser) {
-    return this.memberService.create(body, user);
+  create(@Body() body: CreateAgentDto) {
+    return this.memberService.create(body);
   }
 
   @Post('list')

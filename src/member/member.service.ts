@@ -26,7 +26,7 @@ export class MemberService {
   ) {}
   isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
 
-  async create(data: CreateAgentDto, user: LoginUser) {
+  async create(data: CreateAgentDto) {
     const {
       password,
       nickname,
@@ -35,6 +35,7 @@ export class MemberService {
       parent_id,
       email,
       phone,
+      invited_code,
     } = data;
 
     const hash = await argon2.hash(password);
@@ -62,13 +63,13 @@ export class MemberService {
       },
     });
 
-    const record = await this.prisma.member.findUnique({
+    const dupicatedRecord = await this.prisma.member.findUnique({
       where: {
         username,
       },
     });
 
-    if (record) {
+    if (dupicatedRecord) {
       this.prisma.error(ResCode.DATA_DUPICATED, '帳號重複');
     }
 
@@ -80,13 +81,14 @@ export class MemberService {
       );
     }
 
-    await this.prisma.member.create({
+    const record = await this.prisma.member.create({
       data: {
         nickname,
         username,
         password: hash,
         parent_id: parent?.id,
         layer,
+        invited_code,
         promos: {
           create: {
             type: TargetType.PLAYER,
@@ -111,6 +113,33 @@ export class MemberService {
       },
     });
 
+    // 遊戲輸贏佔成：有上層代理即吃上層設定值, 無則吃預設值
+    if (parent_id) {
+      const gameRatios = await this.prisma.gameRatio.findMany({
+        where: {
+          agent_id: parent_id,
+        },
+      });
+      await this.prisma.gameRatio.createMany({
+        data: gameRatios.map((t) => ({
+          ...t,
+          agent_id: record.id,
+        })),
+      });
+    } else {
+      const games = await this.prisma.game.findMany();
+      await this.prisma.gameRatio.createMany({
+        data: games.map((t) => ({
+          agent_id: record.id,
+          platform_code: t.platform_code,
+          game_code: t.code,
+          ratio: 100,
+          water: 0.5,
+          water_duty: 100,
+        })),
+      });
+    }
+
     return this.prisma.success();
   }
 
@@ -124,15 +153,7 @@ export class MemberService {
       phone,
       email,
     } = data;
-    // 確認帳號是否重複
-    const record = await this.prisma.member.findUnique({
-      where: {
-        username,
-      },
-    });
-    if (record) {
-      this.prisma.error(ResCode.DATA_DUPICATED, '帳號不可用');
-    }
+
     const invitedPromo = await this.prisma.promoCode.findFirst({
       where: {
         code: invited_code,
@@ -153,44 +174,17 @@ export class MemberService {
       this.prisma.error(ResCode.NOT_FOUND, '無此推薦碼');
     }
     const { parent } = invitedPromo;
-    const hash = await argon2.hash(password);
-    try {
-      await this.prisma.member.create({
-        data: {
-          nickname,
-          username,
-          password: hash,
-          parent_id: parent.id,
-          layer: parent ? ++parent.layer : 1,
-          invited_code,
-          promos: {
-            create: {
-              type: TargetType.PLAYER,
-              code: promo_code || username,
-            },
-          },
-          duty: {
-            create: {
-              fee_duty: parent?.duty.fee_duty || 0,
-              promotion_duty: parent?.duty.promotion_duty || 0,
-            },
-          },
-          contact:
-            email || phone
-              ? {
-                  create: {
-                    email,
-                    phone,
-                  },
-                }
-              : undefined,
-        },
-      });
-    } catch (err) {
-      this.prisma.error(ResCode.DB_ERR, JSON.stringify(err));
-    }
 
-    return this.prisma.success();
+    return this.create({
+      password,
+      nickname,
+      username,
+      promo_code,
+      phone,
+      email,
+      parent_id: parent.id,
+      invited_code,
+    });
   }
 
   getAllSubs(id: string | null) {
