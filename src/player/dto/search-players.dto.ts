@@ -1,5 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsDate, IsIn, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsBooleanString,
+  IsDate,
+  IsIn,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { PaginateDto } from 'src/dto/paginate.dto';
 
 export class SearchPlayersDto extends PaginateDto {
@@ -48,4 +55,8 @@ export class SearchPlayersDto extends PaginateDto {
   @IsOptional()
   @IsString()
   agent_id: string;
+
+  @IsOptional()
+  @IsBooleanString()
+  is_all: boolean; // agent_id + is_all -> 撈全部下層玩家
 }

@@ -181,6 +181,7 @@ export class PlayerService {
 
     return this.prisma.success();
   }
+
   async create(data: CreatePlayerDto, user: LoginUser) {
     const { password, username, nickname, agent_id, phone, email } = data;
     const hash = await argon2.hash(password);
@@ -219,7 +220,7 @@ export class PlayerService {
     return this.prisma.success();
   }
 
-  async findAll(search: SearchPlayersDto, user: LoginUser) {
+  async findAll(search: SearchPlayersDto) {
     const {
       page,
       perpage,
@@ -230,15 +231,22 @@ export class PlayerService {
       is_blocked,
       created_start_at,
       created_end_at,
+      is_all,
       phone,
       email,
       is_lock_bet,
       agent_id,
     } = search;
 
+    let subs: SubPlayer[];
+
+    if (agent_id && is_all) {
+      subs = await this.prisma.$queryRaw<SubPlayer[]>(subPlayers(agent_id));
+    }
+
     const findManyArgs: Prisma.PlayerFindManyArgs = {
       where: {
-        agent_id,
+        agent_id: !subs ? agent_id : undefined,
         contact: {
           phone,
           email,
@@ -250,13 +258,9 @@ export class PlayerService {
         vip_id: {
           in: vip_ids?.length ? vip_ids : undefined,
         },
-        id: !this.isAdmin
-          ? {
-              in: (
-                await this.prisma.$queryRaw<SubPlayer[]>(subPlayers(user.id))
-              ).map((t) => t.id),
-            }
-          : undefined,
+        id: {
+          in: subs?.map((t) => t.id),
+        },
         username: {
           contains: username,
         },
