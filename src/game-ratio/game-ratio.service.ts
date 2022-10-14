@@ -119,6 +119,8 @@ export class GameRatioService {
       );
     }
 
+    // 若有下層，需要判斷下層的設定值是否需要往下壓
+    // 跑直屬下層即可，再由該層執行往下跑
     const subs = await this.prisma.member.findMany({
       where: { parent_id: agent_id },
       include: {
@@ -131,22 +133,25 @@ export class GameRatioService {
       },
     });
 
-    const subsSetting = subs.map(async (t) => {
-      const _setting = t.game_ratios[0];
-      if (!_setting) return;
-      await this.set(
-        {
-          agent_id: t.id,
-          platform_code,
-          game_code,
-          ratio: Math.min(_setting.ratio || 0, ratio),
-          water: Math.min(_setting.water || 0, water),
-          water_duty: Math.min(_setting.water_duty || 0, water_duty),
-        },
-        false,
+    if (subs) {
+      await Promise.all(
+        subs.map(async (t) => {
+          const _setting = t.game_ratios[0];
+          if (!_setting) return;
+          await this.set(
+            {
+              agent_id: t.id,
+              platform_code,
+              game_code,
+              ratio: Math.min(_setting.ratio || 0, ratio),
+              water: Math.min(_setting.water || 0, water),
+              water_duty: Math.min(_setting.water_duty || 0, water_duty),
+            },
+            false,
+          );
+        }),
       );
-    });
-    await Promise.all(subsSetting);
+    }
 
     // 若不為驗證模式，則送出更新
     if (!is_check) {

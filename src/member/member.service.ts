@@ -2,7 +2,7 @@ import { GamePlatformStatus } from 'src/game-platform/enums';
 import { RegisterAgentDto } from './dto/register-agent.dto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Member, Prisma } from '@prisma/client';
+import { AgentDuty, Member, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginUser } from 'src/types';
@@ -38,24 +38,20 @@ export class MemberService {
     } = data;
 
     const hash = await argon2.hash(password);
-    let parent: Member | null = null;
-    if ('admin_role_id' in user) {
-      if (parent_id) {
-        parent = await this.prisma.member.findUnique({
-          where: { id: parent_id },
-        });
-      }
-    } else {
-      if (parent_id) {
-        parent = (await this.getAllSubs(user.id)).find(
-          (t) => t.id === parent_id,
-        );
-        if (!parent) {
-          this.prisma.error(ResCode.FIELD_NOT_VALID, '上層錯誤');
-        }
-      } else {
-        parent = user;
-      }
+
+    let parent:
+      | (Member & {
+          duty: AgentDuty;
+        })
+      | null;
+
+    if (parent_id) {
+      parent = await this.prisma.member.findUnique({
+        where: { id: parent_id },
+        include: {
+          duty: true,
+        },
+      });
     }
 
     const layer = parent ? parent.layer + 1 : 1;
@@ -66,6 +62,16 @@ export class MemberService {
       },
     });
 
+    const record = await this.prisma.member.findUnique({
+      where: {
+        username,
+      },
+    });
+
+    if (record) {
+      this.prisma.error(ResCode.DATA_DUPICATED, '帳號重複');
+    }
+
     // 確認階層數是否超過限制
     if (layer > +maxLayerDepth.value) {
       this.prisma.error(
@@ -74,7 +80,7 @@ export class MemberService {
       );
     }
 
-    return this.prisma.member.create({
+    await this.prisma.member.create({
       data: {
         nickname,
         username,
@@ -83,8 +89,14 @@ export class MemberService {
         layer,
         promos: {
           create: {
-            type: TargetType.AGENT,
-            code: promo_code,
+            type: TargetType.PLAYER,
+            code: promo_code || username, // 若為給promo_code 則預設帳號為推廣碼
+          },
+        },
+        duty: {
+          create: {
+            fee_duty: parent?.duty.fee_duty || 100,
+            promotion_duty: parent?.duty.promotion_duty || 100,
           },
         },
         contact:
@@ -98,7 +110,10 @@ export class MemberService {
             : undefined,
       },
     });
+
+    return this.prisma.success();
   }
+
   async register(data: RegisterAgentDto) {
     const {
       password,
@@ -129,6 +144,7 @@ export class MemberService {
             id: true,
             username: true,
             layer: true,
+            duty: true,
           },
         },
       },
@@ -149,8 +165,14 @@ export class MemberService {
           invited_code,
           promos: {
             create: {
-              type: TargetType.AGENT,
-              code: promo_code,
+              type: TargetType.PLAYER,
+              code: promo_code || username,
+            },
+          },
+          duty: {
+            create: {
+              fee_duty: parent?.duty.fee_duty || 0,
+              promotion_duty: parent?.duty.promotion_duty || 0,
             },
           },
           contact:
@@ -241,9 +263,10 @@ export class MemberService {
 
   async getTreeNode(parent_id: string, user: LoginUser) {
     const default_parent_id = 'admin_role_id' in user ? null : user.id;
-    return this.prisma.$queryRaw<TreeNodeMember[]>(
+    const result = await this.prisma.$queryRaw<TreeNodeMember[]>(
       getTreeNode(parent_id || default_parent_id),
     );
+    return this.prisma.success(result);
   }
 
   async findOne(id: string) {
@@ -274,12 +297,21 @@ export class MemberService {
       where: { agent_id: id },
     });
 
+    let parentDuty: AgentDuty;
+
+    if (agent?.parent_id) {
+      parentDuty = await this.prisma.agentDuty.findUnique({
+        where: { agent_id: agent.parent_id },
+      });
+    }
+
     return this.prisma.success({
       agent,
       contact,
       promoCodes,
       siteUrl: siteUrlResult.value,
       duty,
+      parentDuty,
     });
   }
 
@@ -297,8 +329,8 @@ export class MemberService {
     });
   }
 
-  async setDuty(agent_id: string, data: SetAgentDutyDto) {
-    const { fee_duty, promotion_duty } = data;
+  async setDuty(data: SetAgentDutyDto) {
+    const { agent_id, fee_duty, promotion_duty } = data;
     const agent = await this.prisma.member.findUnique({
       where: { id: agent_id },
     });
@@ -332,7 +364,33 @@ export class MemberService {
       );
     }
 
-    return this.prisma.agentDuty.upsert({
+    // 若有下層，需要判斷下層的設定值是否需要往下壓
+    // 跑直屬下層即可，再由該層執行往下跑
+    const subs = await this.prisma.member.findMany({
+      where: {
+        parent_id: agent.id,
+      },
+    });
+
+    if (subs) {
+      await Promise.all(
+        subs.map(async (t) => {
+          const record = await this.prisma.agentDuty.findUnique({
+            where: { agent_id: t.id },
+          });
+          await this.setDuty({
+            agent_id: t.id,
+            fee_duty: Math.min(record?.fee_duty || 0, fee_duty),
+            promotion_duty: Math.min(
+              record?.promotion_duty || 0,
+              promotion_duty,
+            ),
+          });
+        }),
+      );
+    }
+
+    await this.prisma.agentDuty.upsert({
       where: { agent_id },
       create: {
         agent_id,
@@ -344,6 +402,7 @@ export class MemberService {
         promotion_duty,
       },
     });
+    return this.prisma.success();
   }
 
   remove(id: string) {

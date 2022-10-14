@@ -57,9 +57,9 @@ export class MemberController {
     return this.memberService.update(id, updateMemberDto);
   }
 
-  @Post(':id/duty')
-  setDuty(@Param('id') id: string, @Body() data: SetAgentDutyDto) {
-    return this.memberService.setDuty(id, data);
+  @Post('duty')
+  setDuty(@Body() data: SetAgentDutyDto) {
+    return this.memberService.setDuty(data);
   }
 
   @Delete(':id')

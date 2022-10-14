@@ -22,8 +22,8 @@ export class CreateAgentDto {
   nickname: string;
 
   @IsString()
-  @IsNotEmpty()
-  promo_code?: string;
+  @IsOptional()
+  promo_code: string;
 
   @IsString()
   @IsOptional()
