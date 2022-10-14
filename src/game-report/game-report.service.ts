@@ -13,11 +13,9 @@ import { playerReport } from './raw/playerReport';
 export class GameReportService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(
-    groupBy: 'platform_code' | 'category_code',
-    search: SearchGameReportsDto,
-  ) {
+  async findAll(search: SearchGameReportsDto) {
     const {
+      group_by,
       category_codes,
       game_ids,
       bet_start_at,
@@ -42,7 +40,7 @@ export class GameReportService {
     }
 
     const result = await this.prisma.betRecord.groupBy({
-      by: [groupBy],
+      by: [group_by],
       where: {
         status: {
           in: status,
@@ -82,14 +80,16 @@ export class GameReportService {
       _count: { _all: true },
       _sum: { amount: true, valid_amount: true, win_lose_amount: true },
     });
-    return result.map((t) => ({
-      category_code: t.category_code,
-      platform_code: t.platform_code,
-      bet_count: t._count._all,
-      bet_amount: +t._sum.amount?.toFixed(2) || 0,
-      valid_amount: +t._sum.valid_amount?.toFixed(2) || 0,
-      win_lose_amount: +t._sum.win_lose_amount?.toFixed(2) || 0,
-    }));
+    return this.prisma.success(
+      result.map((t) => ({
+        category_code: t.category_code,
+        platform_code: t.platform_code,
+        bet_count: t._count._all,
+        bet_amount: +t._sum.amount?.toFixed(2) || 0,
+        valid_amount: +t._sum.valid_amount?.toFixed(2) || 0,
+        win_lose_amount: +t._sum.win_lose_amount?.toFixed(2) || 0,
+      })),
+    );
   }
 
   async winLoseReport(search: SearchAgentReportDto) {

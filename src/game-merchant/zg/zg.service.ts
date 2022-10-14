@@ -399,11 +399,12 @@ export class ZgService {
               .subtract(t.bet_amount)
               .value();
             // 上層佔成資訊
-            const [game, ratios] = await this.gameMerchantService.getBetInfo(
-              player,
-              this.platformCode,
-              t.game_id.toString(),
-            );
+            const [game, ratios, vip_water] =
+              await this.gameMerchantService.getBetInfo(
+                player,
+                this.platformCode,
+                t.game_id.toString(),
+              );
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
@@ -432,6 +433,7 @@ export class ZgService {
                 }[t.status],
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 nums_rolling: game.nums_rolling,
+                vip_water,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({

@@ -31,8 +31,8 @@ export class PlayerController {
   }
 
   @Post('list')
-  findAll(@Body() search: SearchPlayersDto, @User() user: LoginUser) {
-    return this.playerService.findAll(search, user);
+  findAll(@Body() search: SearchPlayersDto) {
+    return this.playerService.findAll(search);
   }
 
   @Get(':id')

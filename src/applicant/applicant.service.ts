@@ -100,7 +100,7 @@ export class ApplicantService {
     // 流水金額計算
     const rollingAmount = rewardAmount * promotion.nums_rolling;
 
-    // 將注單加上以參與活動標註, 修改申請單狀態, 生成禮包
+    // 將注單加上以參與活動標註及活動反水比例, 修改申請單狀態, 生成禮包
     await this.prisma.$transaction([
       this.prisma.betRecord.updateMany({
         where: {
@@ -108,9 +108,10 @@ export class ApplicantService {
             in: records.map((t) => t.id),
           },
         },
-        data: {
+        data: records.map((t) => ({
           promotion_id,
-        },
+          promotion_water: gameWaterMap[`${t.platform_code}|${t.game_code}`],
+        })),
       }),
       this.prisma.applicant.update({
         where: {

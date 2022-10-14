@@ -57,19 +57,19 @@ model OperationRec {
 }
 
 model Announcement {
-  id         String           @id @default(cuid())
+  id         String    @id @default(cuid())
   title      String
   content    String?
-  start_at   DateTime?        @db.Timestamptz(6)
-  end_at     DateTime?        @db.Timestamptz(6)
-  created_at DateTime         @default(now()) @db.Timestamptz()
-  updated_at DateTime         @updatedAt @db.Timestamptz()
-  type       Int @default(1) // 系統 遊戲 活動
-  is_active  Boolean          @default(true)
+  start_at   DateTime? @db.Timestamptz(6)
+  end_at     DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz()
+  updated_at DateTime  @updatedAt @db.Timestamptz()
+  type       Int       @default(1) // 系統 遊戲 活動
+  is_active  Boolean   @default(true)
   link       String?
-  is_new_win Boolean          @default(false)
-  is_top     Boolean          @default(false)
-  sort       Int              @default(autoincrement())
+  is_new_win Boolean   @default(false)
+  is_top     Boolean   @default(false)
+  sort       Int       @default(autoincrement())
 }
 
 model Menu {
@@ -87,9 +87,9 @@ model Menu {
 
 model PromoCode {
   code       String   @id
-  type Int  @default(1) // 會員推廣 代理推廣
+  type       Int      @default(1) // 會員推廣 代理推廣
   is_active  Boolean  @default(true)
-  parent     Member  @relation("parent", fields: [parent_id], references: [id])
+  parent     Member   @relation("parent", fields: [parent_id], references: [id])
   parent_id  String
   inviter    Player?  @relation("inviter", fields: [inviter_id], references: [id])
   inviter_id String?
@@ -167,7 +167,7 @@ model BankDepositRec {
   amount         Float
   created_at     DateTime    @default(now()) @db.Timestamptz()
   updated_at     DateTime    @updatedAt @db.Timestamptz()
-  finished_at    DateTime?  @db.Timestamptz()
+  finished_at    DateTime?   @db.Timestamptz()
   card_id        String
   status         Int         @default(1) // 等待付款 等待審核 完成核發 取消申請 拒絕退回 已過期
   player_card    PlayerCard  @relation(fields: [player_card_id], references: [id])
@@ -196,8 +196,8 @@ model WithdrawRec {
   inner_note     String?
   outter_note    String?
   player         Player     @relation(fields: [player_id], references: [id])
-  fee   Float      @default(0)
-  times Int // 第X次出金
+  fee            Float      @default(0)
+  times          Int // 第X次出金
 }
 
 model WalletRec {
@@ -265,7 +265,7 @@ model Player {
   bet_records      BetRecord[]
   game_accounts    GameAccount[]
 
-  balance       Float @default(0)
+  balance Float @default(0)
 
   identity IdentityVerify?
 
@@ -351,12 +351,12 @@ model Contact {
 
 model Vip {
   id                String        @id @default(cuid())
-  sort  Int @default(autoincrement())
+  sort              Int           @default(autoincrement())
   name              String
   icon              String?
-  card_count Int @default(1) // 可申請的會員銀行卡數
+  card_count        Int           @default(1) // 可申請的會員銀行卡數
   valid_bet         Int           @default(0) // 有效投注量
-  deposit_min      Int  @default(0)   // 最低儲值量
+  deposit_min       Int           @default(0) // 最低儲值量
   withdraw_min      Int
   withdraw_max      Int
   card_rotate_id    Int
@@ -376,9 +376,9 @@ model Vip {
 }
 
 model SmsMerchant {
-  code String @id
-  name String
-  config Json?
+  code      String  @id
+  name      String
+  config    Json?
   is_active Boolean @default(true)
 }
 
@@ -432,21 +432,21 @@ model GameCategory {
 }
 
 model Maintenance {
-  id            Int           @id @default(autoincrement())
-  type   Int // 主站 遊戲商
+  id   Int @id @default(autoincrement())
+  type Int // 主站 遊戲商
 
-  platform      GamePlatform? @relation(fields: [platform_code], references: [code])
-  platform_code String?
-  game      Game? @relation(fields: [game_id], references: [id])
-  game_id String?
-  start_at      DateTime?     @db.Timestamptz()
-  end_at        DateTime?     @db.Timestamptz()
+  platform        GamePlatform? @relation(fields: [platform_code], references: [code])
+  platform_code   String?
+  game            Game?         @relation(fields: [game_id], references: [id])
+  game_id         String?
+  start_at        DateTime?     @db.Timestamptz()
+  end_at          DateTime?     @db.Timestamptz()
   repeat_start_at DateTime?     @db.Timestamptz()
-  repeat_end_at DateTime?     @db.Timestamptz()
+  repeat_end_at   DateTime?     @db.Timestamptz()
 
   is_repeat Boolean @default(true)
-  status Int @default(1) // 已排程 進行中 已完成
-  note String?
+  status    Int     @default(1) // 已排程 進行中 已完成
+  note      String?
 
 }
 
@@ -481,7 +481,7 @@ model Game {
   category      GameCategory? @relation(fields: [category_code], references: [code])
   category_code String?
 
-  status Int    @default(1) // 啟用 停用 維護中
+  status Int @default(1) // 啟用 停用 維護中
 
   nums_rolling Float @default(1)
 
@@ -516,28 +516,28 @@ model InboxRec {
 
 // 支付方式
 model Payway {
-  id                 String      @id @default(cuid())
-  type               PayType
-  code               String // 金流廠商渠道代號
-  name               String // 支付方式名稱
+  id   String  @id @default(cuid())
+  type PayType
+  code String // 金流廠商渠道代號
+  name String // 支付方式名稱
 
-  player_fee_amount  Float       @default(0)
-  player_fee_percent Float       @default(0)
-  player_fee_min     Float       @default(10)
-  player_fee_max     Float       @default(200)
-  fee_amount         Float       @default(0)
-  fee_percent        Float       @default(0)
-  fee_min            Float       @default(10)
-  fee_max            Float       @default(200)
+  player_fee_amount  Float        @default(0)
+  player_fee_percent Float        @default(0)
+  player_fee_min     Float        @default(10)
+  player_fee_max     Float        @default(200)
+  fee_amount         Float        @default(0)
+  fee_percent        Float        @default(0)
+  fee_min            Float        @default(10)
+  fee_max            Float        @default(200)
   tool_id            String?
   deposit_max        Int
   deposit_min        Int
   tool               PaymentTool? @relation(fields: [tool_id], references: [id])
-  is_active          Boolean     @default(false)
+  is_active          Boolean      @default(false)
 
   records PaymentDepositRec[]
 
-  merchant PaymentMerchant @relation(fields: [merchant_id], references: [id])
+  merchant    PaymentMerchant @relation(fields: [merchant_id], references: [id])
   merchant_id String
 
   @@unique([tool_id, code])
@@ -684,7 +684,7 @@ model RechargeReward {
 
   recharge_amount Int
 
-  reward_amount  Int
+  reward_amount Int
 
   reward_percent Float
 
@@ -698,13 +698,13 @@ model Promotion {
   type  Int // 首儲獎勵 續儲獎勵 遊戲返水
   title String
 
-  schedule_type Int       @default(1) // 僅一次 月延續 周延續 日延續
+  schedule_type Int      @default(1) // 僅一次 月延續 周延續 日延續
   start_at      DateTime @db.Timestamptz()
   end_at        DateTime @db.Timestamptz()
 
-  is_active           Boolean @default(false) // 關閉則佔不開放申請
-  approval_type Int @default(1) // 人工審核派發, 半自動(產生未派發禮包), 全自動(自動派發禮包)
-  settlement_type   Int @default(1) // (生成禮包時間點) 立即結算 活動結束時結算(排程查看)
+  is_active       Boolean @default(false) // 關閉則佔不開放申請
+  approval_type   Int     @default(1) // 人工審核派發, 半自動(產生未派發禮包), 全自動(自動派發禮包)
+  settlement_type Int     @default(1) // (生成禮包時間點) 立即結算 活動結束時結算(排程查看)
 
   vips Vip[]
 
@@ -782,12 +782,12 @@ model Gift {
 }
 
 model BetRecordTicket {
-  id Int @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   platform_code String
-  max_seconds Int // 最大搜尋範圍(秒)
-  kept_days Int // 數據保留時間(日)
-  valid_at DateTime? @db.Timestamptz(6)
-  expired_at DateTime? @db.Timestamptz(6)
+  max_seconds   Int // 最大搜尋範圍(秒)
+  kept_days     Int // 數據保留時間(日)
+  valid_at      DateTime? @db.Timestamptz(6)
+  expired_at    DateTime? @db.Timestamptz(6)
 }
 
 model BetRecord {
@@ -810,8 +810,12 @@ model BetRecord {
   game_code       String? // 遊戲類型 (普通百家乐,..)
   bet_target      String? // 下注目標 (莊,閒,和,..)
   bet_detail      Json?
-  ratios          BetRatioRec[]
-  vip_water       Float         @default(0)
+  ratios          BetRatioRec[] // 代理的佔成及退水
+
+  // agent_water Float @default(0) // 代理的退水(頂層代理的設定值)
+
+  vip_water       Float @default(0) // 會員等級退水 (GameWater vip)
+  promotion_water Float @default(0) // 返水活動 (GameWater promotion)
 
   promotion    Promotion? @relation(fields: [promotion_id], references: [id])
   promotion_id String?
@@ -831,7 +835,6 @@ model BetRatioRec {
   @@unique([agent_id, bet_id])
 }
 
-
 model GameAccount {
   id            Int          @id @default(autoincrement())
   platform      GamePlatform @relation(fields: [platform_code], references: [code])
@@ -847,7 +850,6 @@ model GameAccount {
   @@unique([platform_code, account])
   @@unique([platform_code, player_id])
 }
-
 
 model GameRatio {
   game_code     String
@@ -868,23 +870,23 @@ model PlayerTag {
   player    Player @relation(fields: [player_id], references: [id])
   player_id String
   type      Int // 儲值過, 提領過, 實名認證, 手機認證
-  count Int @default(1)
+  count     Int    @default(1)
 
   @@unique([player_id, type])
 }
 
 model SysConfig {
-  code String @id
+  code  String @id
   value String
 }
 
 model TelegramBot {
-  id Int @id @default(autoincrement())
-  chat_id String
-  token String
-  type Int // 儲值, 出金, ..
+  id        Int     @id @default(autoincrement())
+  chat_id   String
+  token     String
+  type      Int // 儲值, 出金, ..
   is_active Boolean @default(true)
-  note String?
+  note      String?
 }
 
 // model AuthToken {

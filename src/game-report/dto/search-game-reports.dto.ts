@@ -1,8 +1,19 @@
 import { Transform } from 'class-transformer';
-import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { BetRecordStatus } from 'src/bet-record/enums';
 
 export class SearchGameReportsDto {
+  @IsIn(['platform_code', 'category_code'])
+  @IsNotEmpty()
+  group_by: 'platform_code' | 'category_code';
+
   @IsOptional()
   @Transform(({ value }) => new Date(value))
   @IsDate()

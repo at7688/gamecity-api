@@ -363,11 +363,12 @@ export class BwinService {
               return;
             }
             // 上層佔成資訊
-            const [game, ratios] = await this.gameMerchantService.getBetInfo(
-              player,
-              this.platformCode,
-              t.productId.toString(),
-            );
+            const [game, ratios, vip_water] =
+              await this.gameMerchantService.getBetInfo(
+                player,
+                this.platformCode,
+                t.productId.toString(),
+              );
             const betAmount = numeral(t.bet).divide(rate).value();
             const validAmount = numeral(t.validBet).divide(rate).value();
             const winLoseAmount = numeral(t.result).divide(rate).value();
@@ -397,6 +398,7 @@ export class BwinService {
                 }[t.status],
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 nums_rolling: game.nums_rolling,
+                vip_water,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({

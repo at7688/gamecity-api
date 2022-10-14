@@ -54,20 +54,19 @@ export class GameMerchantService {
     const agents = await this.prisma.$queryRaw<ParentBasic[]>(
       getAllParents(player?.agent_id),
     );
-    const ratios = await Promise.all(
-      agents.map((t) =>
-        this.prisma.gameRatio.findUnique({
-          where: {
-            platform_code_game_code_agent_id: {
-              platform_code,
-              game_code,
-              agent_id: t.id,
-            },
-          },
-        }),
-      ),
-    );
-    return compact(ratios);
+    const ratios = await this.prisma.gameRatio.findMany({
+      where: {
+        platform_code,
+        game_code,
+        agent_id: { in: agents.map((t) => t.id) },
+      },
+      orderBy: {
+        agent: {
+          layer: 'asc',
+        },
+      },
+    });
+    return ratios;
   }
 
   async requestErrorHandle(

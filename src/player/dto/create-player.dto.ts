@@ -14,8 +14,9 @@ export class CreatePlayerDto {
 
   @IsString()
   @IsNotEmpty()
-  password: string;
   @Matches(/^\w{5,}$/, { message: '密碼需為5個以上英數字' })
+  password: string;
+
   @IsString()
   @IsNotEmpty()
   @MinLength(3, { message: '暱稱需為3個以上英數字' })

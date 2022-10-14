@@ -380,11 +380,12 @@ export class BngService {
               return;
             }
             // 上層佔成資訊
-            const [game, ratios] = await this.gameMerchantService.getBetInfo(
-              player,
-              this.platformCode,
-              t.game_code,
-            );
+            const [game, ratios, vip_water] =
+              await this.gameMerchantService.getBetInfo(
+                player,
+                this.platformCode,
+                t.game_code,
+              );
             await this.prisma.betRecord.upsert({
               where: {
                 bet_no_platform_code: {
@@ -407,6 +408,7 @@ export class BngService {
                 status: BetRecordStatus.DONE,
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 nums_rolling: game.nums_rolling,
+                vip_water,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({
