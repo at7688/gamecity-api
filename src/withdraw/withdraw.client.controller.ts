@@ -5,7 +5,7 @@ import { CreateWithdrawDto } from './dto/create-withdraw.dto';
 import { SearchWithdrawsDto } from './dto/search-withdraws.dto';
 import { WithdrawClientService } from './withdraw.client.service';
 
-@Controller('withdraws')
+@Controller('client/withdraw')
 @Platforms([PlatformType.PLAYER])
 export class WithdrawClientController {
   constructor(private readonly bankWithdrawService: WithdrawClientService) {}

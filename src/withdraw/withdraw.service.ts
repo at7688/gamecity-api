@@ -70,6 +70,13 @@ export class WithdrawService {
             id: true,
             nickname: true,
             username: true,
+            vip: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              },
+            },
           },
         },
         player_card: {
@@ -103,6 +110,13 @@ export class WithdrawService {
             id: true,
             nickname: true,
             username: true,
+            vip: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              },
+            },
           },
         },
         player_card: {
@@ -124,8 +138,8 @@ export class WithdrawService {
     return this.prisma.success(record);
   }
 
-  async update(id: string, data: UpdateWithdrawDto) {
-    const { inner_note, outter_note, status, fee } = data;
+  async validate(data: UpdateWithdrawDto) {
+    const { id, inner_note, outter_note, status, fee } = data;
 
     const record = await this.prisma.withdrawRec.findUnique({
       where: { id },
@@ -145,12 +159,16 @@ export class WithdrawService {
 
     if (status === ProcessStatus.FINISHED) {
       const finished_at = new Date();
+      fee || record.fee;
       this.prisma.$transaction([
         // 紀錄完成日期
         this.prisma.withdrawRec.update({
           where: { id: record.id },
           data: {
             status: ProcessStatus.FINISHED,
+            fee,
+            inner_note,
+            outter_note,
             finished_at,
           },
           include: { player_card: true },
@@ -160,7 +178,7 @@ export class WithdrawService {
           type: WalletRecType.WITHDRAW,
           player_id: record.player_id,
           amount: -record.amount,
-          fee: fee || record.fee, // 已送單時設定的提領手續費為主，無設定則以紀錄為主
+          fee, // 已送單時設定的提領手續費為主，無設定則以紀錄為主
           source: `(${record.player_card.bank_code})${record.player_card.account}`,
           relative_id: record.id,
         })),
@@ -201,10 +219,9 @@ export class WithdrawService {
         },
       });
     } else {
-      const record = await this.prisma.withdrawRec.update({
+      await this.prisma.withdrawRec.update({
         where: { id },
-        data: { inner_note, outter_note, status, fee },
-        include: { player_card: true },
+        data: { inner_note, outter_note, status, finished_at: new Date() },
       });
     }
     return this.prisma.success();

@@ -31,17 +31,6 @@ export class WithdrawClientService {
       where: { id: this.player.id },
     });
 
-    // 驗證餘額是否足夠
-    if (amount > player.balance) {
-      this.prisma.error(ResCode.BALANCE_NOT_ENOUGH, '餘額不足');
-    }
-    // 驗證是否達到流水標準
-    const result = await this.prisma.$queryRaw<PlayerRolling[]>(
-      playerRolling(player.id),
-    );
-    if (result[0].current_rolling < result[0].required_rolling) {
-      this.prisma.error(ResCode.ROLLING_NO_ENOUGH, '流水未達標準');
-    }
     // 驗證客戶的卡片
     const playerCard = await this.prisma.playerCard.findFirst({
       where: {
@@ -52,6 +41,18 @@ export class WithdrawClientService {
     });
     if (!playerCard) {
       this.prisma.error(ResCode.FIELD_NOT_VALID, '卡片不可用');
+    }
+
+    // 驗證餘額是否足夠
+    if (amount > player.balance) {
+      this.prisma.error(ResCode.BALANCE_NOT_ENOUGH, '餘額不足');
+    }
+    // 驗證是否達到流水標準
+    const result = await this.prisma.$queryRaw<PlayerRolling[]>(
+      playerRolling(player.id),
+    );
+    if (result[0]?.current_rolling < result[0]?.required_rolling) {
+      this.prisma.error(ResCode.ROLLING_NO_ENOUGH, '流水未達標準');
     }
 
     // 若有審核中的提領單則駁回
