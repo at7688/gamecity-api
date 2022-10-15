@@ -23,7 +23,7 @@ export class GameWater {
 export class SetGameWaterDto {
   @IsString()
   @IsNotEmpty()
-  vip_id: string;
+  id: string;
 
   @ValidateNested({ each: true })
   @Type(() => GameWater)

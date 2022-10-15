@@ -10,6 +10,7 @@ import {
 import { CheckVipDto } from './dto/check-vip.dto';
 import { CreateVipDto } from './dto/create-vip.dto';
 import { SearchVipQueueDto } from './dto/search-vip-queue.dto';
+import { SearchVipWaterDto } from './dto/search-vip-water.dto';
 import { SetGameWaterDto } from './dto/set-game-water.dto';
 import { UpdateVipDto } from './dto/update-vip.dto';
 import { VipService } from './vip.service';
@@ -55,9 +56,13 @@ export class VipController {
     return this.vipService.update(id, updateVipDto);
   }
 
-  @Post('water')
-  gameWater(@Body() setGameWaterDto: SetGameWaterDto) {
-    return this.vipService.gameWater(setGameWaterDto);
+  @Post('getWaters')
+  getWaters(@Body() search: SearchVipWaterDto) {
+    return this.vipService.getWaters(search);
+  }
+  @Post('setWaters')
+  setWaters(@Body() setGameWaterDto: SetGameWaterDto) {
+    return this.vipService.setWaters(setGameWaterDto);
   }
 
   @Delete(':id')

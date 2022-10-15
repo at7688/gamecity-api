@@ -5,6 +5,7 @@ import { ResCode } from 'src/errors/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateVipDto } from './dto/create-vip.dto';
 import { SearchVipQueueDto } from './dto/search-vip-queue.dto';
+import { SearchVipWaterDto } from './dto/search-vip-water.dto';
 import { SetGameWaterDto } from './dto/set-game-water.dto';
 import { UpdateVipDto } from './dto/update-vip.dto';
 import { vipCheck, VipCheckItem } from './raw/vipCheck';
@@ -48,8 +49,19 @@ export class VipService {
     return this.prisma.success();
   }
 
-  async gameWater(data: SetGameWaterDto) {
-    const { setting, vip_id } = data;
+  async getWaters(search: SearchVipWaterDto) {
+    const { id, platform_code } = search;
+    const result = await this.prisma.gameWater.findMany({
+      where: {
+        vip_id: id,
+        platform_code,
+      },
+    });
+    return this.prisma.success(result);
+  }
+
+  async setWaters(data: SetGameWaterDto) {
+    const { setting, id } = data;
     await Promise.all(
       setting.map((t) => {
         return this.prisma.gameWater.upsert({
@@ -62,11 +74,11 @@ export class VipService {
             platform_code_game_code_vip_id: {
               platform_code: t.platform_code,
               game_code: t.game_code,
-              vip_id,
+              vip_id: id,
             },
           },
           create: {
-            vip_id,
+            vip_id: id,
             platform_code: t.platform_code,
             game_code: t.game_code,
             water: t.water,
