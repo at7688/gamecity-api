@@ -14,12 +14,12 @@ export class SearchGameReportsDto {
   @IsNotEmpty()
   group_by: 'platform_code' | 'category_code';
 
-  @IsOptional()
+  @IsNotEmpty()
   @Transform(({ value }) => new Date(value))
   @IsDate()
   bet_start_at?: string; //下注時間
 
-  @IsOptional()
+  @IsNotEmpty()
   @Transform(({ value }) => new Date(value))
   @IsDate()
   bet_end_at?: string;

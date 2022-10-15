@@ -423,6 +423,7 @@ export class WmService {
                 bet_detail: t as unknown as Prisma.InputJsonObject,
                 nums_rolling: game.nums_rolling,
                 vip_water,
+                agent_water: ratios[0]?.water,
                 ratios: {
                   createMany: {
                     data: ratios.map((r) => ({

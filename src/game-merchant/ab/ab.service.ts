@@ -434,6 +434,7 @@ export class AbService {
               }[t.status],
               bet_detail: t as unknown as Prisma.InputJsonObject,
               vip_water,
+              agent_water: ratios[0]?.water,
               nums_rolling: game.nums_rolling,
               ratios: {
                 createMany: {

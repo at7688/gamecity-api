@@ -812,7 +812,7 @@ model BetRecord {
   bet_detail      Json?
   ratios          BetRatioRec[] // 代理的佔成及退水
 
-  // agent_water Float @default(0) // 代理的退水(頂層代理的設定值)
+  agent_water Float @default(0) // 代理的退水(頂層代理的設定值)
 
   vip_water       Float @default(0) // 會員等級退水 (GameWater vip)
   promotion_water Float @default(0) // 返水活動 (GameWater promotion)

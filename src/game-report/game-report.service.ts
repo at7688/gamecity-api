@@ -7,6 +7,7 @@ import { SearchAgentReportDto } from './dto/search-agent-report.dto';
 import { SearchGameReportsDto } from './dto/search-game-reports.dto';
 import { SearchPlayerReportDto } from './dto/search-player-report.dto';
 import { agentReport } from './raw/agentReport';
+import { gameReport } from './raw/gameReport';
 import { playerReport } from './raw/playerReport';
 
 @Injectable()
@@ -39,57 +40,9 @@ export class GameReportService {
       );
     }
 
-    const result = await this.prisma.betRecord.groupBy({
-      by: [group_by],
-      where: {
-        status: {
-          in: status,
-        },
-        bet_at: {
-          gte: bet_start_at,
-          lte: bet_end_at,
-        },
+    const result = await this.prisma.$queryRaw(gameReport(search));
 
-        player: {
-          AND: [
-            {
-              username: {
-                contains: username,
-              },
-            },
-            {
-              id: {
-                in: playersByAgent
-                  ? playersByAgent.map((t) => t.id)
-                  : undefined,
-              },
-            },
-          ],
-        },
-        game: {
-          id: {
-            in: game_ids,
-          },
-          category: {
-            code: {
-              in: category_codes,
-            },
-          },
-        },
-      },
-      _count: { _all: true },
-      _sum: { amount: true, valid_amount: true, win_lose_amount: true },
-    });
-    return this.prisma.success(
-      result.map((t) => ({
-        category_code: t.category_code,
-        platform_code: t.platform_code,
-        bet_count: t._count._all,
-        bet_amount: +t._sum.amount?.toFixed(2) || 0,
-        valid_amount: +t._sum.valid_amount?.toFixed(2) || 0,
-        win_lose_amount: +t._sum.win_lose_amount?.toFixed(2) || 0,
-      })),
-    );
+    return this.prisma.success(result);
   }
 
   async winLoseReport(search: SearchAgentReportDto) {
