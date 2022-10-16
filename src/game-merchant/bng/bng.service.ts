@@ -346,8 +346,9 @@ export class BngService {
         start,
         end,
       );
-      start = d.start;
-      end = d.end;
+
+      // start = d.start;
+      // end = d.end;
     }
 
     // 驗證是否當前可搜尋及搜尋區間是否符合規則

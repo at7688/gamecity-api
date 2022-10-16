@@ -36,7 +36,7 @@ export class PlayerService {
     private readonly eventEmitter: EventEmitter2,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
-  isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
+  // isAdmin = this.configService.get('PLATFORM') === 'ADMIN';
 
   async validate(username: string) {
     const record = await this.prisma.player.findUnique({
@@ -192,14 +192,14 @@ export class PlayerService {
       orderBy: { name: 'asc' },
     });
 
-    if (!this.isAdmin) {
-      const agents = await this.prisma.$queryRaw<SubAgent[]>(
-        subAgents(user.id),
-      );
-      if (agents.findIndex((t) => t.id === agent_id) === -1) {
-        this.prisma.error(ResCode.FIELD_NOT_VALID, '無此下線');
-      }
-    }
+    // if (!this.isAdmin) {
+    //   const agents = await this.prisma.$queryRaw<SubAgent[]>(
+    //     subAgents(user.id),
+    //   );
+    //   if (agents.findIndex((t) => t.id === agent_id) === -1) {
+    //     this.prisma.error(ResCode.FIELD_NOT_VALID, '無此下線');
+    //   }
+    // }
 
     await this.prisma.player.create({
       data: {

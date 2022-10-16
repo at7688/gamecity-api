@@ -41,12 +41,12 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
             ORDER BY layer
           ) pp
         ) parents,
-      d.fee_duty,
-      d.promotion_duty,
+      COALESCE(d.fee_duty, 0) fee_duty,
+      COALESCE(d.promotion_duty, 0) promotion_duty,
       (
         SELECT json_build_object(
-          'total', gf.amount,
-          'duty', (d.promotion_duty * gf.amount / 100)
+          'total', COALESCE(gf.amount, 0),
+          'duty', COALESCE((d.promotion_duty * gf.amount / 100), 0)
         )
         FROM (
           SELECT SUM(g.amount) amount FROM (
@@ -65,8 +65,8 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
       ) promotion,
       (
         SELECT json_build_object(
-          'total', pf.fee,
-          'duty', (d.fee_duty * pf.fee / 100)
+          'total', COALESCE(pf.fee, 0),
+          'duty', COALESCE((d.fee_duty * pf.fee / 100), 0)
         ) FROM (
           SELECT SUM(g.fee) fee
           FROM (
@@ -80,12 +80,13 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
           ) a
           JOIN "Player" p ON p.agent_id = a.id
           JOIN "PaymentDepositRec" g ON g.player_id = p.id
+          WHERE status = 10
         ) pf
       ) deposit_fee,
       (
         SELECT json_build_object(
-          'total', wf.fee,
-          'duty', (d.fee_duty * wf.fee / 100)
+          'total', COALESCE(wf.fee, 0),
+          'duty', COALESCE((d.fee_duty * wf.fee / 100), 0)
         ) FROM (
           SELECT SUM(g.fee) fee
           FROM (
@@ -102,9 +103,9 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
         ) wf
       ) withdraw_fee,
       (SELECT json_build_object(
-        'ratio_result', p.ratio_result,
-        'agent_water_comm', p.agent_water_comm,
-        'water_duty_result', p.water_duty_result
+        'ratio_result', COALESCE(p.ratio_result, 0),
+        'agent_water_comm', COALESCE(p.agent_water_comm, 0),
+        'water_duty_result', COALESCE(p.water_duty_result, 0)
       ) FROM (
         SELECT
           SUM(ratio_result) ratio_result,
@@ -131,9 +132,9 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
         WHERE agent_id = m.parent_id
       ) p) parent_info,
       json_build_object(
-        'ratio_result', a.ratio_result,
-        'agent_water_comm', a.agent_water_comm,
-        'water_duty_result', a.water_duty_result
+        'ratio_result', COALESCE(a.ratio_result, 0),
+        'agent_water_comm', COALESCE(a.agent_water_comm, 0),
+        'water_duty_result', COALESCE(a.water_duty_result, 0)
       ) agent_info,
       (SELECT
         json_build_object(
@@ -148,7 +149,7 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
         SELECT
           b.*,
           agents.id agent_id,
-          (w.water * b.valid_amount / 100) player_water_comm
+          COALESCE((w.water * b.valid_amount / 100), 0) player_water_comm
         FROM (
           WITH RECURSIVE subAgents AS (
             SELECT * FROM "Member" WHERE username = m.username
