@@ -16,7 +16,7 @@ export class GameReportController {
     return this.gameReportService.findAll(body);
   }
 
-  @Post('winlose')
+  @Post('agent')
   winLoseReport(@Body() body: SearchAgentReportDto) {
     return this.gameReportService.winLoseReport(body);
   }

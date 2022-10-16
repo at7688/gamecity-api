@@ -9,6 +9,11 @@ export const playerReport = (search: SearchPlayerReportDto) => {
     nickname,
     username,
     layer,
+    -- 下層代理數(為0則不給點擊)
+    (
+      SELECT COUNT(*) FROM "Member" WHERE parent_id = m.id
+    ) agent_count,
+    -- 上層代理樹
     (
         SELECT json_agg(pp) FROM (
           WITH RECURSIVE parents AS (
@@ -23,6 +28,7 @@ export const playerReport = (search: SearchPlayerReportDto) => {
           ORDER BY layer
         ) pp
       ) parents,
+      -- 登入會員數
       (
         SELECT COUNT(*)
         FROM (
@@ -40,6 +46,7 @@ export const playerReport = (search: SearchPlayerReportDto) => {
           WHERE login_at BETWEEN ${start_at} AND ${end_at}
         ) gg
       ) login_player_count,
+      -- 註冊會員數
       (
         SELECT COUNT(*) FROM (
           WITH RECURSIVE subAgents AS (
@@ -53,6 +60,7 @@ export const playerReport = (search: SearchPlayerReportDto) => {
         JOIN "Player" p ON p.agent_id = a.id
         WHERE p.created_at BETWEEN ${start_at} AND ${end_at}
       ) register_player_count,
+      -- 總會員數
       (
         SELECT COUNT(*) FROM (
           WITH RECURSIVE subAgents AS (

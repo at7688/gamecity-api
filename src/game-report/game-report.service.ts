@@ -123,7 +123,7 @@ export class GameReportService {
     });
     const agent_ids = agents.map((t) => t.id);
     const bet_ids = betRecords.map((t) => t.id);
-    const list = await (bet_ids.length && agent_ids.length
+    const list = await (agent_ids.length
       ? this.prisma.$queryRaw(agentReport(agent_ids, bet_ids))
       : []);
 

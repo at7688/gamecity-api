@@ -5,9 +5,7 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
   WITH
   filterBets AS (
     SELECT * FROM "BetRecord"
-    ${
-      bet_ids ? Prisma.sql`WHERE id IN (${Prisma.join(bet_ids)})` : Prisma.empty
-    }
+    WHERE id = ANY (${bet_ids})
   )
   SELECT
     *,
@@ -16,6 +14,8 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
        + (list.deposit_fee::json->>'duty')::decimal
        + (list.withdraw_fee::json->>'duty')::decimal
        + (list.agent_info::json->>'ratio_result')::decimal
+       + (list.agent_info::json->>'water_duty_result')::decimal
+       - (list.agent_info::json->>'agent_water_comm')::decimal
     ) settlement
   FROM (
     SELECT
@@ -23,6 +23,10 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
       m.username,
       m.nickname,
       m.layer,
+       -- 下層代理數(為0則不給點擊)
+      (
+        SELECT COUNT(*) FROM "Member" WHERE parent_id = m.id
+      ) agent_count,
       (
           SELECT json_agg(pp) FROM (
             WITH RECURSIVE parents AS (
@@ -137,7 +141,8 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
           'valid_amount', COALESCE(SUM(valid_amount), 0),
           'player_water_comm', COALESCE(ROUND(SUM(player_water_comm)::decimal, 2), 0),
           'win_lose_amount', COALESCE(SUM(win_lose_amount), 0),
-              'player_count', COALESCE(COUNT(DISTINCT player_id), 0)
+          'player_count', COALESCE(COUNT(DISTINCT player_id), 0),
+          'count', COALESCE(COUNT(id), 0)
         )
       FROM (
         SELECT
@@ -191,11 +196,8 @@ export const agentReport = (agent_ids?: string[], bet_ids?: string[]) => {
       ) r
       GROUP BY agent_id
     ) a ON a.agent_id = m.id
-    ${
-      agent_ids
-        ? Prisma.sql`WHERE id IN (${Prisma.join(agent_ids)})`
-        : Prisma.empty
-    }
+    WHERE id = ANY (${agent_ids})
+
   ) list
   `;
 };
