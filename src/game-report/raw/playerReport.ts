@@ -4,7 +4,7 @@ import { SearchPlayerReportDto } from '../dto/search-player-report.dto';
 export const playerReport = (search: SearchPlayerReportDto) => {
   const { start_at, end_at, username = '', layers, parent_id } = search;
   return Prisma.sql`
-    SELECT
+   SELECT
     id,
     nickname,
     username,
@@ -64,7 +64,103 @@ export const playerReport = (search: SearchPlayerReportDto) => {
           SELECT * FROM subAgents
         ) a
         JOIN "Player" p ON p.agent_id = a.id
-      ) player_count
+      ) player_count,
+-- 	  首儲人數/點數
+	  (
+        SELECT
+		  json_build_object(
+			  'count', COUNT(*),
+			  'amount', COALESCE(SUM(amount), 0)
+		  )
+		  FROM (
+          WITH RECURSIVE subAgents AS (
+            SELECT * FROM "Member" WHERE username = m.username
+            UNION
+            SELECT m.* FROM "Member" m
+            JOIN subAgents s ON s.id = m.parent_id
+          )
+          SELECT * FROM subAgents
+        ) a
+        JOIN "Player" p ON p.agent_id = a.id
+	  	JOIN
+		  (
+			  SELECT player_id, amount, is_first FROM "BankDepositRec"
+			  WHERE status = 10 AND created_at BETWEEN ${start_at} AND ${end_at}
+			  UNION
+			  SELECT player_id, amount, is_first FROM "PaymentDepositRec"
+			  WHERE status = 10 AND created_at BETWEEN ${start_at} AND ${end_at}
+		  ) r ON r.player_id = p.id
+	  	WHERE is_first
+      ) first_deposit,
+-- 	  儲值人數/次數
+	  (
+        SELECT
+		  json_build_object(
+			  'count', COUNT(*),
+			  'amount', COALESCE(SUM(amount), 0),
+			  'player_count', COUNT(DISTINCT player_id)
+		  )
+		  FROM (
+          WITH RECURSIVE subAgents AS (
+            SELECT * FROM "Member" WHERE username = m.username
+            UNION
+            SELECT m.* FROM "Member" m
+            JOIN subAgents s ON s.id = m.parent_id
+          )
+          SELECT * FROM subAgents
+        ) a
+        JOIN "Player" p ON p.agent_id = a.id
+	  	JOIN
+		  (
+			  SELECT player_id, amount, is_first FROM "BankDepositRec"
+			  WHERE status = 10 AND created_at BETWEEN ${start_at} AND ${end_at}
+			  UNION
+			  SELECT player_id, amount, is_first FROM "PaymentDepositRec"
+			  WHERE status = 10 AND created_at BETWEEN ${start_at} AND ${end_at}
+		  ) r ON r.player_id = p.id
+      ) deposit,
+
+-- 	  首次提領人數/總額
+	  (
+        SELECT
+		  json_build_object(
+			  'count', COUNT(*),
+			  'amount', COALESCE(SUM(amount), 0)
+		  )
+		  FROM (
+          WITH RECURSIVE subAgents AS (
+            SELECT * FROM "Member" WHERE username = m.username
+            UNION
+            SELECT m.* FROM "Member" m
+            JOIN subAgents s ON s.id = m.parent_id
+          )
+          SELECT * FROM subAgents
+        ) a
+      JOIN "Player" p ON p.agent_id = a.id
+	  	JOIN "WithdrawRec" r ON r.player_id = p.id
+	  	WHERE status = 10 AND times = 1 AND r.created_at BETWEEN ${start_at} AND ${end_at}
+      ) first_withdraw,
+-- 	  提領人數/次數
+	  (
+        SELECT
+		  json_build_object(
+			  'count', COUNT(*),
+			  'amount', COALESCE(SUM(amount), 0),
+			  'player_count', COUNT(DISTINCT player_id)
+		  )
+		  FROM (
+          WITH RECURSIVE subAgents AS (
+            SELECT * FROM "Member" WHERE username = m.username
+            UNION
+            SELECT m.* FROM "Member" m
+            JOIN subAgents s ON s.id = m.parent_id
+          )
+          SELECT * FROM subAgents
+        ) a
+        JOIN "Player" p ON p.agent_id = a.id
+	  	JOIN "WithdrawRec" r ON r.player_id = p.id
+	  	WHERE status = 10 AND r.created_at BETWEEN ${start_at} AND ${end_at}
+      ) withdraw
 
     FROM "Member" m
     WHERE

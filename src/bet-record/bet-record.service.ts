@@ -107,9 +107,17 @@ export class BetRecordService {
             nickname: true,
           },
         },
+        platform: {
+          select: {
+            name: true,
+            code: true,
+          },
+        },
         game: {
-          include: {
-            platform: true,
+          select: {
+            id: true,
+            name: true,
+            code: true,
           },
         },
         ratios: {

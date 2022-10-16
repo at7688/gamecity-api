@@ -6,12 +6,12 @@ import { SearchGameReportsDto } from './dto/search-game-reports.dto';
 import { SearchPlayerReportDto } from './dto/search-player-report.dto';
 import { GameReportService } from './game-report.service';
 
-@Controller('gameReport')
+@Controller('report')
 @Platforms([PlatformType.PLAYER])
 export class GameReportController {
   constructor(private readonly gameReportService: GameReportService) {}
 
-  @Post('list')
+  @Post('game')
   findAll(@Body() body: SearchGameReportsDto) {
     return this.gameReportService.findAll(body);
   }

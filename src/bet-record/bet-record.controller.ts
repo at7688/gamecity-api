@@ -4,7 +4,7 @@ import { SearchBetRecordsDto } from './dto/search-bet-records.dto';
 import { Platforms } from 'src/metas/platforms.meta';
 import { PlatformType } from '@prisma/client';
 
-@Controller('bet-record')
+@Controller('betRecord')
 @Platforms([PlatformType.PLAYER])
 export class BetRecordController {
   constructor(private readonly betRecordService: BetRecordService) {}
