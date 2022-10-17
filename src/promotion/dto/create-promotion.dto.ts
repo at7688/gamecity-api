@@ -15,7 +15,6 @@ import {
   ApplyGap,
   ApprovalType,
   PromotionType,
-  RechargeRewardType,
   RollingType,
   ScheduleType,
   SettlementType,

@@ -36,16 +36,6 @@ export enum RollingType {
   INCLUDE_RECHARGE = 2,
 }
 
-export enum RechargeRewardType {
-  AMOUNT = 1,
-  PERCENTAGE = 2,
-}
-
-export enum ApplyLimitType {
-  TOTAL_PERIOD = 1, // 活動期間
-  EACH_SECTION = 2, // 每檔期
-}
-
 export enum PromotionStatus {
   COMMING = 1,
   RUNING = 2,

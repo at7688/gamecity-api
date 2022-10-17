@@ -1,3 +1,4 @@
+import { SearchPromotionWaterDto } from './dto/search-promotion-water.dto';
 import {
   Body,
   Controller,
@@ -12,6 +13,7 @@ import { Platforms } from 'src/metas/platforms.meta';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { PromotionService } from './promotion.service';
+import { SetGameWaterDto } from './dto/set-game-water.dto';
 
 @Controller('promotion')
 export class PromotionController {
@@ -30,6 +32,15 @@ export class PromotionController {
   @Get('view/:id')
   findOne(@Param('id') id: string) {
     return this.promotionService.findOne(id);
+  }
+
+  @Post('getWaters')
+  getWaters(@Body() search: SearchPromotionWaterDto) {
+    return this.promotionService.getWaters(search);
+  }
+  @Post('setWaters')
+  setWaters(@Body() setGameWaterDto: SetGameWaterDto) {
+    return this.promotionService.setWaters(setGameWaterDto);
   }
 
   @Patch(':id')
