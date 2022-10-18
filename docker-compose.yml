@@ -1,11 +1,11 @@
 version: "3"
 services:
   api:
-    image: summerchen0101/development:v1.1.1
+    image: summerchen0101/development:v1.1.2
     env_file:
       - .env
     ports:
-      - "80:8080"
+      - "80:80"
     restart: unless-stopped
     # command: sh -c "yarn migrate deploy"
     links:
